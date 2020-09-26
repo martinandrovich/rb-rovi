@@ -54,13 +54,16 @@ Installation of the system/workspace/package; the following configuration steps 
 1. Installing `ROS`
 2. Cloning repository (catkin workspace)
 
+
+For auto-completion, linting etc., VS Code can be configured [as defined here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers..
+
 Scripts for these steps will be available later.
 
 ### Usage
 
 Guide on how to test if the installation if successful.
 
-For auto-completion, linting etc. in VS Code the [ROS plugin][ros-vs-code-plugin] must be installed. VS Code should be launched from the `ws` directory (`code ../rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers. In case of include errors, delete the `ws/.vscode` directory and reload VS Code.
+
 
 ### API & Troubleshooting
 
@@ -77,6 +80,8 @@ No license has been decided yet.
 ## Acknowledgments
 
 - [Erdal Perkel][erdal-git] - integration of Franka Emika Panda into Gazebo
+- [RoboGnome][erdal-git] - configuration of VS Code to run flawlessly with ROS
+
 
 [semver]: http://semver.org/
 [releases]: about:blank
@@ -85,6 +90,8 @@ No license has been decided yet.
 
 [ros]: http://wiki.ros.org/noetic/
 [gazebo]: http://gazebosim.org/
+[ros-vs-code]: https://github.com/RoboGnome/VS_Code_ROS
 
 [erdal-git]: https://github.com/erdalpekel
+[robognome-git]: https://github.com/RoboGnome
 
