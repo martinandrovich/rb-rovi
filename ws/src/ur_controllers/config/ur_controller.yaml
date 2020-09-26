@@ -1,0 +1,33 @@
+ur5_joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 100
+
+ur5_group_pos_controller:
+  type: position_controllers/JointGroupPositionController
+  arm_id: ur5
+  joints:
+    - ur5_joint_1
+    - ur5_joint_2
+    - ur5_joint_3
+    - ur5_joint_4
+    - ur5_joint_5
+    - ur5_joint_6
+
+  publish_rate: 500
+
+wsg_group_pos_controller:
+  type: position_controllers/JointGroupPositionController
+  joints:
+    - joint_wsg_gripper_left
+    - joint_wsg_gripper_right
+
+gazebo_ros_control:
+  pid_gains:
+    ur5_joint_1: {p: 70, i: 0.0000, d: 1.5,  i_clamp: 1}
+    ur5_joint_2: {p: 70, i: 0.0000, d: 1.5, i_clamp: 1}
+    ur5_joint_3: {p: 70, i: 0.0000, d: 1.5, i_clamp: 1}
+    ur5_joint_4: {p: 70, i: 0.0000, d: 1.5, i_clamp: 1}
+    ur5_joint_5: {p: 70, i: 0.0000, d: 1.5, i_clamp: 1}
+    ur5_joint_6: {p: 70, i: 0.0000, d: 1.5, i_clamp: 1}
+    joint_wsg_gripper_left: {p: 100, i: 0.0000, d: 1.5, i_clamp: 1}
+    joint_wsg_gripper_right: {p: 100, i: 0.0000, d: 1.5, i_clamp: 1}
