@@ -21,4 +21,24 @@
 	<depend>gazebo_ros</depend>
 	<depend>Eigen3</depend>
 
+	<export>
+
+	<!--
+		 https://answers.gazebosim.org//question/6568/uri-paths-to-packages-in-the-sdf-model-file/
+		 gazebo_ros_paths_plugin automatically adds these to GAZEBO_PLUGIN_PATH and GAZEBO_MODEL_PATH
+		 when you do this export inside the package.xml file. You can than use URIs of type model://my_package/stuff.
+
+		 test with:
+		 rospack plugins -\-attrib="gazebo_media_path" gazebo_ros
+
+		 will only work when launched using gazebo_ros
+	-->
+	
+	<gazebo_ros
+		gazebo_plugin_path="${prefix}/lib"
+		gazebo_model_path="${prefix}/models"
+	/>
+	<!-- gazebo_model_path="${prefix}/.." -->
+	</export>
+
 </package>
