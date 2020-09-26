@@ -19,9 +19,6 @@ find_package(catkin REQUIRED
 
 )
 
-find_package(RobWork REQUIRED)
-link_directories( ${ROBWORK_LIBRARY_DIRS} )
-
 catkin_package(
     INCLUDE_DIRS include
 )
@@ -44,5 +41,4 @@ target_include_directories(
 target_link_libraries(ur5_kin ${catkin_LIBRARIES})
 
 add_executable(ur5_controller src/main.cpp)
-target_link_libraries(ur5_controller PRIVATE ${catkin_LIBRARIES} ${ROBWORK_LIBRARIES} ur5_kin)
-target_include_directories(ur5_controller PRIVATE ${ROBWORK_INCLUDE_DIRS})
+target_link_libraries(ur5_controller PRIVATE ${catkin_LIBRARIES} ur5_kin)
