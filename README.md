@@ -63,7 +63,7 @@ Scripts for these steps will be available later.
 
 Guide on how to test if the installation if successful.
 
-
+Run `source rb-rovi/ws/devel/setup.bash` to load the necessary variables to access the commands to run the packages of this repository, i.e. `rosrun rovi_gazebo example`
 
 ### API & Troubleshooting
 

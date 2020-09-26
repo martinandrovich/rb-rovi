@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+
+	<name>rovi_gazebo</name>
+	<version>0.1.0</version>
+	<description>Integration of ROVI work cell, objects etc. into Gazebo.</description>
+
+	<author email="marta16@student.sdu.dk">Martin Androvich</author>
+	<maintainer email="marta16@student.sdu.dk">Martin Androvich</maintainer>
+
+	<license>TODO</license>
+
+	<url type="website">https://github.com/martinandrovich/rb-rovi</url>
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>xacro</depend>
+	<depend>gazebo_ros</depend>
+	<depend>Eigen3</depend>
+
+</package>
