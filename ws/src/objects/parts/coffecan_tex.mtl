@@ -1,0 +1,26 @@
+# Blender MTL File: 'assets.blend'
+# Material Count: 2
+
+newmtl CoffeCanBlack.002
+Ns 84.833807
+Ka 1.000000 1.000000 1.000000
+Kd 0.009018 0.009018 0.009018
+Ks 0.010000 0.010000 0.010000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd Textures/[2K]Metal29/Metal29_col.jpg
+refl Textures/[2K]Metal29/Metal29_met.jpg
+
+newmtl CoffeCanTop.002
+Ns 84.833807
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.010000 0.010000 0.010000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd Textures/[2K]Metal10/Metal10_col.jpg
+refl Textures/[2K]Metal10/Metal10_met.jpg

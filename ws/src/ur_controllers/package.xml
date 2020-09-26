@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>ur_controllers</name>
+
+  <version>0.0.0</version>
+
+  <description>
+      Gazebo wrapper for the Universal UR5/10 robot arms.
+  </description>
+
+
+  <author>Daniel Tofte Schøn</author>
+  <maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <test_depend>roslaunch</test_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>effort_controllers</exec_depend>
+  <exec_depend>joint_state_controller</exec_depend>
+  <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_ros_control</exec_depend>
+  <exec_depend>position_controllers</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rostopic</exec_depend>
+  <exec_depend>ur5_description</exec_depend>
+
+
+</package>
