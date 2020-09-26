@@ -54,8 +54,9 @@ Installation of the system/workspace/package; the following configuration steps 
 1. Installing `ROS`
 2. Cloning repository (catkin workspace)
 
+Once the catkin directory is cloned, `rosdep` can be used to install any dependencies. Start with [installing `rosdep`][rosdep]. Then, from the `ws` directory, run `rosdep install --from-paths src --ignore-src -r -y`.
 
-For auto-completion, linting etc., VS Code can be configured [as defined here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers..
+For auto-completion, linting etc., VS Code can be configured [as explained here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers.
 
 Scripts for these steps will be available later.
 
@@ -90,6 +91,7 @@ No license has been decided yet.
 
 [ros]: http://wiki.ros.org/noetic/
 [gazebo]: http://gazebosim.org/
+[rosdep]: http://wiki.ros.org/rosdep#Installing_rosdep
 [ros-vs-code]: https://github.com/RoboGnome/VS_Code_ROS
 
 [erdal-git]: https://github.com/erdalpekel
