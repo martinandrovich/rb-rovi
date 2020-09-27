@@ -38,7 +38,7 @@
 		gazebo_plugin_path="${prefix}/lib"
 		gazebo_model_path="${prefix}/models"
 	/>
-	<!-- gazebo_model_path="${prefix}/.." -->
+
 	</export>
 
 </package>
