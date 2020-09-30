@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="ur5_transmission">
+
+    <!-- Load Gazebo lib with desired parameters -->
+
+    <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so" />
+    </gazebo>
+
+    <!-- transmission joint 1 -->
+
+    <transmission name="ur5_tran_1">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint1">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_1">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      
+    </transmission>
+
+    <!-- transmission joint 2 -->
+
+    <transmission name="ur5_tran_2">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint2">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_2">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+
+    </transmission>
+
+    <!-- transmission joint 3 -->
+
+    <transmission name="ur5_tran_3">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint3">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_3">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+
+    </transmission>
+
+    <!-- transmission joint 4 -->
+
+    <transmission name="ur5_tran_4">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint4">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_4">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+
+    </transmission>
+
+    <!-- transmission joint 5 -->
+
+    <transmission name="ur5_tran_5">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint5">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_5">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+
+    </transmission>
+
+    <!-- transmission joint 6 -->
+
+    <transmission name="ur5_tran_6">
+
+      <type>transmission_interface/SimpleTransmission</type>
+
+      <joint name="ur5_joint6">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+
+      <actuator name="ur5_motor_6">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+
+    </transmission>
+
+    <!-- transmission gripper -->
+
+    <transmission name="wsg_tran_left">
+
+        <type>transmission_interface/SimpleTransmission</type>
+
+        <joint name="joint_wsg_gripper_left">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+
+        <actuator name="wsg_motor_left">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+
+      </transmission>
+
+      <transmission name="wsg_tran_right">
+
+        <type>transmission_interface/SimpleTransmission</type>
+
+        <joint name="joint_wsg_gripper_right">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        </joint>
+
+        <actuator name="wsg_motor_right">
+          <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+
+    </transmission>
+
+  </xacro:macro>
+
+</robot>

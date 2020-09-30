@@ -1,0 +1,488 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur5">
+
+  <!-- properties of the UR5 robot -->
+
+  <property name="base_mass" value="0.1" />
+  <property name="shoulder_mass" value="0.1" />
+  <property name="upper_arm_mass" value="0.1" />
+  <property name="forearm_mass" value="0.1" />
+  <property name="wrist_1_mass" value="0.1" />
+  <property name="wrist_2_mass" value="0.1" />
+  <property name="wrist_3_mass" value="0.1" />
+
+  <property name="shoulder_cog" value="0.0 0.00193 -0.02561" />
+  <property name="upper_arm_cog" value="0.0 -0.024201 0.2125" />
+  <property name="forearm_cog" value="0.0 0.0265 0.11993" />
+  <property name="wrist_1_cog" value="0.0 0.110949 0.01634" />
+  <property name="wrist_2_cog" value="0.0 0.0018 0.11099" />
+  <property name="wrist_3_cog" value="0.0 0.001159 0.0" />
+
+  <property name="ur5_d1" value="0.089159" />
+  <property name="ur5_a2" value="-0.42500" />
+  <property name="ur5_a3" value="-0.39225" />
+  <property name="ur5_d4" value="0.14215" />
+  <property name="ur5_d5" value="0.1" />
+  <property name="ur5_d6" value="0.0983" />
+  
+  <property name="shoulder_offset" value="0.13585" />
+  <property name="elbow_offset" value="-0.1197" />
+
+  <property name="shoulder_height" value="${ur5_d1}" />
+  <property name="upper_arm_length" value="${-ur5_a2}" />
+  <property name="forearm_length" value="${-ur5_a3}" />
+  <property name="wrist_1_length" value="${ur5_d4 - elbow_offset - shoulder_offset}" />
+  <property name="wrist_2_length" value="${ur5_d5}" />
+  <property name="wrist_3_length" value="${ur5_d6}" />
+
+  <property name="shoulder_radius" value="0.060" />
+  <property name="upper_arm_radius" value="0.054" />
+  <property name="elbow_radius" value="0.060" />
+  <property name="forearm_radius" value="0.040" />
+  <property name="wrist_radius" value="0.045" />
+
+  <!-- cyldenrical inertia for approximation for the link inertias -->
+
+  <macro name="cylinder_inertial" params="radius length mass *origin">
+
+    <inertial>
+      <mass value="${mass}" />
+      <insert_block name="origin" />
+      <inertia ixx="${0.0833333 * mass * (3 * radius * radius + length * length)}" ixy="0.0" ixz="0.0" iyy="${0.0833333 * mass * (3 * radius * radius + length * length)}" iyz="0.0" izz="${0.5 * mass * radius * radius}" />
+    </inertial>
+	
+  </macro>
+
+  <!-- the ur5_arm element -->
+  
+  <macro name="ur5_arm">
+
+    <!-- fix the robot to the Gazebo world coordinate system -->
+
+    <link name="world" />
+
+    <joint name="robot_to_world" type="fixed">
+      <parent link="world" />
+      <child link="ur5_link0" />
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    </joint>
+
+    <!-- link 0 -->
+
+    <link name="ur5_link0">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link0.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link0.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.06" length="0.05" mass="${base_mass}">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint1 connects link0 and link1 -->
+
+    <joint name="ur5_joint1" type="revolute">
+      <parent link="ur5_link0" />
+      <child link="ur5_link1" />
+      <origin xyz="0.0 0.0 ${shoulder_height}" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 0 1" />
+      <limit lower="-3.14" upper="3.14" effort="150.0" velocity="3.15" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 1 -->
+
+    <link name="ur5_link1">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link1.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link1.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.06" length="0.15" mass="${shoulder_mass}">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint2 connects link1 and link2 -->
+
+    <joint name="ur5_joint2" type="revolute">
+      <parent link="ur5_link1" />
+      <child link="ur5_link2" />
+      <origin xyz="0.0 ${shoulder_offset} 0.0" rpy="0.0 ${pi / 2.0} 0.0" />
+      <axis xyz="0 1 0" />
+      <limit lower="-3.14" upper="3.14" effort="150.0" velocity="3.15" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 2 -->
+
+    <link name="ur5_link2">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link2.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link2.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.06" length="0.56" mass="${upper_arm_mass}">
+        <origin xyz="0.0 0.0 0.28" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint3 connects link2 and link3 -->
+
+    <joint name="ur5_joint3" type="revolute">
+      <parent link="ur5_link2" />
+      <child link="ur5_link3" />
+      <origin xyz="0.0 ${elbow_offset} ${upper_arm_length}" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 1 0" />
+      <limit lower="-3.14" upper="3.14" effort="150.0" velocity="3.15" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 3 -->
+
+    <link name="ur5_link3">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link3.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link3.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.06" length="0.5" mass="${forearm_mass}">
+        <origin xyz="0.0 0.0 0.25" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint4 connects link3 and link4 -->
+
+    <joint name="ur5_joint4" type="revolute">
+      <parent link="ur5_link3" />
+      <child link="ur5_link4" />
+      <origin xyz="0.0 0.0 ${forearm_length}" rpy="0.0 ${pi / 2.0} 0.0" />
+      <axis xyz="0 1 0" />
+      <limit lower="-3.14" upper="3.14" effort="28.0" velocity="3.2" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 4 -->
+
+    <link name="ur5_link4">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link4.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link4.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.6" length="0.12" mass="${wrist_1_mass}">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint5 connects link4 and link5 -->
+
+    <joint name="ur5_joint5" type="revolute">
+      <parent link="ur5_link4" />
+      <child link="ur5_link5" />
+      <origin xyz="0.0 ${wrist_1_length} 0.0" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 0 1" />
+      <limit lower="-3.14" upper="3.14" effort="28.0" velocity="3.2" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 5 -->
+
+    <link name="ur5_link5">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link5.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link5.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.6" length="0.12" mass="${wrist_2_mass}">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+    <!-- joint6 connects link5 and link6 -->
+
+    <joint name="ur5_joint6" type="revolute">
+      <parent link="ur5_link5" />
+      <child link="ur5_link6" />
+      <origin xyz="0.0 0.0 ${wrist_2_length}" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 1 0" />
+      <limit lower="-3.14" upper="3.14" effort="28.0" velocity="3.2" />
+      <dynamics damping="1" friction="1" />
+    </joint>
+
+    <!-- link 6 -->
+
+    <link name="ur5_link6">
+
+      <visual>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/visual/link6.dae" />
+        </geometry>
+        <material name="LightGrey">
+          <color rgba="0.7 0.7 0.7 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <mesh filename="package://ur5_description/meshes/collision/link6.stl" />
+        </geometry>
+      </collision>
+
+      <cylinder_inertial radius="0.6" length="0.12" mass="${wrist_3_mass}">
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      </cylinder_inertial>
+
+    </link>
+
+  </macro>
+
+  <!-- This is where WSG50 begins -->
+
+  <joint name="ur5_ee_fixed_joint" type="fixed">
+    <parent link="ur5_link6" />
+    <child link="wsg_base" />
+    <origin xyz="0.0 ${wrist_3_length} 0.0" rpy="-${pi/2} 0.0 0.0" />
+  </joint>
+
+  <link name="wsg_base">
+
+    <inertial>
+      <mass value="0.01" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/visual/WSG50_110.stl" scale="1 1 1" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/collision/WSG50_110.stl" scale="1 1 1" />
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="jointwsg_gripper_left" type="prismatic">
+    <limit lower="-0.055" upper="-0.0027" effort="100" velocity="100" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="wsg_base" />
+    <child link="wsg_gripper_left" />
+    <dynamics friction="1" damping="1" />
+    <axis xyz="1 0 0" />
+  </joint>
+
+  <link name="wsg_gripper_left">
+
+    <inertial>
+      <mass value="0.01" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/visual/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/collision/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="wsg_jointfinger_left" type="fixed">
+    <origin xyz="0 0 0.023" rpy="0 0 0" />
+    <parent link="wsg_gripper_left" />
+    <child link="wsg_finger_left" />
+    <axis xyz="1 0 0" />
+  </joint>
+
+  <link name="wsg_finger_left">
+
+    <inertial>
+      <mass value="0.01" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/visual/WSG-FMF.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/collision/WSG-FMF.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="jointwsg_gripper_right" type="prismatic">
+    <limit lower="0.0027" upper="0.055" effort="100" velocity="100" />
+    <origin xyz="0 0 0" rpy="0 0 3.14159" />
+    <parent link="wsg_base" />
+    <child link="wsg_gripper_right" />
+    <axis xyz="-1 0 0" />
+    <dynamics friction="1" damping="1" />
+  </joint>
+
+  <link name="wsg_gripper_right">
+
+    <inertial>
+      <mass value="0.01" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/visual/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/collision/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+
+  </link>
+
+  <joint name="wsg_jointfinger_right" type="fixed">
+    <origin xyz="0 0 0.023" rpy="0 0 0" />
+    <parent link="wsg_gripper_right" />
+    <child link="wsg_finger_right" />
+    <axis xyz="1 0 0" />
+  </joint>
+
+  <link name="wsg_finger_right">
+
+    <inertial>
+      <mass value="0.01" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />
+    </inertial>
+
+    <visual>
+      <origin xyz="0.0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/visual/WSG-FMF.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1" />
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://ur5_description/meshes/collision/WSG-FMF.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+
+  </link>
+
+</robot>
