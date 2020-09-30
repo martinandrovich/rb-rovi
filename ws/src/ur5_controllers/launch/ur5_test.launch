@@ -17,11 +17,11 @@
       <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 -J ur5_joint_1 0 -J ur5_joint_2 -1.5 -J ur5_joint_3 0 -J ur5_joint_4 0 -J ur5_joint_5 0 -J ur5_joint_6 0 "/>
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5"/>
 
   <!-- Load joint controller configurations from YAML file to parameter server -->
-  <rosparam file="$(find ur5_control)/config/ur_controller.yaml" command="load"/>
+  <rosparam file="$(find ur5_controllers)/config/control.yaml" command="load"/>
 
-  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_group_pos_controller wsg_group_pos_controller" />
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_arm_controller" />
 
 </launch>
