@@ -6,11 +6,12 @@
   <!-- <xacro:include filename="$(find ur5_description)/robots/ur5_gripper.xacro" /> -->
 
   <!-- load gazebo + transmission files -->
-  <xacro:include filename="$(find franka_description)/robots/ur5.gazebo.xacro" />
-  <xacro:include filename="$(find franka_description)/robots/ur5.transmission.xacro" />
+  <xacro:include filename="$(find ur5_description)/robots/ur5.gazebo.xacro" />
+  <xacro:include filename="$(find ur5_description)/robots/ur5.transmission.xacro" />
 
   <!-- construct robot -->
   <xacro:ur5_arm />
+  <!-- <xacro:ur5_gripper /> -->
   <xacro:ur5_gazebo />
   <xacro:ur5_transmission />
 
