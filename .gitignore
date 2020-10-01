@@ -67,3 +67,4 @@ CATKIN_IGNORE
 
 # log files
 *.log
+ws/src/CMakeLists.txt

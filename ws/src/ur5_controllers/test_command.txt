@@ -1,1 +1,1 @@
-rostopic pub /ur5_joint_group_pos_controller/command s_msgs/Float64MultiArray '{data: [0,-0.785,0,-2.356,0,1.571]}'
+rostopic pub /ur5_joint_group_pos_controller/command std_msgs/Float64MultiArray '{data: [0,-0.785,0,-2.356,0,1.571]}'
