@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="wsg">
+
+    <!-- load arm -->
+    <xacro:include filename="$(find ur5_description)/robots/ur5_arm.xacro" />
+    <xacro:include filename="$(find ur5_description)/robots/ur5.gazebo.xacro" />
+    <xacro:include filename="$(find ur5_description)/robots/ur5.transmission.xacro" />
+
+    <!-- load end-effector -->
+    <xacro:include filename="$(find ur5_description)/robots/wsg.gazebo.xacro"/>
+    <xacro:include filename="$(find ur5_description)/robots/wsg.transmission.xacro" />
+    <xacro:include filename="$(find ur5_description)/robots/wsg.urdf.xacro" />
+
+    <!-- construct robot -->
+    <xacro:ur5_arm />
+    <xacro:ur5_gazebo />
+    <xacro:ur5_transmission />
+
+    <!-- construct end effector -->
+    <xacro:wsg/>
+    <xacro:wsg_gazebo/>
+    <xacro:wsg_transmission/>
+    
+</robot>

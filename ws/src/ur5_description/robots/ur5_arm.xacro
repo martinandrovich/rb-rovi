@@ -365,7 +365,8 @@
 
     </link>
 
-    <!-- <joint name="ee_fixed_joint" type="fixed">
+    <!-- 
+      <joint name="ee_fixed_joint" type="fixed">
       <parent link="$u5_link6" />
       <child link = "ee_link" />
       <origin xyz="0.0 ${wrist_3_length} 0.0" rpy="0.0 0.0 ${pi/2.0}" />
