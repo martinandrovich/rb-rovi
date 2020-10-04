@@ -7,6 +7,8 @@
 
 	<!-- locate robot description -->
 	<param name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5_with_wsg.urdf.xacro"/>
+	<param name="table" textfile="$(find rovi_gazebo)/models/table/model.sdf"/>
+	<param name="bottle" textfile="$(find rovi_gazebo)/models/bottle/model.sdf"/>
 
 	<!-- gazebo arguments -->
 	<arg name="paused" default="true"/>
@@ -15,8 +17,9 @@
 	<arg name="headless" default="false"/>
 	<arg name="debug" default="false"/>
 
-	<!-- launch gazebo (empty world) -->
+	<!-- launch gazebo (empty world) - change the update rate later -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find rovi_gazebo)/world/table.world"/>
 		<arg name="debug" value="$(arg debug)"/>
 		<arg name="gui" value="$(arg gui)"/>
 		<arg name="paused" value="$(arg paused)"/>
@@ -25,7 +28,10 @@
 	</include>
 
 	<!-- spawn URDF model in gazebo -->
-	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 -J ur5_joint1 0 -J ur5_joint2 -1.5 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0 -J wsg_base_mount_right_joint 0.01 -J wsg_base_mount_left_joint 0.01 "/>
+	<!-- https://answers.gazebosim.org//question/19287/friction-insufficient-in-grasping-simulation/ -->
+	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 -J ur5_joint1 0 -J ur5_joint2 -1.5 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0 -J wsg_base_mount_right_joint 0.01 -J wsg_base_mount_left_joint 0.01 -z 0.54 -x 0.4 -y 0.6"/>
+	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
+	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 0.75 -x 0.5 -y 0.98"/>
 
 	<!-- ROS CONTROL -->
 
@@ -34,7 +40,7 @@
 
 	<!-- load the controllers -->
 	<!-- <node name="spawn_default_controllers" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_trajectory_controller" /> -->
-	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_group_pos_controller" />
+	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_group_pos_controller wsg_group_controller" />
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" /> -->

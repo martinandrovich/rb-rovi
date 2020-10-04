@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: ur5_description
+    relative_path: robots/ur5_with_wsg.urdf.xacro
+    xacro_args: ""
+  SRDF:
+    relative_path: config/wsg.srdf
+  CONFIG:
+    author_name: Daniel
+    author_email: danieltoftesch@hotmail.com
+    generated_timestamp: 1601672679

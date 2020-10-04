@@ -65,10 +65,8 @@
 
     <!-- fix the robot to the Gazebo world coordinate system -->
 
-    <link name="world" />
-
-    <joint name="robot_to_world" type="fixed">
-      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    <joint name="world_to_robot" type="fixed">
+      <origin xyz="0.0 0.0 0.2" rpy="0.0 0.0 0.0" />
       <parent link="world" />
       <child link="ur5_link0" />
     </joint>
@@ -365,15 +363,14 @@
 
     </link>
 
-    <!-- 
-      <joint name="ee_fixed_joint" type="fixed">
-      <parent link="$u5_link6" />
-      <child link = "ee_link" />
-      <origin xyz="0.0 ${wrist_3_length} 0.0" rpy="0.0 0.0 ${pi/2.0}" />
+    <joint name="robot_to_ee_end" type="fixed">
+        <origin xyz="0.0 0.25 0.0" rpy="0.0 0.0 0.0" />
+        <parent link="ur5_link6" />
+        <child link="end_middle" />
     </joint>
 
-	<link name="ee_link" /> -->
-
+    <link name="end_middle">
+    </link>
 
   </xacro:macro>
 

@@ -1,12 +1,12 @@
 ur5_joint_state_controller:
 
     type: joint_state_controller/JointStateController
-    publish_rate: 100
+    publish_rate: 50
 
 ur5_joint_trajectory_controller:
 
     type: position_controllers/JointTrajectoryController
-    state_publish_rate: 100
+    state_publish_rate: 50
 
     joints:
         - ur5_joint1
@@ -15,8 +15,6 @@ ur5_joint_trajectory_controller:
         - ur5_joint4
         - ur5_joint5
         - ur5_joint6
-        - wsg_base_mount_right_joint
-        - wsg_base_mount_left_joint
 
     constraints:
         goal_time: 2.0
@@ -33,6 +31,19 @@ ur5_joint_group_pos_controller:
         - ur5_joint4
         - ur5_joint5
         - ur5_joint6
+
+wsg_group_controller:
+
+    type: effort_controllers/JointGroupPositionController
+    arm_id: ur5
+    
+    joints:
         - wsg_base_mount_right_joint
         - wsg_base_mount_left_joint
+    
+    wsg_base_mount_right_joint:
+        pid: {p: 100.0, i: 0.01, d: 10.0}
+
+    wsg_base_mount_left_joint:
+        pid: {p: 100.0, i: 0.01, d: 10.0}
 

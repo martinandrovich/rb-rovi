@@ -4,8 +4,8 @@
     <xacro:macro name="wsg">
 
     <joint name="robot_to_ee" type="fixed">
-        <origin xyz="0.0 0.0985 0.0" rpy="0.0 0.0 ${pi}" />
-        <parent link="ur5_link6" />
+        <origin xyz="0.0 -0.1515 0.0" rpy="0.0 0.0 ${pi}" />
+        <parent link="end_middle" />
         <child link="wsg_base" />
     </joint>
 
@@ -21,7 +21,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.01"/>
+            <mass value="0.7"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -49,7 +49,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.001"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -72,7 +72,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.001"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -95,7 +95,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.001"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -123,7 +123,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.01"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -146,7 +146,7 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.01"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
@@ -169,12 +169,11 @@
             </geometry>
         </collision>
         <inertial>
-            <mass value="0.001"/>
+            <mass value="0.5"/>
             <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
         </inertial>
     </link>
     
-
     </xacro:macro>
 
 </robot>

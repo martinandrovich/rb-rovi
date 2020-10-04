@@ -10,13 +10,14 @@ int main(int argc, char ** argv)
     ros::NodeHandle nh;
     ros::Rate loop_rate(1);
 
-    ros::Publisher joint_state = nh.advertise<std_msgs::Float64MultiArray>("/ur5_group_pos_controller/command", 1);
+    ros::Publisher joint_state = nh.advertise<std_msgs::Float64MultiArray>("/ur5_joint_group_pos_controller/command", 1);
 
     loop_rate.sleep();
 
     while(true)
     {
         std_msgs::Float64MultiArray arr;
+        // The Arm
         arr.data.push_back(0);
         arr.data.push_back(-1.5);
         arr.data.push_back(0);
@@ -24,9 +25,12 @@ int main(int argc, char ** argv)
         arr.data.push_back(0);
         arr.data.push_back(0);
 
-        loop_rate.sleep();
+        // The WSG
+        arr.data.push_back(0);
+        arr.data.push_back(0);
         
         joint_state.publish(arr);
+        loop_rate.sleep();
     }
 
     ROS_INFO("i have published the target position");

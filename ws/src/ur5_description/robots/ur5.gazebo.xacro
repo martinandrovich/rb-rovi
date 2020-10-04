@@ -3,21 +3,19 @@
 
   <xacro:macro name="ur5_gazebo">
   
-<!-- link 0 -->
+  <!-- link 0 -->
 
     <gazebo reference="ur5_link0">
       <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
-      <static>true</static>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <!-- <material>Gazebo/Grey</material> -->
     </gazebo>
 
     <!-- link/joint 1 -->
     
     <gazebo reference="ur5_link1">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
@@ -32,7 +30,6 @@
     <!-- link/joint 2 -->
 
     <gazebo reference="ur5_link2">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
@@ -47,7 +44,6 @@
     <!-- link/joint 3 -->
 
     <gazebo reference="ur5_link3">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
@@ -62,7 +58,6 @@
     <!-- link/joint 4 -->
 
     <gazebo reference="ur5_link4">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
@@ -77,7 +72,6 @@
     <!-- link/joint 5 -->
 
     <gazebo reference="ur5_link5">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
@@ -92,7 +86,6 @@
     <!-- link/joint 6 -->
 
     <gazebo reference="ur5_link6">
-      <static>true</static>
       <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>

@@ -3,7 +3,7 @@
 
   <name>ur5_controllers</name>
 
-  <version>0.0.0</version>
+  <version>1.0.0</version>
 
   <description>
       Gazebo wrapper for the Universal UR5/10 robot arms.

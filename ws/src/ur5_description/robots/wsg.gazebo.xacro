@@ -6,64 +6,66 @@
     <!-- wsg base -->
 
     <gazebo reference="wsg_base">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
-      <static>true</static>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
     <!-- Right -->
     
     <gazebo reference="wsg_finger_mount_right">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
     <gazebo reference="wsg_finger_right">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Black</material>
     </gazebo>
 
     <gazebo reference="wsg_fingertip_right">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Blue</material>
     </gazebo>
 
     <!-- Left -->
 
     <gazebo reference="wsg_finger_mount_left">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
     <gazebo reference="wsg_finger_left">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Black</material>
     </gazebo>
 
     <gazebo reference="wsg_fingertip_left">
-      <static>true</static>
       <selfCollide>true</selfCollide>
-      <mu1>0.2</mu1>
-      <mu2>0.2</mu2>
+      <mu1>0.1</mu1>
+      <mu2>0.1</mu2>
       <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="wsg_base_mount_left_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+      <provideFeedback>true</provideFeedback>
+    </gazebo>
+
+    <gazebo reference="wsg_base_mount_right_joint">
+      <implicitSpringDamper>1</implicitSpringDamper>
+      <provideFeedback>true</provideFeedback>
     </gazebo>
 
   </xacro:macro>

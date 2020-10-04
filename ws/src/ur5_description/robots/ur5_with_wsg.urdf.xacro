@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="wsg">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ur5">
 
     <!-- load arm -->
     <xacro:include filename="$(find ur5_description)/robots/ur5_arm.xacro" />
@@ -9,9 +9,11 @@
     <!-- load end-effector -->
     <xacro:include filename="$(find ur5_description)/robots/wsg.gazebo.xacro"/>
     <xacro:include filename="$(find ur5_description)/robots/wsg.transmission.xacro" />
-    <xacro:include filename="$(find ur5_description)/robots/wsg.urdf.xacro" />
+    <xacro:include filename="$(find ur5_description)/robots/wsg.xacro" />
 
-    <!-- construct robot -->
+    <link name="world"/>
+
+    <!-- construct robot note: make a variable to move the robot -->
     <xacro:ur5_arm />
     <xacro:ur5_gazebo />
     <xacro:ur5_transmission />
