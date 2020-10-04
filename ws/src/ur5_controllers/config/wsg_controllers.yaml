@@ -1,0 +1,8 @@
+wsg_group_controller:
+
+    type: effort_controllers/JointGroupEffortController
+    arm_id: ur5
+    
+    joints:
+        - wsg_base_mount_right_joint
+        - wsg_base_mount_left_joint

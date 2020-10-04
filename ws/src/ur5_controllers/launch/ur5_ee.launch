@@ -7,8 +7,13 @@
 
 	<!-- locate robot description -->
 	<param name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5_with_wsg.urdf.xacro"/>
+
+	<!-- locate object models -->
 	<param name="table" textfile="$(find rovi_gazebo)/models/table/model.sdf"/>
 	<param name="bottle" textfile="$(find rovi_gazebo)/models/bottle/model.sdf"/>
+
+	<!-- robot position [x, y, z] -->
+	<arg name="robot_position" doc="The position of the robot spawn location given as a '-x 0 -y 0 -z 0' string." default="-x 0.1 -y 0.1 -z 0.75"/>
 
 	<!-- gazebo arguments -->
 	<arg name="paused" default="true"/>
@@ -27,22 +32,32 @@
 		<arg name="headless" value="$(arg headless)"/>
 	</include>
 
-	<!-- spawn URDF model in gazebo -->
+	<!-- spawn URDF robot model in gazebo -->
 	<!-- https://answers.gazebosim.org//question/19287/friction-insufficient-in-grasping-simulation/ -->
-	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 -J ur5_joint1 0 -J ur5_joint2 -1.5 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0 -J wsg_base_mount_right_joint 0.01 -J wsg_base_mount_left_joint 0.01 -z 0.54 -x 0.4 -y 0.6"/>
+	<!-- <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 -J ur5_joint1 0 -J ur5_joint2 -1.5 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0 -J wsg_base_mount_right_joint 0.01 -J wsg_base_mount_left_joint 0.01 -z 0.55 -x 0.4 -y 0.6"/> -->
+	<!-- <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 $(arg robot_position) -J wsg_base_mount_right_joint 0.01 -J wsg_base_mount_left_joint 0.01"/> -->
+	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5 $(arg robot_position) -J ur5_joint1 0.725 -J ur5_joint2 -0.155 -J ur5_joint3 0.2 -J ur5_joint4 -2.356 -J ur5_joint5 0 -J ur5_joint6 -0.9 -J wsg_base_mount_right_joint 0.1 -J wsg_base_mount_left_joint 0.1"/>
+
+	<!-- spawn objects -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
-	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 0.75 -x 0.5 -y 0.98"/>
+	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.5 -y 0.76"/>
 
 	<!-- ROS CONTROL -->
 
 	<!-- load controller configurations -->
-	<rosparam file="$(find ur5_controllers)/config/default_ee_controllers.yaml" command="load"/>
+	<rosparam file="$(find ur5_controllers)/config/ur5_controllers.yaml" command="load"/>
+	<rosparam file="$(find ur5_controllers)/config/wsg_controllers.yaml" command="load"/>
 
 	<!-- load the controllers -->
-	<!-- <node name="spawn_default_controllers" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_trajectory_controller" /> -->
-	<node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_group_pos_controller wsg_group_controller" />
+	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_position_pd_gravity_controller"/>
+	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_group_controller"/>
+
+	<!-- publish default setpoints for controllers -->
+	<node pkg="rostopic" type="rostopic" name="default_wgc_setpoint" args="pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: [100, 100]}'" output="screen"/>
+	<node pkg="rostopic" type="rostopic" name="default_ur5_setpoint" args="pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64MultiArray '{data: [0.725,-0.155,0.2,-2.356,0,-0.9]}'" output="screen"/>
+	<!-- <node pkg="rostopic" type="rostopic" name="default_ur5_setpoint" args="pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64MultiArray '{data: [0,-0.785,0,-2.356,0,1.571]}'" output="screen"/> -->
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
-	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" /> -->
+	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
 
 </launch>

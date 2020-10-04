@@ -31,3 +31,16 @@ ur5_joint_group_pos_controller:
         - ur5_joint4
         - ur5_joint5
         - ur5_joint6
+
+ur5_joint_position_pd_gravity_controller:
+
+    type: ur5_controllers/JointPositionPDGravityController
+    state_publish_rate: 100
+
+    joint_names:
+        - ur5_joint1
+        - ur5_joint2
+        - ur5_joint3
+        - ur5_joint4
+        - ur5_joint5
+        - ur5_joint6

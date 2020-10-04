@@ -5,12 +5,12 @@
       <inertial>
         <mass>3</mass>
         <inertia>
-          <ixx>0</ixx>
+          <ixx>0.002436</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>0</iyy>
+          <iyy>0.002436</iyy>
           <iyz>0</iyz>
-          <izz>0</izz>
+          <izz>0.001604</izz>
         </inertia>
         <pose>0 0 0.086433 0 -0 0</pose>
       </inertial>
@@ -43,11 +43,11 @@
         <surface>
           <friction>
             <ode>
-              <mu>10</mu>
-              <mu2>10</mu2>
+              <mu>Inf</mu>
+              <mu2>Inf</mu2>
               <fdir1>0 0 0</fdir1>
-              <slip1>10</slip1>
-              <slip2>10</slip2>
+              <slip1>0</slip1>
+              <slip2>0</slip2>
             </ode>
             <torsional>
               <coefficient>1</coefficient>

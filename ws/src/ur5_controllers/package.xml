@@ -1,33 +1,38 @@
 <?xml version="1.0"?>
 <package format="2">
 
-  <name>ur5_controllers</name>
+	<name>ur5_controllers</name>
+	<version>1.0.0</version>
+	<description>Gazebo wrapper for the Universal UR5 robot arms.</description>
 
-  <version>1.0.0</version>
+	<author>Daniel Tofte Schøn</author>
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
 
-  <description>
-      Gazebo wrapper for the Universal UR5/10 robot arms.
-  </description>
+	<license>BSD</license>
 
+	<buildtool_depend>catkin</buildtool_depend>
 
-  <author>Daniel Tofte Schøn</author>
-  <maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>xacro</depend>
+	<depend>urdf</depend>
+	<depend>controller_manager</depend>
+	<depend>controller_interface</depend>
+	<depend>gazebo_ros</depend>
+	<depend>std_msgs</depend>
+	<depend>effort_controllers</depend>
+	<depend>position_controllers</depend>
+	<depend>joint_state_controller</depend>
+	<depend>joint_trajectory_controller</depend>
+	<depend>joint_state_publisher</depend>
+	<depend>robot_state_publisher</depend>
+	<depend>kdl_parser</depend>
+	<depend>pluginlib</depend>
 
-  <license>BSD</license>
+	<depend>ur5_description</depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>roslaunch</depend>
-  <depend>controller_manager</depend>
-  <depend>effort_controllers</depend>
-  <depend>position_controllers</depend>
-  <depend>joint_state_controller</depend>
-  <depend>joint_trajectory_controller</depend>
-  <depend>gazebo_ros</depend>
-  <depend>gazebo_ros_control</depend>
-  <depend>robot_state_publisher</depend>
-  <depend>rostopic</depend>
-
-  <depend>ur5_description</depend>
+	<export>
+		<controller_interface plugin="${prefix}/ur5_controllers_plugin.xml"/>
+	</export>
 
 </package>
