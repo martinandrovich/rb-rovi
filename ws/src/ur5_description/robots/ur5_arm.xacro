@@ -65,6 +65,8 @@
 
     <!-- fix the robot to the Gazebo world coordinate system -->
 
+    <link name="world"/>
+
     <joint name="world_to_robot" type="fixed">
       <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
       <parent link="world"/>
@@ -98,6 +100,7 @@
       <inertial>
         <mass value="10.0"/>
         <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       </inertial>
 
     </link>
@@ -199,7 +202,7 @@
       <axis xyz="0 1 0"/>
       <!-- <limit lower="-3.14" upper="3.14" effort="112.0" velocity="3.15"/> -->
       <limit lower="${-pi}" upper="${pi}" effort="112.0" velocity="${pi}"/>
-	  <dynamics damping="0.4" friction="0.0"/>
+    <dynamics damping="0.4" friction="0.0"/>
     </joint>
 
     <!-- link 3 -->
@@ -366,10 +369,10 @@
     <joint name="robot_to_ee_end" type="fixed">
         <origin xyz="0.0 0.25 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="ur5_link6"/>
-        <child link="end_middle"/>
+        <child link="ee_tcp"/>
     </joint>
 
-    <link name="end_middle"/>
+    <link name="ee_tcp"/>
 
   </xacro:macro>
 

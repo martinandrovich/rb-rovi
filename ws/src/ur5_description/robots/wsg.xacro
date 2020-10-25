@@ -3,9 +3,9 @@
 
   <xacro:macro name="wsg">
 
-  <joint name="robot_to_ee" type="fixed">
+  <joint name="gripper_to_ee" type="fixed">
     <origin xyz="0.0 -0.1515 0.0" rpy="0.0 0.0 ${pi}"/>
-    <parent link="end_middle"/>
+    <parent link="ee_tcp"/>
     <child link="wsg_base"/>
   </joint>
 

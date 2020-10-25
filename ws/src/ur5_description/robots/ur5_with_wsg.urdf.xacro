@@ -11,9 +11,7 @@
     <xacro:include filename="$(find ur5_description)/robots/wsg.transmission.xacro"/>
     <xacro:include filename="$(find ur5_description)/robots/wsg.xacro"/>
 
-    <link name="world"/>
-
-    <!-- construct robot note: make a variable to move the robot -->
+    <!-- construct robot -->
     <xacro:ur5_arm/>
     <xacro:ur5_gazebo/>
     <xacro:ur5_transmission/>
