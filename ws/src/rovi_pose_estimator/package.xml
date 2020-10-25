@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<package format="2">
+
+	<name>rovi_pose_estimator</name>
+	<version>0.1.0</version>
+	<description>Ros Node to do pose estimation</description>
+
+	<author email="pniel17@student.sdu.dk">Martin Androvich</author>
+	<maintainer email="pniel17@student.sdu.dk">Martin Androvich</maintainer>
+
+	<license>TODO</license>
+
+	<url type="website">https://github.com/martinandrovich/rb-rovi</url>
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>Eigen3</depend>
+	<depend>sensor_msgs</depend>
+	<depend>OpenCV</depend>
+	<depend>cv_bridge</depend>
+
+	<export>
+
+	
+	<gazebo_ros
+		gazebo_plugin_path="${prefix}/lib"
+	/>
+
+	</export>
+
+</package>
