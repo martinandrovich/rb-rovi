@@ -3,7 +3,7 @@
 
   <model name='camera'>
 
-  <pose>-1 0 2 0 1 0</pose>
+  <!-- <pose>-1 0 2 0 1 0</pose> -->
 
   <static>true</static>
   <allow_auto_disable>false</allow_auto_disable>
@@ -38,6 +38,7 @@
       <update_rate>30.0</update_rate>
 
       <camera name="head">
+
         <horizontal_fov>1.3962634</horizontal_fov>
 
         <image>
@@ -59,23 +60,26 @@
           <mean>0.0</mean>
           <stddev>0.007</stddev>
         </noise>
+
       </camera>
 
       <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
         <cameraName>rbrovi/camera</cameraName>
         <imageTopicName>image_raw</imageTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>
+
         <hackBaseline>0.07</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
         <distortionK3>0.0</distortionK3>
         <distortionT1>0.0</distortionT1>
         <distortionT2>0.0</distortionT2>
-      </plugin>
 
+      </plugin>
     </sensor>
 
   </link>

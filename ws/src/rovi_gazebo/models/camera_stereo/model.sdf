@@ -3,7 +3,9 @@
 
   <model name='camera_stereo'>
 
-  <pose>-1 0 2 0 1 0</pose>
+  <!-- http://gazebosim.org/tutorials?tut=ros_gzplugins#Multicamera -->
+
+  <!-- <pose>-1 0 2 0 1 0</pose> -->
 
   <static>true</static>
   <allow_auto_disable>false</allow_auto_disable>
@@ -38,6 +40,7 @@
       <update_rate>30.0</update_rate>
 
       <camera name="left">
+
         <pose>0 0.03 0 0 0 0</pose>
         <horizontal_fov>1.3962634</horizontal_fov>
 
