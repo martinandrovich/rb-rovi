@@ -12,6 +12,7 @@ find_package(
 	roslib
 	sensor_msgs
 	cv_bridge
+	image_transport
 )
 find_package(
 	OpenCV REQUIRED
@@ -45,6 +46,7 @@ catkin_package(
 		roslib
 		sensor_msgs
 		cv_bridge
+		image_transport
 	DEPENDS
 		EIGEN3
 		OpenCV
