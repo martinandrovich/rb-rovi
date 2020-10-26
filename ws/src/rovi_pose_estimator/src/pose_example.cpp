@@ -28,7 +28,8 @@ main(int argc, char** argv)
 
 	ros::init(argc, argv, "example_node");
 	ros::NodeHandle nh;
-	
+	// cv::namedWindow("img");
+	// cv::waitKey(0);
 
 	// log information
 	ROS_INFO("Initialized a single-thread ROS example node.");
@@ -45,17 +46,23 @@ main(int argc, char** argv)
 	// const auto& sub = nh.subscribe("rbrovi/camera_stereo/left/image_raw", 1, &imageCallback);
 	// use rovi_gazebo library
 	// rovi_pose_estimator::test("test");
+	// cv::Mat img;
 
-	//while(ros::ok())
-	//{
-	//	auto msg = ros::topic::waitForMessage<sensor_msgs::Image>( "rbrovi/camera_stereo/left/image_raw", nh);
-	//	//imageCallback(msg);
-	//	cv::imshow("stereo_left2", cv_bridge::toCvShare(msg, "bgr8")->image );
-	//	cv::waitKey(0);
-//
-	//}
+	while (ros::ok())
+	{
+		const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
+		// const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw", ros::Duration(1/30.0));
+
+		if (msg)
+		{
+			ROS_INFO("Got new image!");
+			const auto img = cv_bridge::toCvShare(msg, "bgr8")->image;
+			cv::imshow("img", img);
+			cv::waitKey(0);
+		}
+
+	}
 	
-
 	//nh.subscribe("/rbrovi/camera_stereo/left/image_raw");
 	
 	// give full control over to ROS to handle callbacks etc.
