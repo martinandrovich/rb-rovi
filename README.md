@@ -2,11 +2,11 @@
 Robotics and computer vision project of Advanced Robotics at SDU.
 
 * [Overview](#overview)
+* [Packages](#packages)
 * [Getting Started](#getting-started)
 	+ [Dependencies](#dependencies)
 	+ [Configuration](#configuration)
-	+ [Installation](#installation)
-	+ [Test](#test)
+	+ [Usage](#usage)
 	+ [API & Troubleshooting](#api--troubleshooting)
 * [Versioning](#versioning)
 * [License](#license)
@@ -22,8 +22,9 @@ This repository is structured as a `catkin` ROS workspace, consisting of the fol
 
 ```
 rb-rovi/ws/src
-    /ur_description
-    /ur_controllers
+    /ur5_description
+    /ur5_controllers
+	/ur5_dynamics
     /rovi_gazebo
     /rovi_planner
     /rovi_pose_estimator
@@ -34,7 +35,7 @@ rb-rovi/ws/src
         pick_and_place_estimated.cpp
 ```
 
-Description of each package can be found in the corresponding README.
+Description of each package can be found in the corresponding README (TODO).
 
 ## Getting Started
 
@@ -42,19 +43,22 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Dependencies
 
-The system is running a Ubuntu (`20.04.3 LTS`) distribtuion. The project is compiled using `C++17 GCC`, managed with CMake (`3.10.2`) and built with:
+The system is tested on Ubuntu `20.04.3 LTS`. The project is compiled using `GNU C++17`, built with `catkin` (CMake `2.8.3`) mainly depending on:
 
 * [ROS (noetic)][ros] - used as framework for robot operation
 * [Gazebo][gazebo] - used as robot simulation environment
+* [OpenCV][opencv] - used for computer vision
+* [PCL][pcl] - used for point clouds
 
 ### Configuration
 
 Installation of the system/workspace/package; the following configuration steps are necessary:
 
 1. Installing `ROS`
-2. Cloning repository (catkin workspace)
+2. Installing dependecies (OpenCV etc.)
+3. Cloning repository (catkin workspace)
 
-Once the catkin directory is cloned, `rosdep` can be used to install any dependencies. Start with [installing `rosdep`][rosdep]. Then, from the `ws` directory, run `rosdep install --from-paths src --ignore-src -r -y`.
+Once the catkin directory is cloned, `rosdep` can be used to install any dependencies. Start with [installing `rosdep`][rosdep]. Then, from the `ws` directory, run `rosdep install --from-paths src --ignore-src -r -y`. Once all dependencies are installed, the workspace can be built using `catkin_make` from the `ws` directory.
 
 For auto-completion, linting etc., VS Code can be configured [as explained here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers.
 
@@ -62,9 +66,7 @@ Scripts for these steps will be available later.
 
 ### Usage
 
-Guide on how to test if the installation if successful.
-
-Run `source rb-rovi/ws/devel/setup.bash` to load the necessary variables to access the commands to run the packages of this repository, i.e. `rosrun rovi_gazebo example`
+Run `source rb-rovi/ws/devel/setup.bash` to load the necessary variables to access the commands to run the packages of this repository. The workspace simulation can be launched by running `roslaunch rovi_gazebo workcell.launch`.
 
 ### API & Troubleshooting
 
@@ -91,6 +93,8 @@ No license has been decided yet.
 
 [ros]: http://wiki.ros.org/noetic/
 [gazebo]: http://gazebosim.org/
+[opencv]: https://opencv.org/
+[pcl]: https://pointclouds.org/
 [rosdep]: http://wiki.ros.org/rosdep#Installing_rosdep
 [ros-vs-code]: https://github.com/RoboGnome/VS_Code_ROS
 
