@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+
+	<name>ur5_dynamics</name>
+	<version>1.0.0</version>
+	<description>Dynamics library for the Universal UR5 robot arms.</description>
+
+	<author>Martin Androvich</author>
+
+	<maintainer email="marta16@student.sdu.dk">Martin Androvich</maintainer>
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+
+	<license>BSD</license>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>urdf</depend>
+	<depend>kdl_parser</depend>
+
+</package>
