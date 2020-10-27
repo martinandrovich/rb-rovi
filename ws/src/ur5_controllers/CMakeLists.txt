@@ -23,6 +23,7 @@ find_package(
 	robot_state_publisher
 	kdl_parser
 	pluginlib
+	ur5_dynamics
 )
 
 # declare a catkin package
@@ -47,6 +48,7 @@ catkin_package(
 		robot_state_publisher
 		kdl_parser
 		pluginlib
+		ur5_dynamics
 )
 
 # include directories
@@ -78,7 +80,7 @@ target_link_libraries(ur5_controller PRIVATE ${catkin_LIBRARIES} ur5_kin)
 
 ## ...
 add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp)
-target_link_libraries(ur5_controllers ${catkin_LIBRARIES} ${franka_dynamics_LIBRARIES})
+target_link_libraries(ur5_controllers ${catkin_LIBRARIES})
 
 install(
 	TARGETS ur5_controllers
