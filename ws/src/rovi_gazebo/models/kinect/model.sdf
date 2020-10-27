@@ -1,0 +1,80 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+
+  <model name='openni_kinect'>
+
+  
+  <!-- <pose>-1 0 2 0 1 0</pose> -->
+
+  <static>true</static>
+  <allow_auto_disable>false</allow_auto_disable>
+
+  <link name='kinect'>
+
+    <!-- <pose frame=''>-0.118317 0.002195 0.004205 -0 -0 -3.12703</pose> -->
+
+    <visual name='visual'>
+      <geometry>
+        <box>
+          <size>0.1 0.1 0.1</size>
+        </box>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <mass>0.1</mass>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertia>
+        <ixx>1</ixx>
+        <ixy>0</ixy>
+        <ixz>0</ixz>
+        <iyy>1</iyy>
+        <iyz>0</iyz>
+        <izz>1</izz>
+      </inertia>
+    </inertial>
+
+    <sensor name="openni_kinect" type="depth">
+    <update_rate>20</update_rate>
+    <camera>
+      <horizontal_fov>1.047198</horizontal_fov>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.05</near>
+        <far>3</far>
+      </clip>
+    </camera>
+    <plugin name="kinect_controller" filename="libgazebo_ros_openni_kinect.so">
+      <baseline>0.2</baseline>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>1.0</updateRate>
+      <cameraName>rbrovi/kinect_sensor_ir</cameraName>
+      <imageTopicName>rbrovi/kinect_sensor/color/image_raw</imageTopicName>
+      <cameraInfoTopicName>rbrovi/kinect_sensor/color/camera_info</cameraInfoTopicName>
+      <depthImageTopicName>rbrovi/kinect_sensor/depth/image_raw</depthImageTopicName>
+      <depthImageInfoTopicName>rbrovi/$kinect_sensor/depth/camera_info</depthImageInfoTopicName>
+      <pointCloudTopicName>rbrovi/kinect_sensor/depth/points</pointCloudTopicName>
+      <frameName>openni_kinect_frame</frameName>
+      <pointCloudCutoff>0.5</pointCloudCutoff>
+      <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
+      <distortionK1>0.00000001</distortionK1>
+      <distortionK2>0.00000001</distortionK2>
+      <distortionK3>0.00000001</distortionK3>
+      <distortionT1>0.00000001</distortionT1>
+      <distortionT2>0.00000001</distortionT2>
+      <CxPrime>0</CxPrime>
+      <Cx>0</Cx>
+      <Cy>0</Cy>
+      <focalLength>0</focalLength>
+      <hackBaseline>0</hackBaseline>
+    </plugin>
+  </sensor>
+
+  </link>
+
+  </model>
+</sdf>
