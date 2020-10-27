@@ -134,7 +134,11 @@ ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 Eigen::Vector6d
 ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
 {
-	Eigen::MatrixXd q_sol = ik_ur5(T);
+	//std::cout << T << std::endl;
+
+	Eigen::Matrix<double, 8, 6> q_sol = ik_ur5(T);
+
+	//std::cout << q_sol << std::endl;
 
 	// if rows == 0, then no solution is found
 	if (q_sol.rows() == 0)
@@ -149,11 +153,13 @@ ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
 		double sum = 0.0;
 
 		for (size_t j = 0; j < q_sol.cols(); j++)
-			sum += std::pow(q(i,j) - q(j),2);
+			sum += std::pow(q_sol(i,j) - q(j),2);
 
 		if (sum < least_euclidean)
 			opt_idx = i;
 	}
+
+	std::cout << q_sol << std::endl;
 	
 	return q_sol.row(opt_idx);
 }

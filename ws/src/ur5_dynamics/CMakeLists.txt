@@ -76,4 +76,7 @@ install(
 
 # nodes
 
+add_executable(iktest src/iktest.cpp)
+target_link_libraries(iktest ${catkin_LIBRARIES} ur5_dynamics)
+
 # ...
