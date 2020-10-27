@@ -43,12 +43,12 @@ public:
 
 	static Eigen::Matrix4d
 	fwd_kin(const Eigen::Vector6d& q);
+	
+	static Eigen::Vector6d
+	inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q);
 
 	static Eigen::Vector6d
 	jacobian(const Eigen::Vector6d& q);
-	
-	static Eigen::Vector6d
-	inv_kin(const Eigen::Vector6d& T);
 
 	static inline const std::string  ROBOT_NAME        = "ur5";
 	static inline const std::string  ROBOT_DESCRIPTION = "/robot_description";

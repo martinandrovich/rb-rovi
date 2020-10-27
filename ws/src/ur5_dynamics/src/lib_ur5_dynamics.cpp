@@ -1,4 +1,5 @@
 #include <ur5_dynamics/ur5_dynamics.h>
+#include "ur5_inv.cpp"
 
 bool
 ur5_dynamics::init()
@@ -128,6 +129,33 @@ ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 			T(i, j) = ee_frame(i, j);
 
 	return T;
+}
+
+Eigen::Vector6d
+ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
+{
+	Eigen::MatrixXd q_sol = ik_ur5(T);
+
+	// if rows == 0, then no solution is found
+	if (q_sol.rows() == 0)
+		return q;
+	
+	// least euclidean
+	int opt_idx = 0;
+	double least_euclidean = std::numeric_limits<double>::max();
+
+	for (size_t i = 0; i < q_sol.rows(); i++)
+	{
+		double sum = 0.0;
+
+		for (size_t j = 0; j < q_sol.cols(); j++)
+			sum += std::pow(q(i,j) - q(j),2);
+
+		if (sum < least_euclidean)
+			opt_idx = i;
+	}
+	
+	return q_sol.row(opt_idx);
 }
 
 Eigen::Matrix6d
