@@ -5,41 +5,6 @@ namespace ur5_controllers
 {
 
 bool
-JointPositionPDGravityController::init_KDL()
-{
-
-	// load URDF robot model
-	if (not robot_model.initParam(ROBOT_DESCRIPTION))
-	{
-		ROS_ERROR("Could not load URDF robot model from '%s'.", ROBOT_DESCRIPTION.c_str());
-		return false;
-	}
-
-	// compose KDL tree
-	KDL::Tree kdl_tree;
-	if (not kdl_parser::treeFromUrdfModel(robot_model, kdl_tree))
-	{
-		ROS_ERROR("Could not construct KDL tree from robot model.");
-		return false;
-	};
-
-	// load KDL chain
-	// kdl_tree.getChain("ur5_link0", "ur5_link6", kdl_chain);
-	kdl_tree.getChain("ur5_link0", "ur5_link6", kdl_chain);
-
-	// for (size_t n = 0; n < NUM_JOINTS; ++n)
-	// 	ROS_INFO_STREAM("segment : " << kdl_chain.getSegment(n).getName());
-
-	// initialize KDL solver(s)
-	kdl_dyn_solver = new KDL::ChainDynParam(kdl_chain, KDL::Vector(0, 0, GRAVITY));
-
-	// done
-	ROS_INFO("Initialized KDL for UR5 JointPositionPDGravityController.");
-
-	return true;
-}
-
-bool
 JointPositionPDGravityController::init(hardware_interface::EffortJointInterface* hw, ros::NodeHandle& nh)
 {
 	// get list of joints (from parameter server)
@@ -77,13 +42,6 @@ JointPositionPDGravityController::init(hardware_interface::EffortJointInterface*
 	// subscribe to joint position command
 	sub_command = nh.subscribe<std_msgs::Float64MultiArray>("command", 1, &JointPositionPDGravityController::callback_command, this);
 
-	// initialize KDL
-	if (not init_KDL())
-	{
-		ROS_ERROR_NAMED(CONTROLLER_NAME, "Failed initializing KDL library for UR5 robot.");
-		return false;
-	}
-
 	// init complete
 	ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME << " with kp = " << kp << ", kd = " << kd);
 	return true;
@@ -112,7 +70,9 @@ JointPositionPDGravityController::update(const ros::Time& /*time*/, const ros::D
 	// read joint states
 	const auto q    = get_position();
 	const auto qdot = get_velocity();
-	const auto g    = get_gravity(q);
+
+	// compute dynamics (via KDL)
+	const auto g = ur5_dynamics::gravity(q);
 
 	// compute controller effort
 	Eigen::Vector6d tau_des = kp * (q_d - q) - kd * qdot + g;
@@ -146,27 +106,6 @@ JointPositionPDGravityController::get_velocity()
 		qdot[i] = vec_joints[i].getVelocity();
 
 	return qdot;
-}
-
-Eigen::Vector6d
-JointPositionPDGravityController::get_gravity(const Eigen::Vector6d& q_eigen)
-{
-	static auto q = KDL::JntArray(NUM_JOINTS);
-	static auto g = KDL::JntArray(NUM_JOINTS);
-
-	// load values of q and qdot from joint handles into joint arrays
-	for (size_t i = 0; i < NUM_JOINTS; ++i)
-		q(i) = q_eigen[i];
-
-	// compute gravity
-	kdl_dyn_solver->JntToGravity(q, g);
-
-	// return as Eigen vector
-	static Eigen::Vector6d g_eigen;
-	for (size_t i = 0; i < NUM_JOINTS; ++i)
-		g_eigen[i] = g(i);
-
-	return g_eigen;
 }
 
 Eigen::Vector6d

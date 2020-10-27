@@ -30,6 +30,7 @@
 	<depend>pluginlib</depend>
 
 	<depend>ur5_description</depend>
+	<depend>ur5_dynamics</depend>
 
 	<export>
 		<controller_interface plugin="${prefix}/ur5_controllers_plugin.xml"/>

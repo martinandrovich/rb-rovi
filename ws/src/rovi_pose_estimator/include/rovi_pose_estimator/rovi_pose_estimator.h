@@ -21,9 +21,6 @@ namespace rovi_pose_estimator
 
         void
         get_point_cloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& output_cloud);
-
-
-
     }
     
     void voxelfilter();
