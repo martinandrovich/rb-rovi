@@ -28,8 +28,9 @@ ur5_dynamics::init()
 
 	// initialize KDL solver(s)
 	kdl_dyn_solver = new KDL::ChainDynParam(kdl_chain, KDL::Vector(0, 0, GRAVITY));
-	// kdl_jac_solver = new KDL::ChainJntToJacSolver(kdl_chain);
+	kdl_jac_solver = new KDL::ChainJntToJacSolver(kdl_chain);
 	// kdl_jac_dot_solver = new KDL::ChainJntToJacDotSolver(kdl_chain);
+	kdl_fk_solver = new KDL::ChainFkSolverPos_recursive(kdl_chain);
 
 	// done
 	ROS_INFO("Initialized KDL for ur5_dynamics.");
@@ -56,7 +57,7 @@ ur5_dynamics::gravity(const Eigen::Vector6d& q)
 	static auto q_kdl = KDL::JntArray(NUM_JOINTS);
 	static auto g_kdl = KDL::JntArray(NUM_JOINTS);
 
-	// load values of q and qdot from joint handles into joint arrays
+	// load values of q from Eigen to JntArray
 	for (size_t i = 0; i < NUM_JOINTS; ++i)
 		q_kdl(i) = q[i];
 
@@ -75,7 +76,7 @@ ur5_dynamics::mass(const Eigen::Vector6d& q)
 	static auto q_kdl = KDL::JntArray(NUM_JOINTS);
 	static auto M_kdl = KDL::JntSpaceInertiaMatrix(NUM_JOINTS);
 
-	// load values of q and qdot from joint handles into joint arrays
+	// load values of q from Eigen to JntArray
 	for (size_t i = 0; i < NUM_JOINTS; ++i)
 		q_kdl(i) = q[i];
 
@@ -95,7 +96,7 @@ ur5_dynamics::coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 	static auto qdot_kdl = KDL::JntArray(NUM_JOINTS);
 	static auto C_kdl    = KDL::JntArray(NUM_JOINTS);
 
-	// load values of q and qdot from joint handles into joint arrays
+	// load values of q and qdot from Eigen to JntArray
 	for (size_t i = 0; i < NUM_JOINTS; ++i)
 	{
 		q_kdl(i) = q[i];
@@ -105,4 +106,32 @@ ur5_dynamics::coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 	kdl_dyn_solver->JntToCoriolis(q_kdl, qdot_kdl, C_kdl);
 
 	return C_kdl.data;
+}
+
+Eigen::Matrix4d
+ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
+{
+	ur5_dynamics::check_init();
+
+	static auto ee_frame = KDL::Frame();
+	static auto q_kdl    = KDL::JntArray(NUM_JOINTS);
+
+	// load values of q from Eigen to JntArray
+	for (size_t i = 0; i < NUM_JOINTS; ++i)
+		q_kdl(i) = q[i];
+
+	kdl_fk_solver->JntToCart(q_kdl, ee_frame);
+
+	static Eigen::Matrix4d T = Eigen::Matrix4d::Zero();
+	for (size_t i = 0; i < 4; ++i)
+		for (size_t j = 0; j < 4; ++j)
+			T(i, j) = ee_frame(i, j);
+
+	return T;
+}
+
+Eigen::Matrix6d
+jacobian(const Eigen::Vector6d& q)
+{
+	return Eigen::Matrix6d::Zero();
 }
