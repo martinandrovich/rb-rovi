@@ -1,22 +1,23 @@
-#include <math.h>
 #include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/LU>
+#include <math.h>
 
-static constexpr double PI = M_PI;
-static constexpr double d1 = 0.089159;
-static constexpr double a2 = -0.42500;
-static constexpr double a3 = -0.39225;
-static constexpr double d4 = 0.10915;
-static constexpr double d5 = 0.09465;
-static constexpr double d6 = 0.0823;
-static constexpr double ZERO_THRESH = 0.00000001;
+const double ZERO_THRESH = 0.00000001;
 
 int
-sign(double x)
+SIGN(double x)
 {
 	return (x > 0) - (x < 0);
 }
+
+const double PI = M_PI;
+const double d1 = 0.089159;
+const double a2 = -0.42500;
+const double a3 = -0.39225;
+const double d4 = 0.10915;
+const double d5 = 0.09465;
+const double d6 = 0.0823;
 
 void
 forward(const double* q, double* T)
@@ -307,7 +308,7 @@ forward_all(const double* q, double* T1, double* T2, double* T3, double* T4, dou
 }
 
 int
-inverse(const double* T, double* q_sols, double q6_des = 0.0)
+inverse_sol(const double* T, double* q_sols, double q6_des)
 {
 	int num_sols = 0;
 	double T02 = -*T;
@@ -340,12 +341,11 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 		double A = d6 * T12 - T13;
 		double B = d6 * T02 - T03;
 		double R = A * A + B * B;
-
 		if (fabs(A) < ZERO_THRESH)
 		{
 			double div;
 			if (fabs(fabs(d4) - fabs(B)) < ZERO_THRESH)
-				div = -sign(d4) * sign(B);
+				div = -SIGN(d4) * SIGN(B);
 			else
 				div = -d4 / B;
 			double arcsin = asin(div);
@@ -361,7 +361,7 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 		{
 			double div;
 			if (fabs(fabs(d4) - fabs(A)) < ZERO_THRESH)
-				div = sign(d4) * sign(A);
+				div = SIGN(d4) * SIGN(A);
 			else
 				div = d4 / A;
 			double arccos = acos(div);
@@ -402,7 +402,7 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 			double numer = (T03 * sin(q1[i]) - T13 * cos(q1[i]) - d4);
 			double div;
 			if (fabs(fabs(numer) - fabs(d6)) < ZERO_THRESH)
-				div = sign(numer) * sign(d6);
+				div = SIGN(numer) * SIGN(d6);
 			else
 				div = numer / d6;
 			double arccos = acos(div);
@@ -425,8 +425,8 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 					q6 = q6_des;
 				else
 				{
-					q6 = atan2(sign(s5) * -(T01 * s1 - T11 * c1),
-					           sign(s5) * (T00 * s1 - T10 * c1));
+					q6 = atan2(SIGN(s5) * -(T01 * s1 - T11 * c1),
+					           SIGN(s5) * (T00 * s1 - T10 * c1));
 					if (fabs(q6) < ZERO_THRESH)
 						q6 = 0.0;
 					if (q6 < 0.0)
@@ -445,7 +445,7 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 
 				double c3 = (p13x * p13x + p13y * p13y - a2 * a2 - a3 * a3) / (2.0 * a2 * a3);
 				if (fabs(fabs(c3) - 1.0) < ZERO_THRESH)
-					c3 = sign(c3);
+					c3 = SIGN(c3);
 				else if (fabs(c3) > 1.0)
 				{
 					// TODO NO SOLUTION
@@ -491,54 +491,32 @@ inverse(const double* T, double* q_sols, double q6_des = 0.0)
 	return num_sols;
 }
 
-Eigen::Matrix<double, 8, 6>
-ik_ur5(Eigen::Matrix4d b_T_des)
-/*  This is the transformation matrix of T, the WSG
-    sensor should be offset in the x-direction
-    -----------------------------------------------
-    i.e. x = 0.15
-    -----------------------------------------------
-    T_ee_m << 1., 0., 0., x,
-              0., 1., 0., 0.,
-              0., 0., 1., 0.,
-              0., 0., 0., 1.;
-    -----------------------------------------------
-*/
+Eigen::MatrixXd
+inverse(Eigen::Matrix4d b_T_ee)
 {
-	const int size = 4*4;
-	const int rows = 8;
-	const int cols = 6;
-
-	Eigen::Matrix<double, rows, cols> q_sol_m;
-
-	double q_sols_d[rows * cols] = { 0. };
-
-	double T[size] = { 0. };
+	Eigen::MatrixXd q_sols;
+	double q_sol[8 * 6];
+	double T[16];
 
 	for (int i = 0; i < 4; i++)
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			T[j + i * 4] = b_T_des(i, j);
+			T[i * 4 + j] = b_T_ee(i, j);
 		}
 	}
 
-    // Takes 3 argument but default q6 is 0
-	inverse(T, q_sols_d);
+	int solutions = inverse_sol(T, q_sol, 0.0);
 
-    // Give the solutions within 
-	for (int i = 0; i < rows; i++)
+	q_sols.resize(solutions, 6);
+
+	for (int i = 0; i < solutions; i++)
 	{
-		for (int j = 0; j < cols; j++)
+		for (int j = 0; j < 6; j++)
 		{
-			if (q_sols_d[j + i * cols] > M_PI)
-			{
-				q_sol_m(i, j) = M_PI - q_sols_d[j + i * cols];
-			}
-			else
-				q_sol_m(i, j) = q_sols_d[j + i * cols];
+			q_sols(i, j) = q_sol[i * 6 + j];
 		}
 	}
 
-	return q_sol_m;
+	return q_sols;
 }

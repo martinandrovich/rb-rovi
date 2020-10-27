@@ -8,31 +8,20 @@ main(int argc, char** argv)
 	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
 
 	ros::init(argc, argv, "example_node");
+
 	ros::NodeHandle nh;
 
 	Eigen::Vector6d q = (Eigen::Vector6d() << 0, -1.57, 0, 0, 0, 0).finished();
-	std::cout << q.transpose() << std::endl;
-    std::cout << ur5_dynamics::fwd_kin(q) << std::endl;
 
     Eigen::Matrix4d T = ur5_dynamics::fwd_kin(q);
 
-	Eigen::Matrix4d T_x, T_cord;
+	std::cout << ur5_dynamics::inv_kin(T, q).transpose() << std::endl;
 
-	//std::cout << T << std::endl;
+	Eigen::MatrixXd jac = ur5_dynamics::geometric_jacobian(q);
 
-	T_x <<  1, 0, 0, 0,
-			0, 0, 1, 0,
-			0, -1, 0, 0,
-			0, 0, 0, 1;
+	std::cout << jac << std::endl;
 
-	T_cord << 	-1, 0, 0, 0,
-				0, -1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1;
-
-	std::cout << T_cord * T * T_x << std::endl;
-
-	std::cout << ur5_dynamics::inv_kin(T_cord * T * T_x, q) << std::endl;
+	Eigen::MatrixXd jac_dot = ur5_dynamics::geometric_jacobian_dot(q, q);
 
 	return 0;
 }

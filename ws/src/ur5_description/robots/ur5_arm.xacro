@@ -21,9 +21,9 @@
   <xacro:property name="ur5_d1" value="0.089159"/>
   <xacro:property name="ur5_a2" value="-0.42500"/>
   <xacro:property name="ur5_a3" value="-0.39225"/>
-  <xacro:property name="ur5_d4" value="0.14215"/>
-  <xacro:property name="ur5_d5" value="0.1"/>
-  <xacro:property name="ur5_d6" value="0.0983"/>
+  <xacro:property name="ur5_d4" value="0.10915"/>
+  <xacro:property name="ur5_d5" value="0.09465"/>
+  <xacro:property name="ur5_d6" value="0.0823"/>
   
   <xacro:property name="shoulder_offset" value="0.13585"/>
   <xacro:property name="elbow_offset" value="-0.1197"/>
@@ -79,8 +79,9 @@
     <link name="ur5_link0">
 
       <visual>
+        <origin xyz="0.0 0.0 0.003" rpy="0.0 0.0 0.0"/>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link0.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/base.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -89,7 +90,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link0.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/base.stl"/>
         </geometry>
       </collision>
 
@@ -124,7 +125,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link1.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/shoulder.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -133,7 +134,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link1.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/shoulder.stl"/>
         </geometry>
       </collision>
 
@@ -168,7 +169,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link2.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/upperarm.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -177,7 +178,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link2.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/upperarm.stl"/>
         </geometry>
       </collision>
 
@@ -212,7 +213,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link3.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/forearm.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -221,7 +222,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link3.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/forearm.stl"/>
         </geometry>
       </collision>
 
@@ -255,7 +256,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link4.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/wrist1.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -264,7 +265,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link4.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/wrist1.stl"/>
         </geometry>
       </collision>
 
@@ -298,7 +299,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link5.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/wrist2.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -307,7 +308,7 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link5.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/wrist2.stl"/>
         </geometry>
       </collision>
 
@@ -341,7 +342,7 @@
 
       <visual>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/visual/link6.dae"/>
+          <mesh filename="package://ur5_description/meshes/visual/wrist3.dae"/>
         </geometry>
         <material name="LightGrey">
           <color rgba="0.7 0.7 0.7 1.0"/>
@@ -350,13 +351,9 @@
 
       <collision>
         <geometry>
-          <mesh filename="package://ur5_description/meshes/collision/link6.stl"/>
+          <mesh filename="package://ur5_description/meshes/collision/wrist3.stl"/>
         </geometry>
       </collision>
-
-      <!-- <cylinder_inertial radius="0.6" length="0.12" mass="${wrist_3_mass}">
-        <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
-      </cylinder_inertial> -->
 
       <inertial>
         <mass value="0.1879"/>
@@ -366,9 +363,18 @@
 
     </link>
 
-    <joint name="robot_to_ee_end" type="fixed">
-        <origin xyz="0.0 0.25 0.0" rpy="0.0 0.0 0.0"/>
+    <joint name="ur5_ee_joint" type="fixed">
+        <origin xyz="0.0 0.0823 0.0" rpy="0.0 0.0 0.0"/>
         <parent link="ur5_link6"/>
+        <child link="ur5_ee"/>
+    </joint>
+    
+    <link name="ur5_ee">
+    </link>
+    
+    <joint name="robot_to_ee_end" type="fixed">
+        <origin xyz="0.0 0.1507 0.0" rpy="0.0 0.0 0.0"/>
+        <parent link="ur5_ee"/>
         <child link="ee_tcp"/>
     </joint>
 

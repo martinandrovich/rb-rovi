@@ -47,15 +47,18 @@ public:
 	static Eigen::Vector6d
 	inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q);
 
-	static Eigen::Vector6d
-	jacobian(const Eigen::Vector6d& q);
+	static Eigen::Matrix6d
+	geometric_jacobian(const Eigen::Vector6d& q);
+
+	static Eigen::Matrix6d
+	geometric_jacobian_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot);
 
 	static inline const std::string  ROBOT_NAME        = "ur5";
 	static inline const std::string  ROBOT_DESCRIPTION = "/robot_description";
 	static inline constexpr auto     NUM_JOINTS        = 6;
 	static inline constexpr auto     GRAVITY           = -9.80665;
 	static inline const std::string  BASE_LINK         = ROBOT_NAME + "_link0";
-	static inline const std::string  LAST_LINK         = ROBOT_NAME + "_link6";
+	static inline const std::string  LAST_LINK         = ROBOT_NAME + "_ee";
 
 private:
 
@@ -68,6 +71,6 @@ private:
 	static inline KDL::Chain                       kdl_chain;
 	static inline KDL::ChainDynParam*              kdl_dyn_solver;
 	static inline KDL::ChainJntToJacSolver*        kdl_jac_solver;
-	// static inline KDL::ChainJntToJacDotSolver* kdl_jac_dot_solver;
+	static inline KDL::ChainJntToJacDotSolver*     kdl_jac_dot_solver;
 	static inline KDL::ChainFkSolverPos_recursive* kdl_fk_solver;
 };
