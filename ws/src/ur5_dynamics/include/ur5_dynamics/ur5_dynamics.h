@@ -20,6 +20,7 @@
 
 namespace Eigen
 {
+	using Matrix4d = Eigen::Matrix<double, 4, 4>;
 	using Matrix6d = Eigen::Matrix<double, 6, 6>;
 	using Vector6d = Eigen::Matrix<double, 6, 1>;
 }
@@ -43,11 +44,11 @@ public:
 
 	static Eigen::Vector6d
 	fwd_kin(const Eigen::Vector6d& q);
-	
-	static Eigen::Vector6d
-	inv_kin(const Eigen::Vector6d& T);
 
-	static inline const std::string   ROBOT_NAME        = "ur5";
+	static Eigen::Vector6d
+	inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q);
+
+	static inline const std::string   ROBOT_NAME = "ur5";
 	static inline const std::string   ROBOT_DESCRIPTION = "/robot_description";
 	static inline constexpr auto      NUM_JOINTS        = 6;
 	static inline constexpr auto      GRAVITY           = -9.80665;

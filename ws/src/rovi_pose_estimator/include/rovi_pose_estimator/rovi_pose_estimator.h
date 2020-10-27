@@ -10,10 +10,8 @@ namespace rovi_pose_estimator
         void
         get_depth_image();
 
-
-
-
     }
+    
     void
 	test(const std::string& str);
 
