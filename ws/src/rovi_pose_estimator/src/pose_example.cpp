@@ -6,7 +6,7 @@
 #include <ros/topic.h>
 #include <image_transport/image_transport.h>
 
-#define test 1
+#define test 0
 
 #if !test
 void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_window)
@@ -53,6 +53,8 @@ main(int argc, char** argv)
 	cv::namedWindow("stereo_right");
 	cv::startWindowThread();
 	ros::Rate loop_rate(1000);
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
+	rovi_pose_estimator::M2::get_point_cloud(cloud);
 	while (ros::ok())
 	{
 		const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
