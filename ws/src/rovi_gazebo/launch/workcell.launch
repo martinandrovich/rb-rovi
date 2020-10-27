@@ -7,7 +7,7 @@
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
-	<arg name="kinect_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.8 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
+	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 
 	<!-- GAZEBO -->
 

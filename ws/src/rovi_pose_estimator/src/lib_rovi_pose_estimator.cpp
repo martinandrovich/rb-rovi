@@ -8,8 +8,29 @@ rovi_pose_estimator::test(const std::string& str)
 	ROS_INFO_STREAM("hello: " << str);
 }
 
-void
-rovi_pose_estimator::M2::get_depth_image()
+
+namespace rovi_pose_estimator
+
 {
+	namespace M2
+	{
+		void
+        get_point_cloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& output_cloud)
+		{
+			//const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
+
+		}
+		
+		void
+		get_depth_image()
+		{
+			
+		}
+	}
+
+	namespace TEST
+	{
+
+	}
 	
 }
