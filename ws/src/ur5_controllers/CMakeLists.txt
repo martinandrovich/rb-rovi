@@ -79,7 +79,7 @@ target_link_libraries(ur5_controller PRIVATE ${catkin_LIBRARIES} ur5_kin)
 # libraries
 
 ## ...
-add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp)
+add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp)
 target_link_libraries(ur5_controllers ${catkin_LIBRARIES})
 
 install(
