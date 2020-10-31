@@ -142,8 +142,8 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 		Eigen::DiagonalMatrix<double, 6, 6> kd_m;
 		kd_m.diagonal() << 150, 150, 150, 150, 150, 150;
 
-		ROS_INFO_STREAM_ONCE(kp_m.toDenseMatrix());
-		ROS_INFO_STREAM_ONCE(kd_m.toDenseMatrix());
+		// ROS_INFO_STREAM_ONCE(kp_m.toDenseMatrix());
+		// ROS_INFO_STREAM_ONCE(kd_m.toDenseMatrix());
 
 		// if manipulability is low, then switch to joint controller...
 
