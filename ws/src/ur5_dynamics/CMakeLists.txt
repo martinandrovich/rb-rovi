@@ -14,6 +14,7 @@ find_package(
 	# orocos_kdl -> melodic
 	# liborocos-kdl-dev -> noetic
 	kdl_parser
+	geometry_msgs
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu

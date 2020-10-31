@@ -35,10 +35,6 @@ CartesianPoseController::init(hardware_interface::EffortJointInterface* hw, ros:
 		}
 	}
 
-	// initialize command buffer and q_d vector
-	commands_buffer.writeFromNonRT(std::vector<double>(num_joints, 0.0));
-	q_d = Eigen::Vector6d::Zero();
-
 	// subscribe to joint position command
 	sub_command = nh.subscribe<ur5_controllers::PoseTwist>("command", 1, &CartesianPoseController::callback_command, this);
 
@@ -50,9 +46,25 @@ CartesianPoseController::init(hardware_interface::EffortJointInterface* hw, ros:
 void
 CartesianPoseController::starting(const ros::Time& time)
 {
+	geometry_msgs::Pose x_d;
+	geometry_msgs::Twist x_dot_d;
+
 	// initial desired position
-	// commands_buffer.readFromRT()->assign(num_joints, 0.);
-	commands_buffer.writeFromNonRT(Q_D_INIT);
+	for (size_t i = 0; i < Q_D_INIT.size(); i++)
+	{
+		q_d(i) = Q_D_INIT[i];
+		q_dot_d(i) = 0.0f;
+	}
+	
+	// Init pose and command buffer
+	x_d = ur5_dynamics::fwd_kin<geometry_msgs::Pose>(q_d);
+	x_dot_d.angular.x = 0.0f; x_dot_d.angular.y = 0.0f; x_dot_d.angular.z = 0.0f;
+	x_dot_d.linear.x = 0.0f; x_dot_d.linear.y = 0.0f; x_dot_d.linear.z = 0.0f;
+
+	PoseTwist pose_twist;
+	pose_twist.pose = x_d; pose_twist.twist = x_dot_d;
+
+	commands_buffer.writeFromNonRT(pose_twist);
 }
 
 void
@@ -63,51 +75,68 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 	elapsed_time += period;
 
 	// get desired joint efforts
-	const std::vector<double>& commands = *commands_buffer.readFromRT();
-	for (size_t i = 0; i < commands.size(); ++i)
-		q_d[i] = commands[i];
+	const auto & command = *commands_buffer.readFromRT();
 
 	// read joint states
 	const auto q = get_position();
-	const auto qdot = get_velocity();
+	const auto q_dot = get_velocity();
 
 	// compute dynamics (via KDL)
 	const auto g = ur5_dynamics::gravity(q);
 	const auto m = ur5_dynamics::mass(q);
-	const auto c = ur5_dynamics::coriolis(q, qdot);
+	const auto c = ur5_dynamics::coriolis(q, q_dot);
 
 	// compute kinematics (via KDL)
-	const auto j = ur5_dynamics::jac(q);
-	const auto j_dot = ur5_dynamics::jac_dot(q, qdot);
+	const auto jac = ur5_dynamics::jac(q);
+	const auto jac_dot = ur5_dynamics::jac_dot(q, q_dot);
+	const auto pinv_jac = ur5_dynamics::pinv_jac(jac);
 
-	#define use_ik 0
+	// calculate forward kinematics
+	const auto x = ur5_dynamics::fwd_kin<geometry_msgs::Pose>(q);
+	const auto x_dot = jac*q_dot;
 
-	#if use_ik
-	// get inverse kinematics ( ... )
-	Eigen::Matrix4d T_d;
+	// calculate the difference, dx
+	Eigen::Vector6d dx;
+	Eigen::Vector6d dx_dot;
+	{	
+		// define pose and twist
+		geometry_msgs::Pose x_d = command.pose;
+		
+		// insert into vvector
+		x_dot_d << 	command.twist.linear.x, 
+					command.twist.linear.y, 
+					command.twist.linear.z,
+					command.twist.angular.x, 
+					command.twist.angular.y, 
+					command.twist.angular.z;
 
+		// get inverse kinematics ( ... ) if one needs q_d for nullspace objective
+		q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
 
-	const auto q = ur5_dynamics::inv_kin(,)
+		// calculate difference in position
+		dx.block<3, 1>(0, 0) << x_d.position.x - x.position.x, 
+								x_d.position.y - x.position.y, 
+								x_d.position.z - x.position.z;
 
-	#endif
+		// calculate difference in quaternion
+		Eigen::Quaterniond quat_x_d(x_d.orientation.w, x_d.orientation.x, x_d.orientation.y, x_d.orientation.z);
+		Eigen::Quaterniond quat_x(x.orientation.w, x.orientation.x, x.orientation.y, x.orientation.z);
+		Eigen::Quaterniond dx_quat =  quat_x_d * quat_x.inverse();
 
-	// compute controller effort
-	// easy controller
-	#if use_ik
+		// put into dx last 3 terms
+		dx.block<3, 1>(3, 0) << dx_quat.x(), dx_quat.y(), dx_quat.z();
 
-	const auto y = m * (kp * (q_d - q) + -kd * qdot);
+		// calculate difference in lin/ang velocity
+		dx_dot = x_dot_d - x_dot;
+	}
+
+	const auto y = m * pinv_jac * (kp * dx + kd * dx_dot );
 	Eigen::Vector6d tau_des = y + g + c;
 
-	#else
+	// saturate rate-of-effort (rotatum) this works life a real-life factor xD
+	//if (SATURATE_ROTATUM)
+	//	tau_des = saturate_rotatum(tau_des, period.toSec());
 	
-	const auto y = m * (kp * (q_d - q) + -kd * qdot);
-	Eigen::Vector6d tau_des = y + g + c;
-
-	#endif
-
-	// saturate rate-of-effort (rotatum)
-	if (SATURATE_ROTATUM)
-		tau_des = saturate_rotatum(tau_des, period.toSec());
 
 	// set desired command on joint handles
 	for (size_t i = 0; i < num_joints; ++i)
@@ -160,15 +189,8 @@ CartesianPoseController::saturate_rotatum(const Eigen::Vector6d& tau_des, const 
 void
 CartesianPoseController::callback_command(const ur5_controllers::PoseTwistConstPtr& msg)
 {
-
-	//for (size_t i = 0; i < msg->; i++)
-	//{
-		/* code */
-	//}
-	
-
 	// write commands to command buffer
-	//commands_buffer.writeFromNonRT(msg->data);
+	commands_buffer.writeFromNonRT(*msg);
 }
 
 }

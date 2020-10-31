@@ -15,8 +15,11 @@
 #include <kdl/chainjnttojacdotsolver.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 
+#include <geometry_msgs/Pose.h>
+
 
 #include <Eigen/Core>
+#include <Eigen/SVD>
 
 namespace Eigen
 {
@@ -41,11 +44,14 @@ public:
 	static Eigen::Vector6d
 	coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot);
 
-	static Eigen::Matrix4d
-	fwd_kin(const Eigen::Vector6d& q);
-	
-	static Eigen::Vector6d
-	inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q);
+	template<typename T = Eigen::Matrix4d>
+	static T fwd_kin(const Eigen::Vector6d& q);
+
+	template<typename T = Eigen::Matrix4d>
+	static Eigen::Vector6d inv_kin(const T& frame, const Eigen::Vector6d& q);
+
+	template<typename T = Eigen::Vector6d()>
+	static Eigen::Matrix6d pinv_jac(const T& q, const double eps = 1.0e-5);
 
 	static Eigen::Matrix6d
 	jac(const Eigen::Vector6d& q);
