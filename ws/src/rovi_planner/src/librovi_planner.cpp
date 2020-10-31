@@ -29,6 +29,23 @@ make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori
 	return pose;
 }
 
+geometry_msgs::Pose
+make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = pos[0];
+	pose.position.y = pos[1];
+	pose.position.z = pos[2];
+
+	pose.orientation.w = ori[0];
+	pose.orientation.x = ori[1];
+	pose.orientation.y = ori[2];
+	pose.orientation.y = ori[3];
+
+	return pose;
+}
+
 KDL::Trajectory_Composite
 rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints)
 {
@@ -44,14 +61,14 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 
 	// https://github.com/DonSiMP/trajectory_generators
 
-	// Trajectory_Composite implements a trajectory that is composed of underlying 
+	// Trajectory_Composite implements a trajectory that is composed of underlying
 	// trajectoria (Trajectory_Segment objects). A single trajectory segment is generated
 	// by defining a path (Path_RoundedComposite), composed of waypoints (KDL::Frame(s))
-	// with rounded corners and a trapezoidal velocity profile. 
-	
+	// with rounded corners and a trapezoidal velocity profile.
+
 	if (waypoints.size() == 0)
 		throw std::runtime_error("There must be at least one waypoint.");
-	
+
 	auto interpolator    = new KDL::RotationalInterpolation_SingleAxis();
 	auto traj            = new KDL::Trajectory_Composite();
 	auto path            = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator);
@@ -70,7 +87,7 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	// try creating the trajectory; catch any errors
 	try
 	{
-	
+
 	// there are multiple waypoints
 	if (waypoints.size() > 1)
 	{
@@ -101,9 +118,12 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	}
 	catch (const KDL::Error& e)
 	{
-		std::cout << "Planning was attempted with waypoints:\n\n";
-		for (auto const& point : frames){ std::cout << point << "\n\n"; }
-		
+		ROS_ERROR("Could not plan trajectory.");
+
+		ROS_INFO("Planning was attempted with following waypoints:\n\n");
+		for (auto const& point : frames)
+			std::cout << point << "\n\n";
+
 		std::cerr << e.Description() << std::endl;
 		std::cerr << e.GetType() << std::endl;
 
