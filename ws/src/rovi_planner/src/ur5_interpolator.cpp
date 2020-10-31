@@ -34,19 +34,4 @@ void ur5_interp::rounded_composite()
 
     std::cout << line.Acc(1, 1, 15) << std::endl;
     std::cout << line.LengthToS(1) << std::endl;
-
-    /*
-
-    KDL::Path_RoundedComposite rounted(1, 0.3f, &rotint);
-
-    std::cout << "Added rounted" << std::endl;
-
-    x.Add(&rounted);
-    
-    x.Finish();
-
-    */
-
-
-    //KDL::Path_RoundedComposite 
 }

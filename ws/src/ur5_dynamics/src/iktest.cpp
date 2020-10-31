@@ -18,12 +18,12 @@ main(int argc, char** argv)
 	std::cout << ur5_dynamics::inv_kin(T, q).transpose() << std::endl;
 
 	// this jacobian is only for ur5_end-effector!!
-	Eigen::MatrixXd jac = ur5_dynamics::geometric_jacobian(q);
+	Eigen::MatrixXd jac = ur5_dynamics::jac(q);
 
 	std::cout << jac << std::endl;
 
 	// requires some qdot
-	// Eigen::MatrixXd jac_dot = ur5_dynamics::geometric_jacobian_dot(q, q);
+	// Eigen::MatrixXd jac_dot = ur5_dynamics::jac_dot(q, q);
 
 	return 0;
 }

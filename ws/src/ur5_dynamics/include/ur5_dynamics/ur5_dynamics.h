@@ -48,10 +48,10 @@ public:
 	inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q);
 
 	static Eigen::Matrix6d
-	geometric_jacobian(const Eigen::Vector6d& q);
+	jac(const Eigen::Vector6d& q);
 
 	static Eigen::Matrix6d
-	geometric_jacobian_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot);
+	jac_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot);
 
 	static inline const std::string  ROBOT_NAME        = "ur5";
 	static inline const std::string  ROBOT_DESCRIPTION = "/robot_description";

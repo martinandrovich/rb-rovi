@@ -164,7 +164,7 @@ ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
 }
 
 Eigen::Matrix6d
-ur5_dynamics::geometric_jacobian(const Eigen::Vector6d& q)
+ur5_dynamics::jac(const Eigen::Vector6d& q)
 {
 	ur5_dynamics::init();
 
@@ -180,7 +180,7 @@ ur5_dynamics::geometric_jacobian(const Eigen::Vector6d& q)
 }
 
 Eigen::Matrix6d
-ur5_dynamics::geometric_jacobian_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
+ur5_dynamics::jac_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 {
 	ur5_dynamics::check_init();
 
