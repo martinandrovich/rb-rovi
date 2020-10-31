@@ -109,9 +109,12 @@ ur5_dynamics::coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 	return C_kdl.data;
 }
 
-Eigen::Matrix4d
-ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
+template<typename T>
+T ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 {
+	static_assert(std::is_same<T, Eigen::Matrix4d>::value || std::is_same<T, geometry_msgs::Pose>::value,
+	              "Wrong type use Matrix4d or Pose.");
+
 	ur5_dynamics::check_init();
 
 	static auto ee_frame = KDL::Frame();
@@ -123,24 +126,85 @@ ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 
 	kdl_fk_solver->JntToCart(q_kdl, ee_frame, -1);
 
-	static Eigen::Matrix4d T = Eigen::Matrix4d::Zero();
+	static Eigen::Matrix4d frame = Eigen::Matrix4d::Zero();
+
 	for (size_t i = 0; i < 4; ++i)
 		for (size_t j = 0; j < 4; ++j)
-			T(i, j) = ee_frame(i, j);
+			frame(i, j) = ee_frame(i, j);
 
-	return T;
+	if constexpr (std::is_same<T, Eigen::Matrix4d>::value)
+	{
+		return frame;
+	}
+
+	if constexpr (std::is_same<T, geometry_msgs::Pose>::value)
+	{
+		geometry_msgs::Pose pose;
+
+		// Position
+		pose.position.x = frame(0, 3);
+		pose.position.y = frame(1, 3);
+		pose.position.z = frame(2, 3);
+
+		// Rotation Matrix to Quat
+		Eigen::Quaterniond quat(frame.topLeftCorner<3, 3>());
+		pose.orientation.x = quat.x();
+		pose.orientation.y = quat.y();
+		pose.orientation.z = quat.z();
+		pose.orientation.w = quat.w();
+
+		return pose;
+	}
 }
 
-Eigen::Vector6d
-ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
+template<typename T>
+Eigen::Vector6d ur5_dynamics::inv_kin(const T& pose, const Eigen::Vector6d& q)
 {
-	static auto T_z = (Eigen::Matrix4d() << 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1).finished();
+	static_assert(std::is_same<T, Eigen::Matrix4d>::value || std::is_same<T, geometry_msgs::Pose>::value,
+	              "Wrong type use Matrix4d or Pose.");
 
-	Eigen::MatrixXd q_sol = inverse(T * T_z);
+	Eigen::Matrix4d frame = ( Eigen::Matrix4d() <<  1, 0, 0, 0, 
+													0, 1, 0, 0, 
+													0, 0, 1, 0, 
+													0, 0, 0, 1 ).finished();
+
+	if constexpr (std::is_same<T, geometry_msgs::Pose>::value)
+	{
+		// Position
+		frame.topRightCorner<3, 1>() << pose.position.x, pose.position.y, pose.position.z;
+
+		// Orientation
+		Eigen::Quaterniond quat(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
+		frame.topLeftCorner<3, 3>() = quat.toRotationMatrix();
+	}
+
+	if constexpr (std::is_same<T, Eigen::Matrix4d>::value)
+	{
+		frame = pose;
+	}
+
+	static auto T_z = (Eigen::Matrix4d() << 0, -1, 0, 0, 
+											1,  0, 0, 0, 
+											0,  0, 1, 0, 
+											0,  0, 0, 1).finished();
+
+	Eigen::MatrixXd q_sol = inverse(frame * T_z);
 
 	// if rows == 0, then no solution is found
 	if (q_sol.rows() == 0)
 		return q;
+	
+	// check if joints are within -180:180 degrees
+	for (size_t i = 0; i < q_sol.rows(); i++)
+	{
+		for (size_t j = 0; j < q_sol.cols(); j++)
+		{
+			if (q_sol(i,j) > M_PI)
+				q_sol(i,j) -= 2*M_PI;
+			else if( q_sol(i,j) > M_PI)
+				q_sol(i,j) += 2*M_PI;
+		}
+	}
 
 	// least euclidean distance is determined
 	int opt_idx = 0;
@@ -203,3 +267,60 @@ ur5_dynamics::jac_dot(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 
 	return geo_jac_dot.data;
 }
+
+template<typename T>
+Eigen::Matrix6d ur5_dynamics::pinv_jac(const T& arg, double eps)
+// this is not the dynamical consistent pseudo inverse, but 
+// it should for later usage be implemented, for now, this is fine.
+{
+	static_assert(std::is_same<T, Eigen::Matrix6d>::value || std::is_same<T, Eigen::Vector6d>::value,
+	              "Wrong type use Matrix6d or Vector6d.");
+
+	Eigen::Matrix6d jac;
+
+	// Determine jacobian
+	if constexpr (std::is_same<T, Eigen::Vector6d>::value)
+	{
+		jac = ur5_dynamics::jac(arg);
+	}
+	
+	// Jacobian was an argument
+	if constexpr (std::is_same<T, Eigen::Matrix6d>::value)
+	{
+		jac = arg;
+	}
+	
+	// Transpose
+	Eigen::Matrix6d jac_T = jac.transpose();
+	Eigen::Matrix6d jac_sym = jac_T * jac;
+
+	// Define SVD object
+	Eigen::JacobiSVD<Eigen::Matrix6d> svd(jac_sym, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+	// Pseudo Inverse
+	Eigen::Matrix6d singular_inv = Eigen::Matrix6d::Zero();
+
+	for (size_t i = 0; i < jac.rows(); i++)
+	{
+		if ( svd.singularValues()(i) > eps )
+			singular_inv(i,i) = 1/svd.singularValues()(i);
+		else
+			// implemented with damping term
+			singular_inv(i,i) = 1/(svd.singularValues()(i) + eps*eps);
+	}
+	
+	// Calculate pinv
+	return svd.matrixV() * singular_inv * svd.matrixU().transpose() * jac_T;
+}
+
+template Eigen::Matrix4d ur5_dynamics::fwd_kin<Eigen::Matrix4d>(const Eigen::Vector6d& q);
+
+template geometry_msgs::Pose ur5_dynamics::fwd_kin<geometry_msgs::Pose>(const Eigen::Vector6d& q);
+
+template Eigen::Vector6d ur5_dynamics::inv_kin<Eigen::Matrix4d>(const Eigen::Matrix4d& pose, const Eigen::Vector6d& q);
+
+template Eigen::Vector6d ur5_dynamics::inv_kin<geometry_msgs::Pose>(const geometry_msgs::Pose& pose, const Eigen::Vector6d& q);
+
+template Eigen::Matrix6d ur5_dynamics::pinv_jac<Eigen::Matrix6d>(const Eigen::Matrix6d& jac, const double eps);
+
+template Eigen::Matrix6d ur5_dynamics::pinv_jac<Eigen::Vector6d>(const Eigen::Vector6d& q, const double eps);

@@ -12,6 +12,7 @@ find_package(
 	roslib
 	urdf
 	kdl_parser
+	geometry_msgs
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu

@@ -18,5 +18,6 @@
 	<depend>roslib</depend>
 	<depend>urdf</depend>
 	<depend>kdl_parser</depend>
+	<depend>geometry_msgs</depend>
 
 </package>

@@ -25,6 +25,8 @@
 #include <kdl_parser/kdl_parser.hpp>
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
+
 
 namespace ur5_controllers
 {
@@ -36,13 +38,13 @@ class CartesianPoseController final
 	static inline constexpr auto CONTROLLER_NAME = "CartesianPoseController";
 	static inline constexpr auto SATURATE_ROTATUM = true;
 	static inline constexpr auto TAU_DOT_MAX = 1000.;
-	static inline const std::vector<double> Q_D_INIT = { 0, -M_PI_2, 0, 0, 0, 0 };
+	static inline const std::vector<double> Q_D_INIT = { 0.f, -M_PI_2, 0.f, 0.f, 0.f, 0.f };
 
 	std::vector<std::string> vec_joint_names;
 	size_t num_joints;
 
 	std::vector<hardware_interface::JointHandle> vec_joints;
-	realtime_tools::RealtimeBuffer<std::vector<double>> commands_buffer;
+	realtime_tools::RealtimeBuffer<ur5_controllers::PoseTwist> commands_buffer;
 
 	//Default Constructor
 	CartesianPoseController() {}
@@ -60,7 +62,10 @@ class CartesianPoseController final
   private:
 	ros::Subscriber sub_command;
 
+	Eigen::Vector6d x_dot_d;
+
 	Eigen::Vector6d q_d;
+	Eigen::Vector6d q_dot_d;
 	double kp = 200.0;
 	double kd = 100.0;
 
