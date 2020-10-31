@@ -10,8 +10,10 @@ find_package(
 	COMPONENTS
 	roscpp
 	roslib
-    kdl_parser
-    ur5_dynamics
+	# orocos_kdl -> melodic
+	# liborocos-kdl-dev -> noetic
+	kdl_parser
+	ur5_dynamics
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -36,12 +38,13 @@ catkin_package(
 	INCLUDE_DIRS
 		include
 	LIBRARIES
-		ur5_dynamics
 	CATKIN_DEPENDS
 		roscpp
 		roslib
-		urdf
+		# orocos_kdl -> melodic
+		# liborocos-kdl-dev -> noetic
 		kdl_parser
+		ur5_dynamics
 	DEPENDS
 		EIGEN3
 )
