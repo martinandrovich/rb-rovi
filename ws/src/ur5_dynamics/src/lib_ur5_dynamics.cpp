@@ -166,7 +166,7 @@ ur5_dynamics::inv_kin(const Eigen::Matrix4d& T, const Eigen::Vector6d& q)
 Eigen::Matrix6d
 ur5_dynamics::jac(const Eigen::Vector6d& q)
 {
-	ur5_dynamics::init();
+	ur5_dynamics::check_init();
 
 	static auto q_kdl = KDL::JntArray(NUM_JOINTS);
 	static auto geo_jac = KDL::Jacobian(NUM_JOINTS);

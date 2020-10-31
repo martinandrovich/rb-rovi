@@ -28,9 +28,13 @@
 	<depend>robot_state_publisher</depend>
 	<depend>kdl_parser</depend>
 	<depend>pluginlib</depend>
+	<depend>geometry_msgs</depend>
 
 	<depend>ur5_description</depend>
 	<depend>ur5_dynamics</depend>
+
+	<depend>message_generation</depend>
+	<exec_depend>message_runtime</exec_depend>
 
 	<export>
 		<controller_interface plugin="${prefix}/ur5_controllers_plugin.xml"/>

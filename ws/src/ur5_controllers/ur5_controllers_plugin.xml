@@ -4,4 +4,9 @@
       Joint position control using a PD gravity compensation control loop for the UR5 robot.
     </description>
   </class>
+   <class name="ur5_controllers/CartesianPoseController" type="ur5_controllers::CartesianPoseController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Cartesian Pose Control using inverse dynamics for the UR5 robot.
+    </description>
+  </class>
 </library>
