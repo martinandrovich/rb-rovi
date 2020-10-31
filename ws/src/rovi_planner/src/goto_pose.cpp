@@ -1,40 +1,106 @@
+#include <iostream>
+#include <vector>
+#include <tuple>
+
 #include <ros/ros.h>
 #include <rovi_planner/rovi_planner.h>
-#include <geometry_msgs/Pose.h>
-#include <tf_conversions/tf_eigen.h>
-#include <eigen_conversions/eigen_kdl.h>
+#include <kdl_conversions/kdl_msg.h>
 
-#include <Eigen/Eigen>
+#include <ur5_controllers/PoseTwist.h>
+#include <geometry_msgs/Pose.h>
+#include <gazebo_msgs/LinkStates.h>
 
 int
 main(int argc, char** argv)
 {
+	// check input arguments
+	if (argc < 5)
+	{
+		std::cerr << "Usage: goto_pose mode dx dy dz\n";
+		std::cerr << "Example: goto_pose rel 0.1 -0.2 0\n";
+		exit(-1);
+	}
+
+	// init node
 	ros::init(argc, argv, "goto_pose");
 	ros::NodeHandle nh;
 
-	// get current pose
-	// ros::topic::waitForMessage("")
-	// // define waypoints
-	// // generate trajectory
-	// // publish
+	// define changes in x, y, z from arguments as doubles
+	const auto mode = std::string(argv[1]);
+	const auto [dx, dy, dz] = std::tuple{ std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]) };
 
-	// std::vector<geometry_msgs::Pose> waypoints = 
-	// {
-	// 	make_pose({ 0.12, 0.26, 0.90 }, ori),
-	// 	// make_pose({ 0.15, 0.26, 0.90 }, ori),
-	// 	make_pose({ 0.20, 0.26, 0.90 }, ori2),
-	// 	// make_pose({ 0.52, 0.26, 0.90 }, ori),
-	// 	// make_pose({ 0.30, 0.56, 0.50 }, ori),
-	// 	// make_pose({ 0.60, 0.99, 0.74 }, ori),
-	// };
+	if (mode != "abs" and mode != "rel")
+	{
+		std::cerr << "mode of type " << mode << " is not recognized; please use abs or rel\n";
+		exit(-1);
+	}
 
-	// auto traj = rovi_planner::traj_parabolic(waypoints);
+	// get link states from gazebo
+	ROS_INFO_STREAM("Getting link_states from Gazebo...");
+	const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
+	// gazebo_msgs::LinkStates* link_states = nullptr;
+	// const auto sub_link_states = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, [&](const auto& msg) {
+	// 	ROS_WARN("IN CALLBACK!");
+	// 	link_states = new gazebo_msgs::LinkStates(*msg);
+	// });
 
-	// ROS_INFO_STREAM("Generated trajectory with duration: " << traj.Duration() << " sec");
+	// while (not link_states)
+	// 	ros::spinOnce();
 
-	// for (double t = 0.0; t < traj.Duration(); t += 0.01)
-	// {
-	// }
+	// get current pose of link6
+	const auto& link_names = link_states->name;
+	size_t idx_link6 = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link6"));
+	
+	const auto pose_start = link_states->pose[idx_link6];
+	ROS_INFO_STREAM("Start pose:\n\n" << pose_start << "\n");
+
+	// set desired pose
+	double pos_x, pos_y, pos_z;
+	if (mode == "rel")
+	{
+		pos_x = pose_start.position.x + dx;
+		pos_y = pose_start.position.y + dy;
+		pos_z = pose_start.position.z + dz;
+	}
+	else
+	if (mode == "abs")
+	{
+		pos_x = dx;
+		pos_y = dy;
+		pos_z = dz;
+	}
+	
+	const auto pose_end = make_pose({ pos_x, pos_y, pos_z }, { pose_start.orientation.w, pose_start.orientation.x, pose_start.orientation.y, pose_start.orientation.z } );
+	ROS_INFO_STREAM("End pose:\n\n" << pose_end << "\n");
+
+	// define waypoints
+	std::vector<geometry_msgs::Pose> waypoints = 
+	{
+		pose_start,
+		pose_end
+	};
+
+	// generate trajectory
+	auto traj = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.01, 0.01);
+	ROS_INFO_STREAM("Generated trajectory with duration: " << traj.Duration() << " sec");
+
+	// publish
+	const auto pub_cmd = nh.advertise<ur5_controllers::PoseTwist>("/ur5_cartesian_pose_controller/command", 1);
+
+	constexpr auto LOOP_FREQ = 100.; // Hz
+	ros::Rate loop_rate(LOOP_FREQ);
+	ur5_controllers::PoseTwist msg;
+	for (double t = 0.0; t < traj.Duration(); t += 1/LOOP_FREQ)
+	{
+		const auto& frame = traj.Pos(t);
+		const auto& twist = traj.Vel(t);
+
+		tf::poseKDLToMsg(frame, msg.pose);
+		tf::twistKDLToMsg(twist, msg.twist);
+
+		pub_cmd.publish(msg);
+		loop_rate.sleep();
+	}
 
 	return 0;
 }
