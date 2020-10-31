@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ur5_planner)
+project(rovi_planner)
 
 # C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -13,6 +13,8 @@ find_package(
 	# orocos_kdl -> melodic
 	# liborocos-kdl-dev -> noetic
 	kdl_parser
+	tf_conversions
+	eigen_conversions
 	ur5_dynamics
 )
 
@@ -44,6 +46,8 @@ catkin_package(
 		# orocos_kdl -> melodic
 		# liborocos-kdl-dev -> noetic
 		kdl_parser
+		tf_conversions
+		eigen_conversions
 		ur5_dynamics
 	DEPENDS
 		EIGEN3
@@ -59,11 +63,11 @@ include_directories(
 # libraries
 
 ## ...
-add_library(ur5_interpolator src/ur5_interpolator.cpp)
-target_link_libraries(ur5_interpolator ${catkin_LIBRARIES})
+add_library(rovi_planner src/librovi_planner.cpp)
+target_link_libraries(rovi_planner ${catkin_LIBRARIES})
 
 install(
-	TARGETS ur5_interpolator
+	TARGETS rovi_planner
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -79,7 +83,7 @@ install(
 
 # nodes
 
-add_executable(ur5_intp src/ur5_test.cpp)
-target_link_libraries(ur5_intp ${catkin_LIBRARIES} ur5_interpolator)
+add_executable(traj_test src/traj_test.cpp)
+target_link_libraries(traj_test ${catkin_LIBRARIES} rovi_planner)
 
 # ...

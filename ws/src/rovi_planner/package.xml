@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
 <package format="2">
 
-	<name>ur5_planner</name>
+	<name>rovi_planner</name>
 	<version>1.0.0</version>
-	<description>Planner Library for UR5.</description>
+	<description>Planner library for UR5 robot.</description>
 
 	<author>Daniel Tofte Schøn</author>
+	<author>Martin Androvich</author>
 
 	<maintainer email="marta16@student.sdu.dk">Martin Androvich</maintainer>
 	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
@@ -19,6 +20,8 @@
 	<!-- <depend>orocos_kdl</depend> -->
 	<!-- <depend>liborocos-kdl-dev</depend> -->
 	<depend>kdl_parser</depend>
+	<depend>tf_conversions</depend>
+	<depend>eigen_conversions</depend>
 
 	<depend>ur5_dynamics</depend>
 
