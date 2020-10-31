@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+
+	<name>ur5_planner</name>
+	<version>1.0.0</version>
+	<description>Planner Library for UR5.</description>
+
+	<author>Daniel Tofte Schøn</author>
+
+	<maintainer email="marta16@student.sdu.dk">Martin Androvich</maintainer>
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+
+	<license>BSD</license>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>urdf</depend>
+	<depend>kdl_parser</depend>
+	<depend>ur5_description</depend>
+	<depend>ur5_dynamics</depend>
+
+</package>
