@@ -29,6 +29,7 @@
 	<depend>kdl_parser</depend>
 	<depend>pluginlib</depend>
 	<depend>geometry_msgs</depend>
+	<depend>rviz</depend>
 
 	<depend>ur5_description</depend>
 	<depend>ur5_dynamics</depend>

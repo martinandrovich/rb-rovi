@@ -23,6 +23,7 @@
 #include <kdl/jntarray.hpp>
 #include <kdl/tree.hpp>
 #include <kdl_parser/kdl_parser.hpp>
+#include <visualization_msgs/Marker.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>

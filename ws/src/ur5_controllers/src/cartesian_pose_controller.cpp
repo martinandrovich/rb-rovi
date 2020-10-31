@@ -39,7 +39,7 @@ CartesianPoseController::init(hardware_interface::EffortJointInterface* hw, ros:
 	sub_command = nh.subscribe<ur5_controllers::PoseTwist>("command", 1, &CartesianPoseController::callback_command, this);
 
 	// publish manipulability
-	pub_mani = nh.advertise<geometry_msgs::Pose>("manipulability", 1, 0);
+	pub_mani = nh.advertise<visualization_msgs::Marker>("manipulability", 1, 0);
 
 	// init complete
 	ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME << " with kp = " << kp << ", kd = " << kd);
@@ -163,12 +163,43 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 
 	// calculate manipulability
 	{
+		visualization_msgs::Marker marker;
 		const auto mani = ur5_dynamics::mani(jac);
 		Eigen::Quaterniond quat(mani.block<3, 3>(0, 0));
-		geometry_msgs::Pose pose;
-		pose.position.x = 0.f; pose.position.y = 0.f; pose.position.z = 0.f;
-		pose.orientation.x = quat.x(); pose.orientation.y = quat.y(); pose.orientation.z = quat.z(); pose.orientation.w = quat.w();
-		pub_mani.publish(pose);
+
+		// Update position
+		marker.pose.position.x = 0.f; 
+		marker.pose.position.y = 0.f; 
+		marker.pose.position.z = 0.f;
+
+		// Update orientation
+		marker.pose.orientation.x = quat.x(); 
+		marker.pose.orientation.y = quat.y(); 
+		marker.pose.orientation.z = quat.z(); 
+		marker.pose.orientation.w = quat.w();
+
+		// Update scale
+		double norm = mani(3, 3) + mani(4, 4) + mani(5,5);
+		marker.scale.x = mani(3, 3)/norm;
+		marker.scale.y = mani(4, 4)/norm;
+		marker.scale.z = mani(5, 5)/norm;
+
+		// Update color
+		marker.color.a = 1.0f;
+		marker.color.r = 1.0f;
+		marker.color.g = 0.0f;
+		marker.color.b = 0.0f;
+
+		// Sphere
+		marker.type = visualization_msgs::Marker::ARROW;
+
+		// set frame id
+		marker.header.frame_id = "/my_frame";
+		marker.header.stamp = ros::Time::now();
+		marker.action = visualization_msgs::Marker::ADD;
+		marker.lifetime = ros::Duration(0.01);		
+
+		pub_mani.publish(marker);
 	}
 }
 
