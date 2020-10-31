@@ -21,13 +21,13 @@ main(int argc, char** argv)
 	
 	Eigen::Quaternion ori(0.706825, 0.0, 0.706825, 0.0);
 	// Eigen::Quaternion ori(0.0, 0.0, 0.0, 0.0);
-	// Eigen::Quaternion ori(-0.3273, -0.6513, -0.3273, -0.6012);
+	Eigen::Quaternion ori2(-0.3273, -0.6513, -0.3273, -0.6012);
 
 	std::vector<geometry_msgs::Pose> waypoints = 
 	{
 		make_pose({ 0.12, 0.26, 0.90 }, ori),
-		make_pose({ 0.15, 0.26, 0.90 }, ori),
-		make_pose({ 0.20, 0.26, 0.90 }, ori),
+		// make_pose({ 0.15, 0.26, 0.90 }, ori),
+		make_pose({ 0.20, 0.26, 0.90 }, ori2),
 		// make_pose({ 0.52, 0.26, 0.90 }, ori),
 		// make_pose({ 0.30, 0.56, 0.50 }, ori),
 		// make_pose({ 0.60, 0.99, 0.74 }, ori),
