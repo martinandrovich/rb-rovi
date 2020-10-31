@@ -11,6 +11,8 @@ find_package(
 	roscpp
 	roslib
 	urdf
+	# orocos_kdl -> melodic
+	# liborocos-kdl-dev -> noetic
 	kdl_parser
 	geometry_msgs
 )
@@ -42,6 +44,8 @@ catkin_package(
 		roscpp
 		roslib
 		urdf
+		# orocos_kdl -> melodic
+		# liborocos-kdl-dev -> noetic
 		kdl_parser
 	DEPENDS
 		EIGEN3

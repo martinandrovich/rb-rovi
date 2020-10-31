@@ -17,6 +17,8 @@
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
 	<depend>urdf</depend>
+	<!-- <depend>orocos_kdl</depend> -->
+	<!-- <depend>liborocos-kdl-dev</depend> -->
 	<depend>kdl_parser</depend>
 	<depend>geometry_msgs</depend>
 
