@@ -15,7 +15,9 @@ find_package(
 	kdl_parser
 	tf_conversions
 	eigen_conversions
+	kdl_conversions
 	ur5_dynamics
+	ur5_controllers
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -48,7 +50,9 @@ catkin_package(
 		kdl_parser
 		tf_conversions
 		eigen_conversions
+		kdl_conversions
 		ur5_dynamics
+		ur5_controllers
 	DEPENDS
 		EIGEN3
 )

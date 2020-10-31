@@ -130,12 +130,24 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 		dx_dot = x_dot_d - x_dot;
 	}
 
-	const auto y = m * pinv_jac * (kp * dx + kd * dx_dot );
-	Eigen::Vector6d tau_des = y + g + c;
+	Eigen::Vector6d tau_des;
+	{
+		Eigen::DiagonalMatrix<double, 6, 6> kp;
+		kp.diagonal() << 200, 200, 200, 50, 50, 50;
+
+		Eigen::DiagonalMatrix<double, 6, 6> kd;
+		kd.diagonal() << 100, 100, 100, 25, 25, 25;
+
+		ROS_INFO_STREAM_ONCE(kp.toDenseMatrix());
+		ROS_INFO_STREAM_ONCE(kd.toDenseMatrix());
+
+		const auto y = m * pinv_jac * (kp.toDenseMatrix() * dx + kd.toDenseMatrix() * dx_dot );
+		tau_des = y + g + c;
+	}
 
 	// saturate rate-of-effort (rotatum) this works life a real-life factor xD
-	//if (SATURATE_ROTATUM)
-	//	tau_des = saturate_rotatum(tau_des, period.toSec());
+	if (SATURATE_ROTATUM)
+		tau_des = saturate_rotatum(tau_des, period.toSec());
 	
 
 	// set desired command on joint handles

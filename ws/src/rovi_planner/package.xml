@@ -22,7 +22,9 @@
 	<depend>kdl_parser</depend>
 	<depend>tf_conversions</depend>
 	<depend>eigen_conversions</depend>
+	<depend>kdl_conversions</depend>
 
 	<depend>ur5_dynamics</depend>
+	<depend>ur5_controllers</depend>
 
 </package>
