@@ -16,6 +16,7 @@ find_package(
 	controller_interface
 	gazebo_ros
 	std_msgs
+	geometry_msgs
 	effort_controllers
 	position_controllers
 	joint_state_controller
@@ -24,6 +25,18 @@ find_package(
 	kdl_parser
 	pluginlib
 	ur5_dynamics
+)
+
+# add message files
+add_message_files(
+	FILES
+	PoseTwist.msg
+)
+
+# generate messages
+generate_messages(
+	DEPENDENCIES
+	geometry_msgs
 )
 
 # declare a catkin package

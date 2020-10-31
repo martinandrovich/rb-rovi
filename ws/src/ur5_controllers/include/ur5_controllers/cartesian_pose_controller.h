@@ -13,6 +13,8 @@
 
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <geometry_msgs/Pose.h>
+#include <ur5_controllers/PoseTwist.h>
 
 #include <kdl/chaindynparam.hpp>
 #include <kdl/chainfksolver.hpp>
@@ -81,6 +83,6 @@ class CartesianPoseController final
 	saturate_rotatum(const Eigen::Vector6d& tau_des, const double period = 0.001 /* [s] */);
 
 	void
-	callback_command(const std_msgs::Float64MultiArrayConstPtr& msg);
+	callback_command(const ur5_controllers::PoseTwistConstPtr& msg);
 };
 }

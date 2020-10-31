@@ -40,7 +40,7 @@ CartesianPoseController::init(hardware_interface::EffortJointInterface* hw, ros:
 	q_d = Eigen::Vector6d::Zero();
 
 	// subscribe to joint position command
-	sub_command = nh.subscribe<std_msgs::Float64MultiArray>("command", 1, &CartesianPoseController::callback_command, this);
+	sub_command = nh.subscribe<ur5_controllers::PoseTwist>("command", 1, &CartesianPoseController::callback_command, this);
 
 	// init complete
 	ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME << " with kp = " << kp << ", kd = " << kd);
@@ -73,9 +73,37 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 
 	// compute dynamics (via KDL)
 	const auto g = ur5_dynamics::gravity(q);
+	const auto m = ur5_dynamics::mass(q);
+	const auto c = ur5_dynamics::coriolis(q, qdot);
+
+	// compute kinematics (via KDL)
+	const auto j = ur5_dynamics::jac(q);
+	const auto j_dot = ur5_dynamics::jac_dot(q, qdot);
+
+	#define use_ik 0
+
+	#if use_ik
+	// get inverse kinematics ( ... )
+	Eigen::Matrix4d T_d;
+
+
+	const auto q = ur5_dynamics::inv_kin(,)
+
+	#endif
 
 	// compute controller effort
-	Eigen::Vector6d tau_des = kp * (q_d - q) - kd * qdot + g;
+	// easy controller
+	#if use_ik
+
+	const auto y = m * (kp * (q_d - q) + -kd * qdot);
+	Eigen::Vector6d tau_des = y + g + c;
+
+	#else
+	
+	const auto y = m * (kp * (q_d - q) + -kd * qdot);
+	Eigen::Vector6d tau_des = y + g + c;
+
+	#endif
 
 	// saturate rate-of-effort (rotatum)
 	if (SATURATE_ROTATUM)
@@ -130,17 +158,17 @@ CartesianPoseController::saturate_rotatum(const Eigen::Vector6d& tau_des, const 
 }
 
 void
-CartesianPoseController::callback_command(const std_msgs::Float64MultiArrayConstPtr& msg)
+CartesianPoseController::callback_command(const ur5_controllers::PoseTwistConstPtr& msg)
 {
-	// check size
-	if (msg->data.size() != num_joints)
-	{
-		ROS_ERROR_NAMED(CONTROLLER_NAME, "Number of desired values in command (%lu) does not match number of joints (%lu); execution aborted.", msg->data.size(), num_joints);
-		return;
-	}
+
+	//for (size_t i = 0; i < msg->; i++)
+	//{
+		/* code */
+	//}
+	
 
 	// write commands to command buffer
-	commands_buffer.writeFromNonRT(msg->data);
+	//commands_buffer.writeFromNonRT(msg->data);
 }
 
 }
