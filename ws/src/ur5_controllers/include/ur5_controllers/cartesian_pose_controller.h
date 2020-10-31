@@ -61,6 +61,7 @@ class CartesianPoseController final
 
   private:
 	ros::Subscriber sub_command;
+	ros::Publisher pub_mani; 
 
 	Eigen::Vector6d x_dot_d;
 

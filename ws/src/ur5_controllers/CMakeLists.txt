@@ -25,6 +25,7 @@ find_package(
 	kdl_parser
 	pluginlib
 	ur5_dynamics
+	rviz
 )
 
 # add message files
@@ -62,6 +63,7 @@ catkin_package(
 		kdl_parser
 		pluginlib
 		ur5_dynamics
+		rviz
 )
 
 # include directories

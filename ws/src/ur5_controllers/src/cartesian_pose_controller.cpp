@@ -38,6 +38,9 @@ CartesianPoseController::init(hardware_interface::EffortJointInterface* hw, ros:
 	// subscribe to joint position command
 	sub_command = nh.subscribe<ur5_controllers::PoseTwist>("command", 1, &CartesianPoseController::callback_command, this);
 
+	// publish manipulability
+	pub_mani = nh.advertise<geometry_msgs::Pose>("manipulability", 1, 0);
+
 	// init complete
 	ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME << " with kp = " << kp << ", kd = " << kd);
 	return true;
@@ -89,7 +92,7 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 	// compute kinematics (via KDL)
 	const auto jac = ur5_dynamics::jac(q);
 	const auto jac_dot = ur5_dynamics::jac_dot(q, q_dot);
-	const auto pinv_jac = ur5_dynamics::pinv_jac(jac);
+	const auto pinv_jac = ur5_dynamics::pinv_jac(jac, 0.06);
 
 	// calculate forward kinematics
 	const auto x = ur5_dynamics::fwd_kin<geometry_msgs::Pose>(q);
@@ -98,8 +101,9 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 	// calculate the difference, dx
 	Eigen::Vector6d dx;
 	Eigen::Vector6d dx_dot;
-	{	
-		// define pose and twist
+
+	// define pose and twist
+	{
 		geometry_msgs::Pose x_d = command.pose;
 		
 		// insert into vvector
@@ -111,7 +115,7 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 					command.twist.angular.z;
 
 		// get inverse kinematics ( ... ) if one needs q_d for nullspace objective
-		q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
+		// q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
 
 		// calculate difference in position
 		dx.block<3, 1>(0, 0) << x_d.position.x - x.position.x, 
@@ -132,16 +136,19 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 
 	Eigen::Vector6d tau_des;
 	{
-		Eigen::DiagonalMatrix<double, 6, 6> kp;
-		kp.diagonal() << 200, 200, 200, 50, 50, 50;
+		Eigen::DiagonalMatrix<double, 6, 6> kp_m;
+		kp_m.diagonal() << 200, 200, 200, 200, 200, 200;
 
-		Eigen::DiagonalMatrix<double, 6, 6> kd;
-		kd.diagonal() << 100, 100, 100, 25, 25, 25;
+		Eigen::DiagonalMatrix<double, 6, 6> kd_m;
+		kd_m.diagonal() << 150, 150, 150, 150, 150, 150;
 
-		ROS_INFO_STREAM_ONCE(kp.toDenseMatrix());
-		ROS_INFO_STREAM_ONCE(kd.toDenseMatrix());
+		ROS_INFO_STREAM_ONCE(kp_m.toDenseMatrix());
+		ROS_INFO_STREAM_ONCE(kd_m.toDenseMatrix());
 
-		const auto y = m * pinv_jac * (kp.toDenseMatrix() * dx + kd.toDenseMatrix() * dx_dot );
+		// if manipulability is low, then switch to joint controller...
+
+		const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
+
 		tau_des = y + g + c;
 	}
 
@@ -153,6 +160,16 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 	// set desired command on joint handles
 	for (size_t i = 0; i < num_joints; ++i)
 		vec_joints[i].setCommand(tau_des[i]);
+
+	// calculate manipulability
+	{
+		const auto mani = ur5_dynamics::mani(jac);
+		Eigen::Quaterniond quat(mani.block<3, 3>(0, 0));
+		geometry_msgs::Pose pose;
+		pose.position.x = 0.f; pose.position.y = 0.f; pose.position.z = 0.f;
+		pose.orientation.x = quat.x(); pose.orientation.y = quat.y(); pose.orientation.z = quat.z(); pose.orientation.w = quat.w();
+		pub_mani.publish(pose);
+	}
 }
 
 Eigen::Vector6d

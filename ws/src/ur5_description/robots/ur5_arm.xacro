@@ -115,7 +115,7 @@
       <axis xyz="0 0 1"/>
       <!-- <limit lower="-3.14" upper="3.14" effort="112.0" velocity="3.15"/> -->
       <limit lower="${-pi}" upper="${pi}" effort="112.0" velocity="${pi}"/>
-      <dynamics damping="0.4" friction="0.0"/>
+      <dynamics damping="2" friction="0.0"/>
     </joint>
 
     <!-- link 1 -->
@@ -159,7 +159,7 @@
       <axis xyz="0 1 0"/>
       <!-- <limit lower="-3.14" upper="3.14" effort="112.0" velocity="3.15"/> -->
       <limit lower="${-pi}" upper="${pi}" effort="112.0" velocity="${pi}"/>
-      <dynamics damping="0.4" friction="0.0"/>      
+      <dynamics damping="2" friction="0.0"/>      
     </joint>
 
     <!-- link 2 -->
@@ -203,7 +203,7 @@
       <axis xyz="0 1 0"/>
       <!-- <limit lower="-3.14" upper="3.14" effort="112.0" velocity="3.15"/> -->
       <limit lower="${-pi}" upper="${pi}" effort="112.0" velocity="${pi}"/>
-    <dynamics damping="0.4" friction="0.0"/>
+    <dynamics damping="2" friction="0.0"/>
     </joint>
 
     <!-- link 3 -->

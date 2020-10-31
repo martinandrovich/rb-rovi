@@ -313,6 +313,49 @@ Eigen::Matrix6d ur5_dynamics::pinv_jac(const T& arg, double eps)
 	return svd.matrixV() * singular_inv * svd.matrixU().transpose() * jac_T;
 }
 
+template<typename T>
+Eigen::Matrix6d ur5_dynamics::mani(const T& arg)
+{
+
+	static_assert(std::is_same<T, Eigen::Matrix6d>::value || std::is_same<T, Eigen::Vector6d>::value,
+	              "Wrong type use Matrix6d or Vector6d.");
+
+	Eigen::Matrix6d jac;
+
+	// Determine jacobian
+	if constexpr (std::is_same<T, Eigen::Vector6d>::value)
+	{
+		jac = ur5_dynamics::jac(arg);
+	}
+	
+	// Jacobian was an argument
+	if constexpr (std::is_same<T, Eigen::Matrix6d>::value)
+	{
+		jac = arg;
+	}
+
+	Eigen::Matrix6d man = jac*jac.transpose();
+
+	// Define SVD object
+	Eigen::JacobiSVD<Eigen::Matrix6d> svd(man, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+	// Get the EigenVectors
+	man.block<3, 3>(0, 0) << svd.matrixV().block<3, 3>(0, 0);
+
+	// Get the EigenValues
+	Eigen::Matrix3d singular = Eigen::Matrix3d::Zero();
+	
+	for (size_t i = 0; i < singular.rows(); i++)
+	{
+		singular(i, i) = svd.singularValues()(i);
+	}
+
+	// Put inside manipulability matrix
+	man.block<3, 3>(3, 3) << singular;
+
+	return man;
+}
+
 template Eigen::Matrix4d ur5_dynamics::fwd_kin<Eigen::Matrix4d>(const Eigen::Vector6d& q);
 
 template geometry_msgs::Pose ur5_dynamics::fwd_kin<geometry_msgs::Pose>(const Eigen::Vector6d& q);
@@ -324,3 +367,7 @@ template Eigen::Vector6d ur5_dynamics::inv_kin<geometry_msgs::Pose>(const geomet
 template Eigen::Matrix6d ur5_dynamics::pinv_jac<Eigen::Matrix6d>(const Eigen::Matrix6d& jac, const double eps);
 
 template Eigen::Matrix6d ur5_dynamics::pinv_jac<Eigen::Vector6d>(const Eigen::Vector6d& q, const double eps);
+
+template Eigen::Matrix6d ur5_dynamics::mani<Eigen::Matrix6d>(const Eigen::Matrix6d& jac);
+
+template Eigen::Matrix6d ur5_dynamics::mani<Eigen::Vector6d>(const Eigen::Vector6d& q);
