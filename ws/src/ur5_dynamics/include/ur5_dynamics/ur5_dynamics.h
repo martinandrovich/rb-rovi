@@ -45,16 +45,20 @@ public:
 	coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot);
 
 	template<typename T = Eigen::Matrix4d>
-	static T fwd_kin(const Eigen::Vector6d& q);
+	static T
+	fwd_kin(const Eigen::Vector6d& q);
 
 	template<typename T = Eigen::Matrix4d>
-	static Eigen::Vector6d inv_kin(const T& frame, const Eigen::Vector6d& q);
+	static Eigen::Vector6d
+	inv_kin(const T& frame, const Eigen::Vector6d& q);
 
-	template<typename T = Eigen::Vector6d()>
-	static Eigen::Matrix6d pinv_jac(const T& arg, const double eps = 1.0e-5);
+	template<typename T = Eigen::Vector6d>
+	static Eigen::Matrix6d
+	pinv_jac(const T& arg, const double eps = 1.0e-5);
 
-	template<typename T = Eigen::Vector6d()>
-	static Eigen::Matrix6d mani(const T& arg);
+	template<typename T = Eigen::Vector6d>
+	static Eigen::Matrix6d
+	mani(const T& arg);
 
 	static Eigen::Matrix6d
 	jac(const Eigen::Vector6d& q);
