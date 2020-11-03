@@ -3,14 +3,14 @@
   <model name='coffecan'>
     <link name='link_0'>
       <inertial>
-        <mass>1</mass>
+        <mass>11.392</mass>
         <inertia>
-          <ixx>0</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0</iyy>
-          <iyz>0</iyz>
-          <izz>0</izz>
+          <ixx>0.050950665624800</ixx>
+          <ixy>-0.000000000105600</ixy>
+          <ixz>-0.000518608056800</ixz>
+          <iyy>0.051258621875200</iyy>
+          <iyz>-0.000000003124800</iyz>
+          <izz>0.014837756249600</izz>
         </inertia>
         <pose>0.000513 0 0.080213 0 -0 0</pose>
       </inertial>

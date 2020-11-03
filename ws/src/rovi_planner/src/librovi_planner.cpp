@@ -113,7 +113,7 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	}
 
 	// wait 0.5 seconds at the end of trajectory
-	traj->Add(new KDL::Trajectory_Stationary(0.5, frames.back()));
+	// traj->Add(new KDL::Trajectory_Stationary(0.5, frames.back()));
 
 	}
 	catch (const KDL::Error& e)
