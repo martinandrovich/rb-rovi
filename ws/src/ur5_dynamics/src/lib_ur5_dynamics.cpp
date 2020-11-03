@@ -302,11 +302,8 @@ Eigen::Matrix6d ur5_dynamics::pinv_jac(const T& arg, double eps)
 
 	for (size_t i = 0; i < jac.rows(); i++)
 	{
-		if ( svd.singularValues()(i) > eps )
-			singular_inv(i,i) = 1/svd.singularValues()(i);
-		else
-			// implemented with damping term
-			singular_inv(i,i) = 1/(svd.singularValues()(i) + eps*eps);
+		// singular_inv with dampening
+		singular_inv(i,i) = 1/(svd.singularValues()(i) + eps*eps);	
 	}
 	
 	// Calculate pinv

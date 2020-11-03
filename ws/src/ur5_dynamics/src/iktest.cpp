@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <ur5_dynamics/ur5_dynamics.h>
+#include <wsg_dynamics/wsg_dynamics.h>
 
 int
 main(int argc, char** argv)
@@ -7,9 +8,11 @@ main(int argc, char** argv)
 	// define ROS node
 	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
 
-	ros::init(argc, argv, "example_node");
+	ros::init(argc, argv, "test_node");
 
 	ros::NodeHandle nh;
+
+	/*
 
 	Eigen::Vector6d q = (Eigen::Vector6d() << 0, -1.57, 0, 0, 0, 0).finished();
 
@@ -32,10 +35,14 @@ main(int argc, char** argv)
 
 	std::cout << jac*pinv_jac << std::endl;
 
-	//std::cout << jac << std::endl;
+	std::cout << jac << std::endl;
 
-	// requires some qdot
-	// Eigen::MatrixXd jac_dot = ur5_dynamics::jac_dot(q, q);
+	requires some qdot
+	Eigen::MatrixXd jac_dot = ur5_dynamics::jac_dot(q, q);
+	
+	*/
+
+	wsg_dynamics::init();
 
 	return 0;
 }

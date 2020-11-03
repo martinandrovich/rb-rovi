@@ -74,27 +74,10 @@ include_directories(
 
 ################################################################################################
 
-add_library(
-	ur5_kin 
-	src/ur5_kin.cpp
-)
-
-target_include_directories(
-	ur5_kin PUBLIC
-	include
-)
-
-target_link_libraries(ur5_kin ${catkin_LIBRARIES})
-
-add_executable(ur5_controller src/main.cpp)
-target_link_libraries(ur5_controller PRIVATE ${catkin_LIBRARIES} ur5_kin)
-
-################################################################################################
-
 # libraries
 
 ## ...
-add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp)
+add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp src/wsg_hybrid_controller.cpp)
 target_link_libraries(ur5_controllers ${catkin_LIBRARIES})
 
 install(

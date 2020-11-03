@@ -60,9 +60,13 @@ include_directories(
 
 # libraries
 
-## ...
+## dynamics ur5
 add_library(ur5_dynamics src/lib_ur5_dynamics.cpp)
 target_link_libraries(ur5_dynamics ${catkin_LIBRARIES})
+
+## dynamics wsg
+add_library(wsg_dynamics src/lib_wsg_dynamics.cpp)
+target_link_libraries(wsg_dynamics ${catkin_LIBRARIES})
 
 install(
 	TARGETS ur5_dynamics
@@ -82,6 +86,5 @@ install(
 # nodes
 
 add_executable(iktest src/iktest.cpp)
-target_link_libraries(iktest ${catkin_LIBRARIES} ur5_dynamics)
-
+target_link_libraries(iktest ${catkin_LIBRARIES} ur5_dynamics wsg_dynamics)
 # ...

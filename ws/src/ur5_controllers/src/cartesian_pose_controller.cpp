@@ -114,8 +114,8 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 					command.twist.angular.y, 
 					command.twist.angular.z;
 
-		// get inverse kinematics ( ... ) if one needs q_d for nullspace objective
-		// q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
+		// ik
+		q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
 
 		// calculate difference in position
 		dx.block<3, 1>(0, 0) << x_d.position.x - x.position.x, 
@@ -137,17 +137,17 @@ CartesianPoseController::update(const ros::Time& /*time*/, const ros::Duration& 
 	Eigen::Vector6d tau_des;
 	{
 		Eigen::DiagonalMatrix<double, 6, 6> kp_m;
-		kp_m.diagonal() << 200, 200, 200, 200, 200, 200;
+		kp_m.diagonal() << 600, 600, 600, 600, 600, 600;
 
 		Eigen::DiagonalMatrix<double, 6, 6> kd_m;
-		kd_m.diagonal() << 150, 150, 150, 150, 150, 150;
+		kd_m.diagonal() << 400, 400, 400, 400, 400, 400;
 
 		// ROS_INFO_STREAM_ONCE(kp_m.toDenseMatrix());
 		// ROS_INFO_STREAM_ONCE(kd_m.toDenseMatrix());
 
-		// if manipulability is low, then switch to joint controller...
+		//const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
 
-		const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
+		const auto y = m * (kp_m * ( q_d - q ) - kd_m * q_dot);
 
 		tau_des = y + g + c;
 	}
