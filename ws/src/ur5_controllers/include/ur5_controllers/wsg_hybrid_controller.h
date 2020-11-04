@@ -8,21 +8,14 @@
 #include <pluginlib/class_list_macros.h>
 #include <realtime_tools/realtime_buffer.h>
 #include <ros/ros.h>
-
-#include <controller_interface/controller.h>
-#include <hardware_interface/joint_command_interface.h>
-#include <pluginlib/class_list_macros.h>
-#include <realtime_tools/realtime_buffer.h>
-#include <ros/ros.h>
 #include <ur5_dynamics/ur5_dynamics.h>
 #include <urdf/model.h>
 
 #include <std_msgs/Float64.h>
-
 #include <sensor_msgs/JointState.h>
-#include <std_msgs/Float64MultiArray.h>
 #include <geometry_msgs/Pose.h>
 #include <ur5_controllers/PoseTwist.h>
+#include <gazebo_msgs/LinkStates.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -43,7 +36,8 @@ namespace ur5_controllers
             size_t num_joints;
 
             std::vector<hardware_interface::JointHandle> vec_joints;
-            realtime_tools::RealtimeBuffer<double> commands_buffer;
+            realtime_tools::RealtimeBuffer<std_msgs::Float64> commands_buffer;
+            realtime_tools::RealtimeBuffer<geometry_msgs::Pose> ori_ee_buffer;
 
             //Default Constructor
             WSGHybridController() {}
@@ -61,17 +55,20 @@ namespace ur5_controllers
         private:
 
             ros::Subscriber sub_command;
-            ros::Publisher pub_mani; 
-
+            ros::Subscriber ori_ee;
+            
+            /*
             Eigen::Vector2d x_dot_d;
 
             Eigen::Vector2d q_d;
             Eigen::Vector2d q_dot_d;
-            double kp = 200.0;
-            double kd = 100.0;
+            */
 
             Eigen::Vector2d 
             saturate_rotatum(const Eigen::Vector2d& tau_des, const double period = 0.001 /* [s] */);
+
+            void
+            callback_ori(const gazebo_msgs::LinkStatesConstPtr& msg);
 
             void
             callback_command(const std_msgs::Float64ConstPtr& msg);

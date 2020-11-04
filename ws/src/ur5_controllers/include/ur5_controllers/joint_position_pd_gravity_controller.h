@@ -26,63 +26,62 @@
 
 namespace ur5_controllers
 {
-class JointPositionPDGravityController final
-	: public controller_interface::Controller<hardware_interface::EffortJointInterface>
-{
+	class JointPositionPDGravityController final: public controller_interface::Controller<hardware_interface::EffortJointInterface>
+	{
 
-public:
+	public:
 
-	static inline constexpr auto CONTROLLER_NAME     = "JointPositionPDGravityController";
-	static inline constexpr auto SATURATE_ROTATUM    = true;
-	static inline constexpr auto TAU_DOT_MAX         = 1000.;
-	static inline const std::vector<double> Q_D_INIT = { 0, -M_PI_2, 0, 0, 0, 0 };
+		static inline constexpr auto CONTROLLER_NAME     = "JointPositionPDGravityController";
+		static inline constexpr auto SATURATE_ROTATUM    = true;
+		static inline constexpr auto TAU_DOT_MAX         = 1000.;
+		static inline const std::vector<double> Q_D_INIT = { 0, -M_PI_2, 0, 0, 0, 0 };
 
-	std::vector<std::string> vec_joint_names;
-	size_t num_joints;
+		std::vector<std::string> vec_joint_names;
+		size_t num_joints;
 
-	std::vector<hardware_interface::JointHandle> vec_joints;
-	realtime_tools::RealtimeBuffer<std::vector<double>> commands_buffer;
+		std::vector<hardware_interface::JointHandle> vec_joints;
+		realtime_tools::RealtimeBuffer<std::vector<double>> commands_buffer;
 
-	JointPositionPDGravityController() {}
-	~JointPositionPDGravityController() { sub_command.shutdown(); }
+		JointPositionPDGravityController() {}
+		~JointPositionPDGravityController() { sub_command.shutdown(); }
 
-	bool
-	init(hardware_interface::EffortJointInterface* hw, ros::NodeHandle& nh) override;
+		bool
+		init(hardware_interface::EffortJointInterface* hw, ros::NodeHandle& nh) override;
 
-	void
-	starting(const ros::Time& time) override;
+		void
+		starting(const ros::Time& time) override;
 
-	void 
-	update(const ros::Time& /*time*/, const ros::Duration& /*period*/) override;
+		void 
+		update(const ros::Time& /*time*/, const ros::Duration& /*period*/) override;
 
-private:
+	private:
 
-	ros::Subscriber sub_command;
+		ros::Subscriber sub_command;
 
-	Eigen::Vector6d q_d;
-	double kp = 200.0;
-	double kd = 100.0;
+		Eigen::Vector6d q_d;
+		double kp = 200.0;
+		double kd = 100.0;
 
-	bool
-	init_KDL();
+		bool
+		init_KDL();
 
-	Eigen::Vector6d
-	get_position();
+		Eigen::Vector6d
+		get_position();
 
-	Eigen::Vector6d
-	get_velocity();
+		Eigen::Vector6d
+		get_velocity();
 
-	Eigen::Vector6d
-	get_gravity(const Eigen::Vector6d& q_eigen);
+		Eigen::Vector6d
+		get_gravity(const Eigen::Vector6d& q_eigen);
 
-	Eigen::Vector6d
-	get_mass(const Eigen::Vector6d& q_eigen);
+		Eigen::Vector6d
+		get_mass(const Eigen::Vector6d& q_eigen);
 
-	Eigen::Vector6d
-	saturate_rotatum(const Eigen::Vector6d& tau_des, const double period = 0.001 /* [s] */);
+		Eigen::Vector6d
+		saturate_rotatum(const Eigen::Vector6d& tau_des, const double period = 0.001 /* [s] */);
 
-	void
-	callback_command(const std_msgs::Float64MultiArrayConstPtr& msg);
+		void
+		callback_command(const std_msgs::Float64MultiArrayConstPtr& msg);
 
-};
+	};
 }
