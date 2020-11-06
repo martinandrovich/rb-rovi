@@ -58,7 +58,7 @@ wsg_dynamics::gravity(const Eigen::Vector2d& q)
 	
 	Eigen::Vector2d grav;
 
-	ROS_INFO_ONCE("I did not get pasted here");
+	// ROS_INFO_ONCE("I did not get pasted here");
 
 	wsg_dynamics::check_init();
 
