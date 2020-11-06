@@ -24,7 +24,7 @@ This repository is structured as a `catkin` ROS workspace, consisting of the fol
 rb-rovi/ws/src
     /ur5_description
     /ur5_controllers
-	/ur5_dynamics
+    /ur5_dynamics
     /rovi_gazebo
     /rovi_planner
     /rovi_pose_estimator
