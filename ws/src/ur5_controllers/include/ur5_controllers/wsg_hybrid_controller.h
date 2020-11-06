@@ -16,6 +16,7 @@
 #include <geometry_msgs/Pose.h>
 #include <ur5_controllers/PoseTwist.h>
 #include <gazebo_msgs/LinkStates.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>

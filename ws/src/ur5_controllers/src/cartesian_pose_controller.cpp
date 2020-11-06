@@ -161,8 +161,8 @@ namespace ur5_controllers
 		for (size_t i = 0; i < num_joints; ++i)
 			vec_joints[i].setCommand(tau_des[i]);
 
-		// calculate manipulability
 		/*
+		// calculate manipulability
 		{
 			visualization_msgs::Marker marker;
 			const auto mani = ur5_dynamics::mani(jac);
