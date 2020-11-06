@@ -75,6 +75,9 @@ public:
 	static inline const std::string  BASE_LINK         = ROBOT_NAME + "_link0";
 	static inline const std::string  LAST_LINK         = ROBOT_NAME + "_ee";
 
+	// with end-effector
+	// static inline const std::string  END_EFFECTOR	   = "wsg_base";
+
 private:
 
 	static void

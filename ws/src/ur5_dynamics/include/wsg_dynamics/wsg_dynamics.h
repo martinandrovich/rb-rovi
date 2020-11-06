@@ -15,6 +15,7 @@
 #include <kdl/chainjnttojacdotsolver.hpp>
 #include <kdl/chainjnttojacsolver.hpp>
 
+#include <wsg_dynamics/wsg_dynamics.h>
 #include <geometry_msgs/Pose.h>
 
 
@@ -53,9 +54,9 @@ private:
 	static void
 	check_init();
 
-	static inline bool               is_init = false;
+	static inline bool               is_init 		   = false;
 	static inline urdf::Model        robot_model;
 	
-	static inline KDL::Chain                       kdl_chain[2];
-	static inline KDL::ChainDynParam*              kdl_dyn_solver[2];
+	static inline KDL::Chain                       kdl_chain[FINGERS];
+	static inline KDL::ChainDynParam*              kdl_dyn_solver[FINGERS];
 };

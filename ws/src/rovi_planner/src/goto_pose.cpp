@@ -38,6 +38,7 @@ main(int argc, char** argv)
 	// get link states from gazebo
 	ROS_INFO_STREAM("Getting link_states from Gazebo...");
 	const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
+	
 	// gazebo_msgs::LinkStates* link_states = nullptr;
 	// const auto sub_link_states = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, [&](const auto& msg) {
 	// 	ROS_WARN("IN CALLBACK!");
@@ -50,8 +51,16 @@ main(int argc, char** argv)
 	// get current pose of link6
 	const auto& link_names = link_states->name;
 	size_t idx_link6 = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link6"));
+	size_t idx_base  = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link0"));
 	
-	const auto pose_start = link_states->pose[idx_link6];
+	auto pose_start = link_states->pose[idx_link6];
+	const auto offset 	  = link_states->pose[idx_base];
+
+	// Offset
+	pose_start.position.x -= offset.position.x;
+	pose_start.position.y -= offset.position.y;
+	pose_start.position.z -= offset.position.z;
+
 	ROS_INFO_STREAM("Start pose:\n\n" << pose_start << "\n");
 
 	// set desired pose

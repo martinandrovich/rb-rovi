@@ -35,15 +35,13 @@ wsg_dynamics::init()
     kdl_dyn_solver[LEFT] = new KDL::ChainDynParam(kdl_chain[LEFT], KDL::Vector(0, 0, GRAVITY));
 	kdl_dyn_solver[RIGHT] = new KDL::ChainDynParam(kdl_chain[RIGHT], KDL::Vector(0, 0, GRAVITY));
 
+	is_init = true;
+	
 	// done
 	ROS_INFO("Initialized KDL for WSG.");
-	is_init = true;
+
 	return true;
 }
-
-// TODO 
-// * add entire chain for ur5 for feedback lineraization of the controller, however it 
-// * might be adaquete to just make a pid
 
 void
 wsg_dynamics::check_init()
@@ -55,13 +53,28 @@ wsg_dynamics::check_init()
 Eigen::Vector2d
 wsg_dynamics::gravity(const Eigen::Vector2d& q)
 {
+	static auto q_kdl = KDL::JntArray(1);
+	static auto g_kdl = KDL::JntArray(1);
+	
+	Eigen::Vector2d grav;
+
+	ROS_INFO_ONCE("I did not get pasted here");
+
 	wsg_dynamics::check_init();
 
 	for (size_t i = 0; i < FINGERS; i++)
 	{
-		/* code */
+		// left or right finger
+		q_kdl( i == 0 ? LEFT : RIGHT ) = q[i];
+
+		// compute gravity
+		kdl_dyn_solver[i]->JntToGravity(q_kdl, g_kdl);
+		
+		// fill the gravity vector
+		grav(i) = g_kdl(0);
 	}
 
+	return grav;
 }
 
 Eigen::Matrix2d

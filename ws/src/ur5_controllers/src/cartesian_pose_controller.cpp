@@ -114,6 +114,8 @@ namespace ur5_controllers
 						command.twist.angular.y, 
 						command.twist.angular.z;
 
+			ROS_ERROR_STREAM(x_d);
+
 			// ik
 			q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
 
@@ -137,17 +139,14 @@ namespace ur5_controllers
 		Eigen::Vector6d tau_des;
 		{
 			Eigen::DiagonalMatrix<double, 6, 6> kp_m;
-			kp_m.diagonal() << 600, 600, 600, 600, 600, 600;
+			kp_m.diagonal() << 800, 800, 800, 800, 800, 800;
 
 			Eigen::DiagonalMatrix<double, 6, 6> kd_m;
 			kd_m.diagonal() << 400, 400, 400, 400, 400, 400;
 
-			// ROS_INFO_STREAM_ONCE(kp_m.toDenseMatrix());
-			// ROS_INFO_STREAM_ONCE(kd_m.toDenseMatrix());
+			const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
 
-			//const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
-
-			const auto y = m * (kp_m * ( q_d - q ) - kd_m * q_dot);
+			//const auto y = m * (kp_m * ( q_d - q ) - kd_m * q_dot);
 
 			tau_des = y + g + c;
 		}

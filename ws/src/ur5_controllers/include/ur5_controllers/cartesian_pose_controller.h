@@ -15,14 +15,6 @@
 #include <std_msgs/Float64MultiArray.h>
 #include <geometry_msgs/Pose.h>
 #include <ur5_controllers/PoseTwist.h>
-
-#include <kdl/chaindynparam.hpp>
-#include <kdl/chainfksolver.hpp>
-#include <kdl/chainjnttojacdotsolver.hpp>
-#include <kdl/chainjnttojacsolver.hpp>
-#include <kdl/jntarray.hpp>
-#include <kdl/tree.hpp>
-#include <kdl_parser/kdl_parser.hpp>
 #include <visualization_msgs/Marker.h>
 
 #include <Eigen/Core>

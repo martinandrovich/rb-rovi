@@ -9,12 +9,13 @@
 #include <realtime_tools/realtime_buffer.h>
 #include <ros/ros.h>
 #include <ur5_dynamics/ur5_dynamics.h>
+#include <ur5_controllers/PoseTwist.h>
 #include <urdf/model.h>
+#include <wsg_dynamics/wsg_dynamics.h>
 
 #include <std_msgs/Float64.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
-#include <ur5_controllers/PoseTwist.h>
 #include <gazebo_msgs/LinkStates.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
@@ -42,6 +43,7 @@ namespace ur5_controllers
 
             //Default Constructor
             WSGHybridController() {}
+
             ~WSGHybridController() { sub_command.shutdown(); }
 
             bool
@@ -57,16 +59,11 @@ namespace ur5_controllers
 
             ros::Subscriber sub_command;
             ros::Subscriber ori_ee;
-            
-            /*
-            Eigen::Vector2d x_dot_d;
-
-            Eigen::Vector2d q_d;
-            Eigen::Vector2d q_dot_d;
-            */
 
             Eigen::Vector2d 
             saturate_rotatum(const Eigen::Vector2d& tau_des, const double period = 0.001 /* [s] */);
+
+            Eigen::Vector2d get_position();
 
             void
             callback_ori(const gazebo_msgs::LinkStatesConstPtr& msg);

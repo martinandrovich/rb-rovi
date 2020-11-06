@@ -51,8 +51,8 @@ namespace ur5_controllers
 		// subscribe to joint position command
 		sub_command = nh.subscribe<std_msgs::Float64>("command", 1, &WSGHybridController::callback_command, this);
 
-		// subscribe to pose 
-		ori_ee = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/set_link_state", 1, &WSGHybridController::callback_ori, this);
+		// subscribe to pose you cannot have two subscribers on the same...
+		// ori_ee = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/set_link_state", 1, &WSGHybridController::callback_ori, this);
 
 		// init complete
 		ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME);
@@ -63,7 +63,6 @@ namespace ur5_controllers
 	WSGHybridController::starting(const ros::Time& time)
 	{
 		// Implement PID loop
-
 		for (size_t i = 0; i < 2; i++)
 		{
 			vec_joints[i].setCommand(0);
@@ -75,25 +74,15 @@ namespace ur5_controllers
 	void
 	WSGHybridController::update(const ros::Time& time, const ros::Duration& dur)
 	{
-		// Implement PID loop
-		//
-
-		/*
-			- Pseudo Code
-
-			if state = no torque, then make slowly go the opposite way
-			with some decremental torque.
-
-			if  state = torque, then activate position control until 
-				there is no movement, this is supposed to be a very slow integral torque force controller, that is,
-				make sure the torque reaches some specified value, remember to use the force-torque sensor to read this..
-
-		*/
-
 		// get desired joint efforts
 		const auto & command = *commands_buffer.readFromRT();
 
 		Eigen::Vector2d torque(command.data, command.data);
+
+		Eigen::Vector2d q = get_position();
+		//Eigen::Vector2d qdot = get_position();
+
+		//Eigen::Vector2d grav = wsg_dynamics::gravity(q);
 
 		Eigen::Vector2d torque_des = saturate_rotatum(torque);
 
@@ -140,6 +129,17 @@ namespace ur5_controllers
 	{
 		// set some specified torque.
 		commands_buffer.writeFromNonRT(*msg);
+	}
+
+	Eigen::Vector2d
+	WSGHybridController::get_position()
+	{
+		static Eigen::Vector2d q;
+
+		for (size_t i = 0; i < vec_joints.size(); ++i)
+			q[i] = vec_joints[i].getPosition();
+
+		return q;
 	}
 
 }
