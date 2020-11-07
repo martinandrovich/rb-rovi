@@ -17,7 +17,9 @@ main(int argc, char** argv)
 	if (argc < 5)
 	{
 		std::cerr << "Usage: goto_pose mode dx dy dz\n";
-		std::cerr << "Example: goto_pose rel 0.1 -0.2 0\n";
+		std::cout << "\n"
+		             "The pose is given in the world frame. Mode can be set to 'rel' or 'abs'.\n\n"
+		             "Example: goto_pose rel 0.1 -0.2 0\n";
 		exit(-1);
 	}
 
@@ -37,26 +39,26 @@ main(int argc, char** argv)
 
 	// get link states from gazebo
 	ROS_INFO_STREAM("Getting link_states from Gazebo...");
-	const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
+	// const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
 	
-	// gazebo_msgs::LinkStates* link_states = nullptr;
-	// const auto sub_link_states = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, [&](const auto& msg) {
-	// 	ROS_WARN("IN CALLBACK!");
-	// 	link_states = new gazebo_msgs::LinkStates(*msg);
-	// });
+	gazebo_msgs::LinkStates* link_states = nullptr;
+	const auto sub_link_states = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, [&](const auto& msg) {
+		ROS_WARN("Got LinkStates in temporary ROS callback.");
+		link_states = new gazebo_msgs::LinkStates(*msg);
+	});
 
-	// while (not link_states)
-	// 	ros::spinOnce();
+	while (not link_states)
+		ros::spinOnce();
 
-	// get current pose of link6
+	// get current pose of base and link6 in world frame
 	const auto& link_names = link_states->name;
 	size_t idx_base  = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link0"));
 	size_t idx_link6 = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link6"));
 	
-	const auto offset 	  = link_states->pose[idx_base];
-	auto pose_start = link_states->pose[idx_link6];
+	const auto offset = link_states->pose[idx_base];
+	auto pose_start   = link_states->pose[idx_link6];
 
-	// Offset
+	// controller uses pose given in robot base frame; offset from world
 	pose_start.position.x -= offset.position.x;
 	pose_start.position.y -= offset.position.y;
 	pose_start.position.z -= offset.position.z;
