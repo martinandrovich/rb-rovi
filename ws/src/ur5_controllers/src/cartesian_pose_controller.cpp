@@ -114,8 +114,6 @@ namespace ur5_controllers
 						command.twist.angular.y, 
 						command.twist.angular.z;
 
-			ROS_ERROR_STREAM(x_d);
-
 			// ik
 			q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
 

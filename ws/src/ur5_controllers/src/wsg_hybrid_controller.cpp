@@ -42,8 +42,18 @@ namespace ur5_controllers
 		// init ori_ee_buffer
 		{
 			geometry_msgs::Pose msg;
-			geometry_msgs::Point pos; pos.x = 0.f; pos.y = 0.f; pos.z = 0.f;
-			geometry_msgs::Quaternion ori; ori.x = 0.f; ori.y = 0.f; ori.z = 0.f; ori.w = 1.f;
+
+			geometry_msgs::Point pos; 
+			pos.x = 0.f; 
+			pos.y = 0.f; 
+			pos.z = 0.f;
+
+			geometry_msgs::Quaternion ori; 
+			ori.x = 0.f; 
+			ori.y = 0.f; 
+			ori.z = 0.f; 
+			ori.w = 1.f;
+
 			msg.position = pos; msg.orientation = ori;
 			ori_ee_buffer.writeFromNonRT(msg);
 		}
@@ -81,27 +91,18 @@ namespace ur5_controllers
 
 		Eigen::Vector2d q = get_position();
 
-		//Eigen::Vector2d qdot = get_position();
+		const auto& ori = ori_ee_buffer.readFromNonRT()->orientation;
+		Eigen::Quaterniond quat{ori.w, ori.x, ori.y, ori.z};
+		Eigen::Matrix3d R = quat.toRotationMatrix();
+		Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, 1.5*9.80665);
 
-		Eigen::Vector2d grav = wsg_dynamics::gravity(q);
-
-		/*
-
-			gripper is torque controlled only
-
-			-	first do linearization feedback on both joints, i.e. tau = y + g,
-			where y is the control input.
-
-			-	now, increase the torque with some step size.
-
-		*/
-
+		for (size_t i = 0; i < 2; i++)
+			torque(i) += (i == 0) ? g(0) : -g(0);
+		
 		Eigen::Vector2d torque_des = saturate_rotatum(torque);
 
 		for (size_t i = 0; i < 2; i++)
-		{
-			vec_joints[i].setCommand(torque_des(i));
-		}
+			vec_joints[i].setCommand(torque(i));
 	}
 
 	Eigen::Vector2d
