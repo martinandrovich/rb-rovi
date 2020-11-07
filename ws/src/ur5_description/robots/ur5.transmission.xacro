@@ -4,16 +4,17 @@
   <xacro:macro name="ur5_transmission">
 
     <!-- add planning scene -->
+
     <gazebo>
       <plugin filename="libgazebo_ros_moveit_planning_scene.so" name="gazebo_ros_moveit_planning_scene">
         <topicName>/planning_scene</topicName>
-        <sceneName>laboratory</sceneName>
+        <sceneName>workcell</sceneName>
         <robotName>ur5</robotName>
         <updatePeriod>0.5</updatePeriod>
       </plugin>
     </gazebo>
 
-    <!-- Load Gazebo lib with desired parameters -->
+    <!-- load Gazebo lib with desired parameters -->
 
     <gazebo>
       <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
