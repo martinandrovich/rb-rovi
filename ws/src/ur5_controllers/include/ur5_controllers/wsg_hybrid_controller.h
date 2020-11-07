@@ -31,7 +31,7 @@ namespace ur5_controllers
 
             static inline constexpr auto CONTROLLER_NAME = "WSGHybridController";
             static inline constexpr auto SATURATE_ROTATUM = true;
-            static inline constexpr auto TAU_DOT_MAX = 100.;
+            static inline constexpr auto TAU_DOT_MAX = 10.;
             static inline const std::vector<double> Q_D_INIT = { 0.f, 0.f };
 
             std::vector<std::string> vec_joint_names;

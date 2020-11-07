@@ -21,6 +21,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/SVD>
+#include <Eigen/Geometry>
 
 class wsg_dynamics
 {
@@ -30,7 +31,7 @@ public:
 	init();
 
 	static Eigen::Vector2d
-	gravity(const Eigen::Vector2d& q);
+	gravity(const Eigen::Vector2d& q, const Eigen::Quaterniond& pose);
 
 	static Eigen::Matrix2d
 	mass(const Eigen::Vector2d& q);

@@ -51,14 +51,12 @@ wsg_dynamics::check_init()
 }
 
 Eigen::Vector2d
-wsg_dynamics::gravity(const Eigen::Vector2d& q)
+wsg_dynamics::gravity(const Eigen::Vector2d& q, const Eigen::Quaterniond& pose_grav)
 {
 	static auto q_kdl = KDL::JntArray(1);
 	static auto g_kdl = KDL::JntArray(1);
 	
 	Eigen::Vector2d grav;
-
-	// ROS_INFO_ONCE("I did not get pasted here");
 
 	wsg_dynamics::check_init();
 
