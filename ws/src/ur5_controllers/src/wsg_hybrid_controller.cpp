@@ -83,7 +83,7 @@ namespace ur5_controllers
 
 		//Eigen::Vector2d qdot = get_position();
 
-		//Eigen::Vector2d grav = wsg_dynamics::gravity(q);
+		Eigen::Vector2d grav = wsg_dynamics::gravity(q);
 
 		/*
 
@@ -114,8 +114,6 @@ namespace ur5_controllers
 		// compute saturated torque
 		for (size_t i = 0; i < tau_des_sat.size(); ++i)
 		{
-			// const double diff = tau_des[i] - tau_des_prev[i];
-			// tau_des_sat[i] = tau_des_prev[i] + std::max(std::min(diff, 1.0), -1.0);
 			const double tau_dot = (tau_des[i] - tau_des_prev[i]) / period;
 			tau_des_sat[i] = tau_des_prev[i] + std::max(std::min(tau_dot, TAU_DOT_MAX * period), -(TAU_DOT_MAX * period));
 		}

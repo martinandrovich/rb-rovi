@@ -40,6 +40,7 @@ catkin_package(
 		include
 	LIBRARIES
 		ur5_dynamics
+		wsg_dynamics
 	CATKIN_DEPENDS
 		roscpp
 		roslib
@@ -87,6 +88,14 @@ install(
 	DIRECTORY include/${PROJECT_NAME}/
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
+
+
+## install all project namespaced headers (package/include)
+install(
+	DIRECTORY include/wsg_dynamics/
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
+
 
 ################################################################################################
 

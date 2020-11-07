@@ -92,7 +92,7 @@ namespace ur5_controllers
 		// compute kinematics (via KDL)
 		const auto jac = ur5_dynamics::jac(q);
 		const auto jac_dot = ur5_dynamics::jac_dot(q, q_dot);
-		const auto pinv_jac = ur5_dynamics::pinv_jac(jac, 0.06);
+		const auto pinv_jac = ur5_dynamics::pinv_jac(jac, 0.05);
 
 		// calculate forward kinematics
 		const auto x = ur5_dynamics::fwd_kin<geometry_msgs::Pose>(q);
@@ -142,11 +142,11 @@ namespace ur5_controllers
 			kp_m.diagonal() << 800, 800, 800, 800, 800, 800;
 
 			Eigen::DiagonalMatrix<double, 6, 6> kd_m;
-			kd_m.diagonal() << 400, 400, 400, 400, 400, 400;
+			kd_m.diagonal() << 800, 800, 800, 800, 800, 800;
 
 			const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
 
-			//const auto y = m * (kp_m * ( q_d - q ) - kd_m * q_dot);
+			//const auto y = m * (kp_m * ( q_d - q ) + kd_m * ( pinv_jac*x_dot_d - q_dot ));
 
 			tau_des = y + g + c;
 		}
