@@ -96,7 +96,4 @@ target_link_libraries(traj_test ${catkin_LIBRARIES} rovi_planner)
 add_executable(goto_pose src/goto_pose.cpp)
 target_link_libraries(goto_pose ${catkin_LIBRARIES} rovi_planner)
 
-add_executable(ompl_play src/ompl_play.cpp)
-target_link_libraries(ompl_play ${catkin_LIBRARIES} rovi_planner)
-
 # ...

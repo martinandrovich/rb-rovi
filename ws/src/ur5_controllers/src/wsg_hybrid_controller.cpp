@@ -1,4 +1,4 @@
-#include<ur5_controllers/wsg_hybrid_controller.h>
+#include <ur5_controllers/wsg_hybrid_controller.h>
 
 namespace ur5_controllers
 {
@@ -52,7 +52,7 @@ namespace ur5_controllers
 		sub_command = nh.subscribe<std_msgs::Float64>("command", 1, &WSGHybridController::callback_command, this);
 
 		// subscribe to pose you cannot have two subscribers on the same...
-		// ori_ee = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/set_link_state", 1, &WSGHybridController::callback_ori, this);
+		ori_ee = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, &WSGHybridController::callback_ori, this);
 
 		// init complete
 		ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME);
@@ -68,7 +68,7 @@ namespace ur5_controllers
 			vec_joints[i].setCommand(0);
 		}
 
-		ROS_INFO_ONCE("Updating WSGHybridController Loop");
+		ROS_INFO_ONCE("Start WSG controller");
 	}
 
 	void
@@ -80,9 +80,21 @@ namespace ur5_controllers
 		Eigen::Vector2d torque(command.data, command.data);
 
 		Eigen::Vector2d q = get_position();
+
 		//Eigen::Vector2d qdot = get_position();
 
 		//Eigen::Vector2d grav = wsg_dynamics::gravity(q);
+
+		/*
+
+			gripper is torque controlled only
+
+			-	first do linearization feedback on both joints, i.e. tau = y + g,
+			where y is the control input.
+
+			-	now, increase the torque with some step size.
+
+		*/
 
 		Eigen::Vector2d torque_des = saturate_rotatum(torque);
 
@@ -90,8 +102,6 @@ namespace ur5_controllers
 		{
 			vec_joints[i].setCommand(torque_des(i));
 		}
-
-		ROS_INFO_ONCE("Updating WSGHybridController Loop");
 	}
 
 	Eigen::Vector2d
