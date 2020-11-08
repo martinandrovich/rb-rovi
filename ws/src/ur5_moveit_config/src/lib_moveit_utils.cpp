@@ -1,6 +1,7 @@
 #include "moveit_utils/moveit_utils.h"
 
 #include <ros/ros.h>
+#include <gazebo_msgs/ModelStates.h>
 
 moveit_msgs::CollisionObject
 moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
@@ -8,16 +9,16 @@ moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const 
 	// 3D model of <name> object is expected to be located at
 	// package://rovi_gazebo/models/name/name.dae
 	static const std::string PATH_PACKAGE = "package://rovi_gazebo/models";
-	ROS_WARN_STREAM_ONCE("moveit::make_mesh_cobj() only searches the" << PATH_PACKAGE << " path for .dae models.");
+	ROS_WARN_STREAM_ONCE("make_mesh_cobj() only searches '" << PATH_PACKAGE << "' path for .dae models.");
 
 	// create mesh
 	// https://answers.ros.org/question/246467/moveit-attach-object-error/
 
 	shape_msgs::Mesh mesh;
 	shapes::Mesh* mesh_ptr;
-	shapes::ShapeMsg shape_msg;  
+	shapes::ShapeMsg shape_msg;
 
-	mesh_ptr = shapes::createMeshFromResource(PATH_PACKAGE+ "/" + name + "/" + name + ".dae"); 
+	mesh_ptr = shapes::createMeshFromResource(PATH_PACKAGE+ "/" + name + "/" + name + ".dae");
 	shapes::constructMsgFromShape(mesh_ptr, shape_msg);
 	mesh = boost::get<shape_msgs::Mesh>(shape_msg);
 
@@ -46,4 +47,36 @@ moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const 
 	co.operation = co.ADD;
 
 	return co;
+}
+
+std::vector<moveit_msgs::CollisionObject>
+moveit::get_gazebo_obj(const std::string& frame, const std::vector<std::string>& excludes)
+{
+	// get vector of all objects in gazebo as ModelState msgs
+	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
+	const auto& model_states = ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
+	const auto& vec_poses = model_states->pose;
+	const auto& vec_obj = model_states->name;
+
+	ROS_INFO_STREAM("Recieved gazebo_msgs::ModelStates with " << vec_obj.size() << " objects; excluding " << excludes.size() << " objects");
+
+	std::vector<moveit_msgs::CollisionObject> collision_objects;
+	for (const auto& obj : vec_obj)
+	{
+		// create colllision models that are not to be excluded
+		if (std::find(excludes.begin(), excludes.end(), obj) == excludes.end())
+		{
+			// find pose of object
+			size_t i = std::distance(vec_obj.begin(), std::find(vec_obj.begin(), vec_obj.end(), obj));
+			const auto& pos = vec_poses[i].position;
+
+			// construct and add colision object
+			ROS_INFO_STREAM("Adding object: " << obj << " at " << "[" << pos.x << ", " << pos.y << ", " << pos.z << "]");
+			collision_objects.emplace_back(make_mesh_cobj(obj, frame, { pos.x, pos.y, pos.z }));
+		}
+		else
+			ROS_WARN_STREAM("Excluding object: " << obj);
+	}
+
+	return collision_objects;
 }
