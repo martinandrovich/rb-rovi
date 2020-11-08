@@ -8,4 +8,4 @@ moveit_setup_assistant_config:
   CONFIG:
     author_name: Daniel
     author_email: dscho15@student.sdu.dk
-    generated_timestamp: 1604840725
+    generated_timestamp: 1604855950

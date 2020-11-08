@@ -112,3 +112,6 @@ install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # ur5_moveit_planner
 add_executable(ur5_moveit_planner src/ur5_moveit_planner.cpp)
 target_link_libraries(ur5_moveit_planner ${catkin_LIBRARIES} moveit_utils)
+
+add_executable(ur5_reachability src/ur5_reachability.cpp)
+target_link_libraries(ur5_reachability ${catkin_LIBRARIES} moveit_utils)
