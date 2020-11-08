@@ -17,27 +17,13 @@ const std::string PLANNING_GROUP    = "ur5_arm";
 const std::string ROBOT_DESCRIPTION = "robot_description";
 
 //https://github.com/ros-planning/moveit_tutorials/blob/master/doc/creating_moveit_plugins/lerp_motion_planner/src/lerp_example.cpp
-void	
-callback_ori(const gazebo_msgs::LinkStatesConstPtr& msg)
-{
-    ROS_INFO("Im called");
-    for (size_t i = 0; i < msg->name.size(); i++)
-    {
-        ROS_INFO_STREAM(msg->name[i]);
-    }
-}
 
 int
 main(int argc, char** argv)
 {
 	// init node
-	ros::init(argc, argv, "gazebo2rviz");
+	ros::init(argc, argv, "rrt_planner");
 	ros::NodeHandle nh;
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
-
-    // subscribe to link poses, however we still need mesh names
-    const auto& sub = nh.subscribe<gazebo_msgs::LinkStates>("/gazebo/link_states", 1, &callback_ori);
 
     // load robot model
     const auto robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
@@ -54,19 +40,13 @@ main(int argc, char** argv)
     // visualization in rviz
     moveit_visual_tools::MoveItVisualTools visual_tools("ur5_link0");
     visual_tools.deleteAllMarkers();
-
-    // init objects
-    std::vector<moveit_msgs::CollisionObject> collision_objects
-    {
-        moveit::make_mesh_cobj("table", move_group.getPlanningFrame() , {0, 0, 0}),
-        moveit::make_mesh_cobj("bottle", move_group.getPlanningFrame() , {0, 0, 0})
-    };
-   
-    ROS_INFO_STREAM(move_group.getPlanningFrame());
-
-    moveit::move_base("world_new", "world", {0.0, 0.0, 2.0});
-
+    
+    // collision objects and add to scene
+    const auto collision_objects = moveit::get_gazebo_obj(move_group.getPlanningFrame());
     planning_scene_interface.addCollisionObjects(collision_objects);
+
+    // move base
+    moveit::move_base("world_new", "world", {0.1, 0.1, 0.75});
 
     {
         // set a desired pose for the end-effector
@@ -91,20 +71,7 @@ main(int argc, char** argv)
 
         visual_tools.publishTrajectoryLine(my_plan.trajectory_, joint_model_group);
         visual_tools.trigger();
-        visual_tools.prompt("Press 'next' to continue RvizVisualToolsGui");
-        
     }
-
-    
-
-    while(ros::ok())
-    {
-
-        ROS_INFO_ONCE("hello");
-        ros::Duration(1).sleep();
-    }
-
-    // https://github.com/ros-planning/moveit_tutorials/tree/kinetic-devel/doc/planning_scene
 
     return 0;
 }

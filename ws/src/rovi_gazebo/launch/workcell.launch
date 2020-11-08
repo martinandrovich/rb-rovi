@@ -78,6 +78,6 @@
 	<node pkg="rostopic" type="rostopic" name="default_ur5_setpoint" args="pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64MultiArray '{data: [0, -1.57, 0, 0, 0, 0]}'" output="screen"/>
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
-	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/>
+	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
 
 </launch>
