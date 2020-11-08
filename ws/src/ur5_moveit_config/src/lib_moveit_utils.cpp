@@ -3,7 +3,7 @@
 #include <ros/ros.h>
 
 moveit_msgs::CollisionObject
-moveit::make_mesh_cobj(const std::string& name, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
 	// 3D model of <name> object is expected to be located at
 	// package://rovi_gazebo/models/name/name.dae
@@ -12,6 +12,8 @@ moveit::make_mesh_cobj(const std::string& name, const std::array<double, 3>& pos
 
 	// create mesh
 	// https://answers.ros.org/question/246467/moveit-attach-object-error/
+
+	Vector3d b(0.001, 0.001, 0.001);
 
 	shape_msgs::Mesh mesh;
 	shapes::Mesh* mesh_ptr;
@@ -30,7 +32,7 @@ moveit::make_mesh_cobj(const std::string& name, const std::array<double, 3>& pos
 	co.mesh_poses.resize(1);
 
 	co.meshes[0] = mesh;
-	co.header.frame_id = "base_link";
+	co.header.frame_id = frame;
 
 	co.mesh_poses[0].position.x = pos[0];
 	co.mesh_poses[0].position.y = pos[1];
