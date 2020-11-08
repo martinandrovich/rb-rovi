@@ -24,6 +24,8 @@ main(int argc, char** argv)
 	// init node
 	ros::init(argc, argv, "rrt_planner");
 	ros::NodeHandle nh;
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
 
     // load robot model
     const auto robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
@@ -47,6 +49,8 @@ main(int argc, char** argv)
 
     // move base
     moveit::move_base("world_new", "world", {0.1, 0.1, 0.75});
+
+	std::cin.ignore();
 
     {
         // set a desired pose for the end-effector
