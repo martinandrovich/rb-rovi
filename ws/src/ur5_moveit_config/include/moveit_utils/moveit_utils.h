@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <array>
+
 #include <moveit_msgs/CollisionObject.h>
 #include <geometric_shapes/shape_operations.h>
 
