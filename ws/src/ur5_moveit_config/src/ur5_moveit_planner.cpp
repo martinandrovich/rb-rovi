@@ -64,6 +64,8 @@ main(int argc, char** argv)
    
     ROS_INFO_STREAM(move_group.getPlanningFrame());
 
+    moveit::move_base("world_new", "world", {0.0, 0.0, 2.0});
+
     planning_scene_interface.addCollisionObjects(collision_objects);
 
     {
@@ -79,7 +81,6 @@ main(int argc, char** argv)
 
         // set a targetpose
         move_group.setPoseTarget(target_pose);
-        //move_group.
 
         // this is just planning, not moving the robot
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -93,6 +94,8 @@ main(int argc, char** argv)
         visual_tools.prompt("Press 'next' to continue RvizVisualToolsGui");
         
     }
+
+    
 
     while(ros::ok())
     {

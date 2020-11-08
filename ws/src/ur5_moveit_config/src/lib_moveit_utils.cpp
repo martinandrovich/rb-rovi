@@ -47,3 +47,39 @@ moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const 
 
 	return co;
 }
+
+
+void
+moveit::move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos)
+{	
+
+	static std::thread * threadptr = nullptr;
+
+	if (threadptr != nullptr)
+	{
+		auto handle = threadptr->native_handle();
+		pthread_cancel(handle);
+	}
+
+	threadptr = new std::thread([=]
+								()
+								{
+									const double time = 100;
+									static tf::TransformBroadcaster broadcaster;
+									ros::Rate lp(time);
+									
+									while (ros::ok())
+									{
+										tf::StampedTransform transform = tf::StampedTransform(
+																								tf::Transform( tf::Quaternion(0., 0., 0., 1.),  
+																												tf::Vector3(pos[0], pos[1], pos[2])
+																											), 
+																								ros::Time().now() + ros::Duration(1./time), 
+																								frame_id, 
+																								child
+																							);
+										broadcaster.sendTransform(transform);
+										lp.sleep();
+									}
+								});
+}
