@@ -81,22 +81,22 @@ include_directories(
 
 # libraries
 
-## dynamics ur5
-# add_library(moveit_utils src/lib_moveit_utils.cpp)
-# target_link_libraries(moveit_utils ${catkin_LIBRARIES})
+# dynamics ur5
+add_library(moveit_utils src/lib_moveit_utils.cpp)
+target_link_libraries(moveit_utils ${catkin_LIBRARIES})
 
-# install(
-# 	TARGETS moveit_utils
-# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
+install(
+	TARGETS moveit_utils
+	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
-# ## install all project namespaced headers (package/include)
-# install(
-# 	DIRECTORY include/moveit_utils/
-# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-# )
+## install all project namespaced headers (package/include)
+install(
+	DIRECTORY include/moveit_utils/
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
 # moveit configs
 install(
@@ -109,6 +109,6 @@ install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # nodes
 
-# gazebo2rviz
-add_executable(gazebo2rviz src/gazebo2rviz.cpp)
-target_link_libraries(gazebo2rviz ${catkin_LIBRARIES})
+# ur5_moveit_planner
+add_executable(ur5_moveit_planner src/ur5_moveit_planner.cpp)
+target_link_libraries(ur5_moveit_planner ${catkin_LIBRARIES} moveit_utils)

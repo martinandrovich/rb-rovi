@@ -13,8 +13,6 @@ moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const 
 	// create mesh
 	// https://answers.ros.org/question/246467/moveit-attach-object-error/
 
-	Vector3d b(0.001, 0.001, 0.001);
-
 	shape_msgs::Mesh mesh;
 	shapes::Mesh* mesh_ptr;
 	shapes::ShapeMsg shape_msg;  
