@@ -1,37 +1,38 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ur5_move_it</name>
-  <version>0.3.0</version>
-  <description>
-     An automatically generated package with all the configuration and launch files for using the ur5 with the MoveIt! Motion Planning Framework
-  </description>
-  <author email="dscho15@student.sdu.dk">Daniel</author>
-  <maintainer email="dscho15@student.sdu.dk">Daniel</maintainer>
+	<name>ur5_moveit_config</name>
+	<version>0.3.0</version>
+	<description>
+		 An automatically generated package with all the configuration and launch files for using the ur5 with the MoveIt! Motion Planning Framework
+	</description>
 
-  <license>BSD</license>
+	<author email="marta16@student.sdu.dk">Daniel</author>
+	<author email="dscho15@student.sdu.dk">Martin Androvich</author>
 
-  <url type="website">http://moveit.ros.org/</url>
-  <url type="bugtracker">https://github.com/ros-planning/moveit/issues</url>
-  <url type="repository">https://github.com/ros-planning/moveit</url>
+	<maintainer email="dscho15@student.sdu.dk">Daniel</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
+	<license>BSD</license>
 
-  <depend>moveit_ros_move_group</depend>
-  <depend>moveit_fake_controller_manager</depend>
-  <depend>moveit_kinematics</depend>
-  <depend>moveit_planners_ompl</depend>
-  <depend>moveit_ros_visualization</depend>
-  <depend>moveit_setup_assistant</depend>
-  <depend>joint_state_publisher</depend>
-  <depend>robot_state_publisher</depend>
-  <depend>tf2_ros</depend>
-  <depend>xacro</depend>
-  <!-- This package is referenced in the warehouse launch files, but does not build out of the box at the moment. Commented the dependency until this works. -->
-  <!-- <depend>warehouse_ros_mongo</depend> -->
-  <depend>ur5_description</depend>
-  <depend>moveit_ros_planning_interface</depend>
-  <depend>gazebo_ros</depend>
+	<url type="website">http://moveit.ros.org/</url>
+	<url type="bugtracker">https://github.com/ros-planning/moveit/issues</url>
+	<url type="repository">https://github.com/ros-planning/moveit</url>
 
-  <depend>rviz</depend>
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>moveit_ros_move_group</depend>
+	<depend>moveit_fake_controller_manager</depend>
+	<depend>moveit_kinematics</depend>
+	<depend>moveit_planners_ompl</depend>
+	<depend>moveit_ros_visualization</depend>
+	<depend>moveit_setup_assistant</depend>
+	<depend>joint_state_publisher</depend>
+	<depend>robot_state_publisher</depend>
+	<depend>tf2_ros</depend>
+	<depend>xacro</depend>
+	<depend>moveit_ros_planning_interface</depend>
+	<depend>gazebo_ros</depend>
+	<depend>rviz</depend>
+
+	<depend>ur5_description</depend>
 
 </package>
