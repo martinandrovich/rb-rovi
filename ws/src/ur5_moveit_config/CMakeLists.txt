@@ -15,6 +15,7 @@ find_package(
 	moveit_kinematics
 	moveit_planners_ompl
 	moveit_ros_visualization
+	moveit_visual_tools
 	moveit_setup_assistant
 	joint_state_publisher
 	robot_state_publisher
@@ -56,6 +57,7 @@ catkin_package(
 		moveit_fake_controller_manager
 		moveit_kinematics
 		moveit_planners_ompl
+		moveit_visual_tools
 		moveit_ros_visualization
 		moveit_setup_assistant
 		joint_state_publisher
@@ -80,21 +82,21 @@ include_directories(
 # libraries
 
 ## dynamics ur5
-add_library(moveit_utils src/lib_moveit_utils.cpp)
-target_link_libraries(moveit_utils ${catkin_LIBRARIES})
+# add_library(moveit_utils src/lib_moveit_utils.cpp)
+# target_link_libraries(moveit_utils ${catkin_LIBRARIES})
 
-install(
-	TARGETS moveit_utils
-	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+# install(
+# 	TARGETS moveit_utils
+# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
 
-## install all project namespaced headers (package/include)
-install(
-	DIRECTORY include/moveit_utils/
-	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
+# ## install all project namespaced headers (package/include)
+# install(
+# 	DIRECTORY include/moveit_utils/
+# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# )
 
 # moveit configs
 install(
@@ -109,4 +111,4 @@ install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 # gazebo2rviz
 add_executable(gazebo2rviz src/gazebo2rviz.cpp)
-target_link_libraries(gazebo2rviz ${catkin_LIBRARIES} moveit_utils)
+target_link_libraries(gazebo2rviz ${catkin_LIBRARIES})

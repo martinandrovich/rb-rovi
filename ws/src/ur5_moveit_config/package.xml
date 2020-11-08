@@ -19,11 +19,14 @@
 
 	<buildtool_depend>catkin</buildtool_depend>
 
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
 	<depend>moveit_ros_move_group</depend>
 	<depend>moveit_fake_controller_manager</depend>
 	<depend>moveit_kinematics</depend>
 	<depend>moveit_planners_ompl</depend>
 	<depend>moveit_ros_visualization</depend>
+	<depend>moveit_visual_tools</depend>
 	<depend>moveit_setup_assistant</depend>
 	<depend>joint_state_publisher</depend>
 	<depend>robot_state_publisher</depend>
