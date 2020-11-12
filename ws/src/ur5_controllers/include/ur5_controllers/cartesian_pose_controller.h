@@ -59,8 +59,8 @@ namespace ur5_controllers
 
 		Eigen::Vector6d q_d;
 		Eigen::Vector6d q_dot_d;
-		double kp = 200.0;
-		double kd = 100.0;
+		double kp = 800.0;
+		double kd = 800.0;
 
 		bool
 		init_KDL();

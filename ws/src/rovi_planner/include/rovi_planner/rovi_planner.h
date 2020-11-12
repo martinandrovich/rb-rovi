@@ -11,6 +11,12 @@
 geometry_msgs::Pose
 make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori);
 
+// geometry_msgs::Pose
+// make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori);
+
+geometry_msgs::Pose
+make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
+
 namespace rovi_planner
 {
 	KDL::Trajectory_Composite

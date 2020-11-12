@@ -137,10 +137,10 @@ namespace ur5_controllers
 		Eigen::Vector6d tau_des;
 		{
 			Eigen::DiagonalMatrix<double, 6, 6> kp_m;
-			kp_m.diagonal() << 800, 800, 800, 800, 800, 800;
+			kp_m.diagonal() << kp, kp, kp, kp, kp, kp;
 
 			Eigen::DiagonalMatrix<double, 6, 6> kd_m;
-			kd_m.diagonal() << 800, 800, 800, 800, 800, 800;
+			kd_m.diagonal() << kd, kd, kd, kd, kd, kd;
 
 			const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
 
@@ -150,8 +150,8 @@ namespace ur5_controllers
 		}
 
 		// saturate rate-of-effort (rotatum) this works life a real-life factor xD
-		if (SATURATE_ROTATUM)
-			tau_des = saturate_rotatum(tau_des, period.toSec());
+		// if (SATURATE_ROTATUM)
+		//	 tau_des = saturate_rotatum(tau_des, period.toSec());
 		
 
 		// set desired command on joint handles

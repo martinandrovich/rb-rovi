@@ -24,11 +24,11 @@ make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori
 	pose.orientation.w = ori.w();
 	pose.orientation.x = ori.x();
 	pose.orientation.y = ori.y();
-	pose.orientation.y = ori.y();
+	pose.orientation.z = ori.z();
 
 	return pose;
 }
-
+/*
 geometry_msgs::Pose
 make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
@@ -41,7 +41,31 @@ make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 	pose.orientation.w = ori[0];
 	pose.orientation.x = ori[1];
 	pose.orientation.y = ori[2];
-	pose.orientation.y = ori[3];
+	pose.orientation.z = ori[3];
+
+	return pose;
+}
+*/
+
+geometry_msgs::Pose
+make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = pos[0];
+	pose.position.y = pos[1];
+	pose.position.z = pos[2];
+
+	Eigen::Quaterniond quat;
+
+	quat = 	Eigen::AngleAxisd(rpy[2], Eigen::Vector3d::UnitZ()) *
+			Eigen::AngleAxisd(rpy[1], Eigen::Vector3d::UnitY()) * 
+			Eigen::AngleAxisd(rpy[0], Eigen::Vector3d::UnitX()) ;
+
+	pose.orientation.w = quat.w();
+	pose.orientation.x = quat.x();
+	pose.orientation.y = quat.y();
+	pose.orientation.z = quat.z();
 
 	return pose;
 }
@@ -50,7 +74,6 @@ KDL::Trajectory_Composite
 rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints)
 {
 	auto interpolator = KDL::RotationalInterpolation_SingleAxis();
-	// auto path = KDL::Path
 
 	return KDL::Trajectory_Composite();
 }
