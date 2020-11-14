@@ -6,12 +6,14 @@
 		 An automatically generated package with all the configuration and launch files for using the ur5 with the MoveIt! Motion Planning Framework
 	</description>
 
-	<author email="marta16@student.sdu.dk">Daniel</author>
-	<author email="dscho15@student.sdu.dk">Martin Androvich</author>
+	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
+	<author email="marta16@student.sdu.dk">Martin Androvich</author>
 
-	<maintainer email="dscho15@student.sdu.dk">Daniel</maintainer>
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
 
 	<license>BSD</license>
+	
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
 
 	<url type="website">http://moveit.ros.org/</url>
 	<url type="bugtracker">https://github.com/ros-planning/moveit/issues</url>
@@ -21,21 +23,23 @@
 
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
+	<depend>xacro</depend>
+	<depend>gazebo_ros</depend>
+	<depend>rviz</depend>
+	<depend>tf2_ros</depend>
+	<depend>joint_state_publisher</depend>
+	<depend>robot_state_publisher</depend>
+
 	<depend>moveit_ros_move_group</depend>
 	<depend>moveit_fake_controller_manager</depend>
 	<depend>moveit_kinematics</depend>
 	<depend>moveit_planners_ompl</depend>
-	<depend>moveit_ros_visualization</depend>
 	<depend>moveit_visual_tools</depend>
+	<depend>moveit_ros_visualization</depend>
 	<depend>moveit_setup_assistant</depend>
-	<depend>joint_state_publisher</depend>
-	<depend>robot_state_publisher</depend>
-	<depend>tf2_ros</depend>
-	<depend>xacro</depend>
 	<depend>moveit_ros_planning_interface</depend>
-	<depend>gazebo_ros</depend>
-	<depend>rviz</depend>
 
 	<depend>ur5_description</depend>
+	<depend>rovi_utils</depend>
 
 </package>
