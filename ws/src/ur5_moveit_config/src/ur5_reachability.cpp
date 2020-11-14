@@ -72,6 +72,7 @@ main(int argc, char** argv)
     moveit_msgs::PlanningScene ps_msg;
     planning_scene_rob.getPlanningSceneDiffMsg(ps_msg);
     ps_msg.world.collision_objects = collision_objects;
+    planning_scene_rob.setPlanningSceneDiffMsg(ps_msg);
 
     planning_scene_pub.publish(ps_msg);
 
@@ -80,10 +81,10 @@ main(int argc, char** argv)
     while(ros::ok())
     {
 
-        planning_scene_rob.getCurrentStateNonConst().setToRandomPositions(joint_model_group);
-        planning_scene_rob.getCurrentStateNonConst().update();
+        planning_scene_rob.getCurrentStateNonConst().setJointGroupPositions(joint_model_group, {0, 1.57, 0, 0, 0, 0});
         planning_scene_rob.getPlanningSceneDiffMsg(ps_msg);
         ps_msg.world.collision_objects = collision_objects;
+        planning_scene_rob.isStateColliding("ur5_arm", true);
 
         planning_scene_pub.publish(ps_msg);
         visual_tools.trigger();
