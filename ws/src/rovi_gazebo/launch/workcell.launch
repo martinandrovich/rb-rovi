@@ -9,6 +9,8 @@
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 
+	<arg name="all_objects" default="false" type="bool" />
+
 	<!-- GAZEBO -->
 
 	<!-- locate robot description -->
@@ -54,9 +56,13 @@
 	<!-- spawn object(s) -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
 	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/>
-	<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.3 -y 0.5"/>
-	<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.6 -y 0.8"/>
-	<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.5 -y 0.4"/>
+	
+	<!-- don't spawn all objects -->
+	<group if="$(arg all_objects)">
+  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.3 -y 0.5"/>
+		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.6 -y 0.8"/>
+		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.5 -y 0.4"/>
+	</group>
 	
 	<!-- ROS CONTROL -->
 

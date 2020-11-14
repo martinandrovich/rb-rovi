@@ -20,19 +20,26 @@ int
 main(int argc, char** argv)
 {
 	// init node
-	ros::init(argc, argv, "gazebo2rviz");
+	ros::init(argc, argv, "reachability");
 	ros::NodeHandle nh;
     ros::AsyncSpinner spinner(1);
     spinner.start();
 
+    // create a planning scene
+    ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+
     // load robot model
-    const auto robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
+    robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
+    robot_model::RobotModelPtr robot_kinematic_model = robot_model_loader->getModel();
 
     // we we will use movegroupinterface to interface the planning group
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
     // we will use planning-scene interface to add and remove collision objects in our virtual world
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+
+    // we need to add a planning_scene
+    planning_scene::PlanningScene planning_scene(robot_kinematic_model);
 
     // raw pointer to joint model group
     const auto joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
@@ -50,10 +57,46 @@ main(int argc, char** argv)
 
     moveit::move_base("world_new", "world", {0.1, 0.1, 0.75});
 
-    planning_scene_interface.addCollisionObjects(collision_objects);
+    planning_scene_interface.addCollisionObjects(collision_objects);   
 
-    // move in the y-direction
-    const double y_step = 0.1;
+    // here ..>
+
+    Eigen::VectorXd joints;
+    move_group.getCurrentState()->copyJointGroupPositions(joint_model_group, joints);
+
+    ROS_INFO_STREAM(joints);
+
+    planning_scene.
+
+    // robot_state::RobotState start_state(*move_group.getCurrentState());
+    // geometry_msgs::Pose start_pose2;
+    // start_pose2.orientation.w = 1.0;
+    // start_pose2.position.x = 0.55;
+    // start_pose2.position.y = -0.05;
+    // start_pose2.position.z = 0.55;
+    // const robot_state::JointModelGroup *joint_model_group2 =
+    //                 start_state.getJointModelGroup(move_group.getName());
+    // start_state.setFromIK(joint_model_group2, start_pose2);
+    // move_group.setStartState(start_state);
+
+    planning_scene.getCurrentState().copyJointGroupPositions(joint_model_group, joints);
+    ROS_INFO_STREAM(joints);
+
+    //robot_state.setJointGroupPositions(joint_model_group, {0, -1.57, 0, 0, 0, 0});
+
+    //move_group.setStartState(robot_state);
+
+    move_group.getCurrentState()->copyJointGroupPositions(joint_model_group, joints);
+
+    ROS_INFO_STREAM(joints);
+
+    visual_tools.trigger();
+
+    // this is just planning, not moving the robot
+    // moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+
+
+    /*
 
     for (size_t i = 0; i < 10; i++)
     {
@@ -86,6 +129,7 @@ main(int argc, char** argv)
             //visual_tools.prompt("Press 'next' to continue RvizVisualToolsGui");
         }
     }
+    */
     
     return 0;
 }

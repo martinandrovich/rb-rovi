@@ -77,7 +77,7 @@ include_directories(
 # libraries
 
 ## ...
-add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp src/wsg_hybrid_controller.cpp)
+add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp src/wsg_hybrid_controller.cpp src/joint_position_controller.cpp)
 target_link_libraries(ur5_controllers ${catkin_LIBRARIES})
 
 install(
