@@ -18,6 +18,7 @@ find_package(
 	kdl_conversions
 	ur5_dynamics
 	ur5_controllers
+	rovi_utils
 	# ompl
 )
 
@@ -55,6 +56,7 @@ catkin_package(
 		kdl_conversions
 		ur5_dynamics
 		ur5_controllers
+		rovi_utils
 		# ompl
 	DEPENDS
 		EIGEN3
@@ -70,7 +72,7 @@ include_directories(
 # libraries
 
 ## ...
-add_library(rovi_planner src/librovi_planner.cpp)
+add_library(rovi_planner src/lib_rovi_planner.cpp)
 target_link_libraries(rovi_planner ${catkin_LIBRARIES})
 
 install(

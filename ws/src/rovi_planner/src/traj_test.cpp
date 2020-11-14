@@ -10,11 +10,12 @@
 
 #include <Eigen/Eigen>
 
+#include <rovi_utils/rovi_utils.h>
+
 int
 main(int argc, char** argv)
 {
-	// define ROS node
-	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
+	using namespace rovi_utils;
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
@@ -60,7 +61,6 @@ main(int argc, char** argv)
 
 		pub.publish(msg);
 
-		// Convert to Eigen
 		lr.sleep();
 	}
 

@@ -10,21 +10,22 @@ find_package(
 	COMPONENTS
 	roscpp
 	roslib
+	xacro
+	gazebo_ros
+	rviz
+	tf2_ros
+	joint_state_publisher
+	robot_state_publisher
 	moveit_ros_move_group
 	moveit_fake_controller_manager
 	moveit_kinematics
 	moveit_planners_ompl
-	moveit_ros_visualization
 	moveit_visual_tools
+	moveit_ros_visualization
 	moveit_setup_assistant
-	joint_state_publisher
-	robot_state_publisher
-	tf2_ros
-	xacro
 	moveit_ros_planning_interface
-	gazebo_ros
-	rviz
 	ur5_description
+	rovi_utils
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -47,12 +48,16 @@ endif()
 # declare a catkin package
 catkin_package(
 	INCLUDE_DIRS
-		include
 	LIBRARIES
-		moveit_utils
 	CATKIN_DEPENDS
 		roscpp
 		roslib
+		xacro
+		gazebo_ros
+		rviz
+		tf2_ros
+		joint_state_publisher
+		robot_state_publisher
 		moveit_ros_move_group
 		moveit_fake_controller_manager
 		moveit_kinematics
@@ -60,14 +65,9 @@ catkin_package(
 		moveit_visual_tools
 		moveit_ros_visualization
 		moveit_setup_assistant
-		joint_state_publisher
-		robot_state_publisher
-		tf2_ros
-		xacro
 		moveit_ros_planning_interface
-		gazebo_ros
-		rviz
 		ur5_description
+		rovi_utils
 	DEPENDS
 		EIGEN3
 )
@@ -79,39 +79,21 @@ include_directories(
 	${EIGEN3_INCLUDE_DIRS}
 )
 
-# libraries
-
-# dynamics ur5
-add_library(moveit_utils src/lib_moveit_utils.cpp)
-target_link_libraries(moveit_utils ${catkin_LIBRARIES})
-
-install(
-	TARGETS moveit_utils
-	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-## install all project namespaced headers (package/include)
-install(
-	DIRECTORY include/moveit_utils/
-	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
 # moveit configs
 install(
 	DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 	PATTERN "setup_assistant.launch" EXCLUDE
 )
+
 install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 ################################################################################################
 
 # nodes
 
-# ur5_moveit_planner
-add_executable(ur5_moveit_planner src/ur5_moveit_planner.cpp)
-target_link_libraries(ur5_moveit_planner ${catkin_LIBRARIES} moveit_utils)
+# rrt_test
+add_executable(rrt_test src/rrt_test.cpp)
+target_link_libraries(rrt_test ${catkin_LIBRARIES})
 
-add_executable(ur5_reachability src/ur5_reachability.cpp)
-target_link_libraries(ur5_reachability ${catkin_LIBRARIES} moveit_utils)
+# add_executable(ur5_reachability src/ur5_reachability.cpp)
+# target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
