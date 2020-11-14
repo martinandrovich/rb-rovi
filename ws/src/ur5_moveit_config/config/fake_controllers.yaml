@@ -1,0 +1,17 @@
+controller_list:
+  - name: fake_ur5_arm_controller
+    joints:
+      - ur5_joint1
+      - ur5_joint2
+      - ur5_joint3
+      - ur5_joint4
+      - ur5_joint5
+      - ur5_joint6
+  - name: fake_wsg_controller
+    joints:
+      - wsg_base_mount_right_joint
+initial:  # Define initial robot poses.
+  - group: ur5_arm
+    pose: home
+  - group: wsg
+    pose: home

@@ -24,7 +24,7 @@ This repository is structured as a `catkin` ROS workspace, consisting of the fol
 rb-rovi/ws/src
     /ur5_description
     /ur5_controllers
-	/ur5_dynamics
+    /ur5_dynamics
     /rovi_gazebo
     /rovi_planner
     /rovi_pose_estimator
@@ -58,7 +58,9 @@ Installation of the system/workspace/package; the following configuration steps 
 2. Installing dependecies (OpenCV etc.)
 3. Cloning repository (catkin workspace)
 
-Once the catkin directory is cloned, `rosdep` can be used to install any dependencies. Start with [installing `rosdep`][rosdep]. Then, from the `ws` directory, run `rosdep install --from-paths src --ignore-src -r -y`. Once all dependencies are installed, the workspace can be built using `catkin_make` from the `ws` directory.
+Once the catkin directory is cloned, `rosdep` can be used to install any dependencies; start by [installing `rosdep`][rosdep]. Due to `noetic` being relatively new, some packages must be installed from the `ros-testing` repository; to do this, open the `/etc/apt/sources.list.d/ros-latest.list` file as `sudo` and change `ros` to `ros-testing`, making it `deb http://packages.ros.org/ros-testing/ubuntu focal main` - then run `sudo apt update`.
+
+To install any ROS dependecies, from the `ws` directory, run `rosdep update` and then `rosdep install --from-paths src --ignore-src -r -y`. Once all dependencies are installed, the workspace can be built using `catkin_make` from the `ws` directory.
 
 For auto-completion, linting etc., VS Code can be configured [as explained here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers.
 

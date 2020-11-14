@@ -3,14 +3,14 @@
   <model name='coffecan'>
     <link name='link_0'>
       <inertial>
-        <mass>11.392</mass>
+        <mass>1.424</mass>
         <inertia>
-          <ixx>0.050950665624800</ixx>
-          <ixy>-0.000000000105600</ixy>
-          <ixz>-0.000518608056800</ixz>
-          <iyy>0.051258621875200</iyy>
-          <iyz>-0.000000003124800</iyz>
-          <izz>0.014837756249600</izz>
+           <ixx>0.006368833984400001</ixx>
+           <ixy>1.5e-12</ixy>
+           <ixz>-6.48260803e-05</ixz>
+           <iyy>0.0064073300781</iyy>
+           <iyz>-3.742e-10</iyz>
+           <izz>0.0018547197266</izz>
         </inertia>
         <pose>0.000513 0 0.080213 0 -0 0</pose>
       </inertial>
@@ -43,7 +43,7 @@
         <surface>
           <friction>
             <ode>
-              <mu>1</mu>
+              <mu>1.35</mu>
               <mu2>1</mu2>
               <fdir1>0 0 0</fdir1>
               <slip1>0</slip1>

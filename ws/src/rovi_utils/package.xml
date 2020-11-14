@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package format="2">
+
+	<name>rovi_utils</name>
+	<version>1.0.0</version>
+	<description>Utility methods for the ROVI project.</description>
+
+	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
+	<author email="marta16@student.sdu.dk">Martin Androvich</author>
+
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+
+	<license>BSD</license>
+	
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>xacro</depend>
+	<depend>gazebo_ros</depend>
+	<depend>tf</depend>
+	<depend>geometry_msgs</depend>
+	<depend>moveit_msgs</depend>
+	<depend>geometric_shapes</depend>
+
+	<depend>Eigen3</depend>
+
+</package>

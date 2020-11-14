@@ -3,14 +3,14 @@
   <model name='mug'>
     <link name='link_0'>
       <inertial>
-        <mass>0.2</mass>
+        <mass>0.255</mass>
         <inertia>
-          <ixx>0</ixx>
-          <ixy>0</ixy>
-          <ixz>0</ixz>
-          <iyy>0</iyy>
-          <iyz>0</iyz>
-          <izz>0</izz>
+          <ixx>0.00046891328119999997</ixx>
+          <ixy>7.48876e-08</ixy>
+          <ixz>-1.3659928e-06</ixz>
+          <iyy>0.000488373584</iyy>
+          <iyz>1.1515100000000001e-08</iyz>
+          <izz>0.0004522395996</izz>
         </inertia>
         <pose>0.001347 -7e-06 0.044695 0 -0 0</pose>
       </inertial>

@@ -3,7 +3,7 @@
 
   <xacro:macro name="ur5_gazebo">
   
-  <!-- link 0 -->
+    <!-- link 0 -->
 
     <gazebo reference="ur5_link0">
       <static>true</static>

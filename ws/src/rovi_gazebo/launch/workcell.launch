@@ -9,6 +9,8 @@
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 
+	<arg name="all_objects" default="false" type="bool" />
+
 	<!-- GAZEBO -->
 
 	<!-- locate robot description -->
@@ -18,6 +20,10 @@
 	<!-- locate models -->
 	<param name="table" textfile="$(find rovi_gazebo)/models/table/model.sdf"/>
 	<param name="bottle" textfile="$(find rovi_gazebo)/models/bottle/model.sdf"/>
+	<param name="mug" textfile="$(find rovi_gazebo)/models/mug/model.sdf"/>
+	<param name="milk" textfile="$(find rovi_gazebo)/models/milk/model.sdf"/>
+	<param name="coffecan" textfile="$(find rovi_gazebo)/models/coffecan/model.sdf"/>
+	
 	<param name="camera_stereo" textfile="$(find rovi_gazebo)/models/camera_stereo/model.sdf"/>
 	<param name="kinect" textfile="$(find rovi_gazebo)/models/kinect/model.sdf"/>
 
@@ -50,7 +56,14 @@
 	<!-- spawn object(s) -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
 	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/>
-
+	
+	<!-- don't spawn all objects -->
+	<group if="$(arg all_objects)">
+  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.3 -y 0.5"/>
+		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.6 -y 0.8"/>
+		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.5 -y 0.4"/>
+	</group>
+	
 	<!-- ROS CONTROL -->
 
 	<!-- load controller configurations -->
@@ -58,11 +71,18 @@
 	<rosparam file="$(find ur5_controllers)/config/wsg_controllers.yaml" command="load"/>
 
 	<!-- load the controllers -->
+	<!-- <node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_cartesian_pose_controller"/> -->
+	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_cartesian_pose_controller"/>
+	<!-- <node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/> -->
+	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_hybrid_controller"/>
+
+	<!--
 	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_position_pd_gravity_controller"/>
 	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_group_controller"/>
+	-->
 
 	<!-- publish default setpoints for controllers -->
-	<node pkg="rostopic" type="rostopic" name="default_wgc_setpoint" args="pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: [20, 20]}'" output="screen"/>
+	<!-- <node pkg="rostopic" type="rostopic" name="default_wgc_setpoint" args="pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: 20.0 }'" output="screen"/> -->
 	<node pkg="rostopic" type="rostopic" name="default_ur5_setpoint" args="pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64MultiArray '{data: [0, -1.57, 0, 0, 0, 0]}'" output="screen"/>
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->

@@ -6,3 +6,17 @@ wsg_group_controller:
     joints:
         - wsg_base_mount_right_joint
         - wsg_base_mount_left_joint
+
+wsg_joint_state_controller:
+
+    type: joint_state_controller/JointStateController
+    publish_rate: 100
+
+wsg_hybrid_controller:
+
+    type: ur5_controllers/WSGHybridController
+    state_publish_rate: 100
+
+    joint_names:
+        - wsg_base_mount_right_joint
+        - wsg_base_mount_left_joint

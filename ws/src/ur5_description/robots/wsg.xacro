@@ -10,24 +10,20 @@
   </joint>
 
   <link name="wsg_base">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/wsg50base.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/wsg50base.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.7"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   <!-- right finger -->
@@ -42,24 +38,20 @@
   </joint>
 
   <link name="wsg_finger_mount_right">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_mount.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_mount.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   <joint name="wsg_mount_finger_right" type="fixed">
@@ -69,24 +61,20 @@
   </joint>
 
   <link name="wsg_finger_right">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   <joint name="wsg_fingertip_right" type="fixed">
@@ -96,24 +84,20 @@
   </joint>
 
   <link name="wsg_fingertip_right">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_tip.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_tip.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   <!-- left finger -->
@@ -125,27 +109,24 @@
     <axis xyz="1 0 0"/>
     <limit lower="0" upper="0.050" effort="150.0" velocity="${pi}"/>
     <dynamics damping="0.4" friction="0.0"/>
+    <mimic joint="wsg_base_mount_right_joint" multiplier="1" offset="0"/>
   </joint>
 
   <link name="wsg_finger_mount_left">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_mount.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_mount.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   <joint name="wsg_mount_finger_left" type="fixed">
@@ -155,19 +136,16 @@
   </joint>
 
   <link name="wsg_finger_left">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
@@ -182,24 +160,20 @@
   </joint>
 
   <link name="wsg_fingertip_left">
-
     <visual>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_tip.stl"/>
       </geometry>
     </visual>
-
     <collision>
       <geometry>
         <mesh filename="package://ur5_description/meshes/collision/fingerweiss50_tip.stl"/>
       </geometry>
     </collision>
-
     <inertial>
       <mass value="0.5"/>
       <inertia ixx="0.004433" ixy="0.0" ixz="0.0" iyy="0.00443333156" iyz="0.0" izz="0.0072"/>
     </inertial>
-
   </link>
 
   </xacro:macro>

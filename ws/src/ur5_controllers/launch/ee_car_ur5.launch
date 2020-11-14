@@ -1,0 +1,48 @@
+<launch>
+
+	<!-- GAZEBO -->
+
+	<!-- https://answers.ros.org/question/214712/gazebo-controller-spawner-warning/ -->
+	<!-- https://answers.ros.org/question/293260/controller-manager-how-to-correctly-launch-it/ -->
+
+	<!-- locate robot description -->
+    <param name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5_with_wsg.urdf.xacro"/>
+
+
+	<!-- gazebo arguments -->
+	<arg name="paused" default="true"/>
+	<arg name="use_sim_time" default="true"/>
+	<arg name="gui" default="true"/>
+	<arg name="headless" default="false"/>
+	<arg name="debug" default="false"/>
+
+	<!-- launch gazebo (empty world) - change the update rate later -->
+	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find rovi_gazebo)/world/groundless.world"/>
+		<arg name="debug" value="$(arg debug)"/>
+		<arg name="gui" value="$(arg gui)"/>
+		<arg name="paused" value="$(arg paused)"/>
+		<arg name="use_sim_time" value="$(arg use_sim_time)"/>
+		<arg name="headless" value="$(arg headless)"/>
+	</include>
+
+	<!-- spawn URDF robot model in gazebo -->
+	<!-- !!! THE MODEL WILL WOBBLE DUE TO GROUND COLLISION, EITHER REMOVE GROUND OR OFFSET ROBOT IN Z -->
+	<!-- spawn URDF robot model with gripper in gazebo -->
+	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5
+		-J ur5_joint1 0 -J ur5_joint2 -1.57 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0
+		-J wsg_base_mount_right_joint 0 -J wsg_base_mount_left_joint 0"/>
+    
+	<!-- ROS CONTROL -->
+
+	<!-- load controller configurations -->
+	<rosparam file="$(find ur5_controllers)/config/ur5_controllers.yaml" command="load"/>
+	<rosparam file="$(find ur5_controllers)/config/wsg_controllers.yaml" command="load"/>
+
+	<!-- load the controllers -->
+	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_cartesian_pose_controller"/>
+	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/>
+
+	<!-- run a robot state publisher to take the joint values and publish them to tf -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/>
+</launch>

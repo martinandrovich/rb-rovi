@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ur5_description</name>
-  <version>0.0.0</version>
-  <description>The ur_description package</description>
+	<name>ur5_description</name>
+	<version>1.0.0</version>
+	<description>URDF description of the UR5 robot.</description>
 
-  <maintainer email="danieltoftesch@hotmail.com">daniel</maintainer>
+	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
+	<author email="marta16@student.sdu.dk">Martin Androvich</author>
 
-  <license>MIT</license>
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>xacro</build_depend>
-  <build_export_depend>xacro</build_export_depend>
-  <exec_depend>xacro</exec_depend>
+	<license>BSD</license>
+	
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
 
-  <export>
+	<buildtool_depend>catkin</buildtool_depend>
 
-  </export>
+	<depend>xacro</depend>
 </package>

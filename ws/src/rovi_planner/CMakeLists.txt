@@ -18,6 +18,8 @@ find_package(
 	kdl_conversions
 	ur5_dynamics
 	ur5_controllers
+	rovi_utils
+	# ompl
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -42,6 +44,7 @@ catkin_package(
 	INCLUDE_DIRS
 		include
 	LIBRARIES
+		rovi_planner
 	CATKIN_DEPENDS
 		roscpp
 		roslib
@@ -53,6 +56,8 @@ catkin_package(
 		kdl_conversions
 		ur5_dynamics
 		ur5_controllers
+		rovi_utils
+		# ompl
 	DEPENDS
 		EIGEN3
 )
@@ -67,7 +72,7 @@ include_directories(
 # libraries
 
 ## ...
-add_library(rovi_planner src/librovi_planner.cpp)
+add_library(rovi_planner src/lib_rovi_planner.cpp)
 target_link_libraries(rovi_planner ${catkin_LIBRARIES})
 
 install(
@@ -90,8 +95,5 @@ install(
 add_executable(traj_test src/traj_test.cpp)
 target_link_libraries(traj_test ${catkin_LIBRARIES} rovi_planner)
 
-
 add_executable(goto_pose src/goto_pose.cpp)
 target_link_libraries(goto_pose ${catkin_LIBRARIES} rovi_planner)
-
-# ...

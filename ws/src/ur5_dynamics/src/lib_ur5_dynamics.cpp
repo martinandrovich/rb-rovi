@@ -192,7 +192,10 @@ Eigen::Vector6d ur5_dynamics::inv_kin(const T& pose, const Eigen::Vector6d& q)
 
 	// if rows == 0, then no solution is found
 	if (q_sol.rows() == 0)
+	{
+		ROS_ERROR_STREAM("There is no inverse kinematics!");
 		return q;
+	}
 	
 	// check if joints are within -180:180 degrees
 	for (size_t i = 0; i < q_sol.rows(); i++)
@@ -302,11 +305,8 @@ Eigen::Matrix6d ur5_dynamics::pinv_jac(const T& arg, double eps)
 
 	for (size_t i = 0; i < jac.rows(); i++)
 	{
-		if ( svd.singularValues()(i) > eps )
-			singular_inv(i,i) = 1/svd.singularValues()(i);
-		else
-			// implemented with damping term
-			singular_inv(i,i) = 1/(svd.singularValues()(i) + eps*eps);
+		// singular_inv with dampening
+		singular_inv(i,i) = 1/(svd.singularValues()(i) + eps*eps);	
 	}
 	
 	// Calculate pinv
