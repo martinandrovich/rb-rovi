@@ -14,4 +14,9 @@
       Hybrid force/position controller for the WSG end-effector.
     </description>
   </class>
+  <class name="ur5_controllers/JointPositionController" type="ur5_controllers::JointPositionController" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Hybrid force/position controller for the WSG end-effector.
+    </description>
+  </class>
 </library>

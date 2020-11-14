@@ -3,13 +3,13 @@
 #include <tuple>
 
 #include <ros/ros.h>
-#include <rovi_planner/rovi_planner.h>
 #include <kdl_conversions/kdl_msg.h>
 
 #include <ur5_controllers/PoseTwist.h>
 #include <geometry_msgs/Pose.h>
 #include <gazebo_msgs/LinkStates.h>
 
+#include <rovi_planner/rovi_planner.h>
 #include <rovi_utils/rovi_utils.h>
 
 int
