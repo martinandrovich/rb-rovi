@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <package format="2">
 
-	<name>rovi_planner</name>
+	<name>rovi_utils</name>
 	<version>1.0.0</version>
-	<description>Planner library for UR5 robot.</description>
+	<description>Utility methods for the ROVI project.</description>
 
 	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
 	<author email="marta16@student.sdu.dk">Martin Androvich</author>
@@ -18,16 +18,13 @@
 
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
-	<!-- <depend>orocos_kdl</depend> -->
-	<!-- <depend>liborocos-kdl-dev</depend> -->
-	<depend>kdl_parser</depend>
-	<depend>tf_conversions</depend>
-	<depend>eigen_conversions</depend>
-	<depend>kdl_conversions</depend>
-	<depend>rviz</depend>
-	<depend>ur5_dynamics</depend>
-	<depend>ur5_controllers</depend>
-	<depend>rovi_utils</depend>
-	<!-- <depend>ompl</depend> -->
+	<depend>xacro</depend>
+	<depend>gazebo_ros</depend>
+	<depend>tf</depend>
+	<depend>geometry_msgs</depend>
+	<depend>moveit_msgs</depend>
+	<depend>geometric_shapes</depend>
+
+	<depend>Eigen3</depend>
 
 </package>

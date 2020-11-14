@@ -1,10 +1,72 @@
-#include "moveit_utils/moveit_utils.h"
+#include "rovi_utils/rovi_utils.h"
+
+#include <thread>
+#include <pthread.h>
 
 #include <ros/ros.h>
 #include <gazebo_msgs/ModelStates.h>
+#include <geometric_shapes/shape_operations.h>
+#include <tf/transform_broadcaster.h>
+
+geometry_msgs::Pose
+rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = pos[0];
+	pose.position.y = pos[1];
+	pose.position.z = pos[2];
+
+	pose.orientation.w = ori.w();
+	pose.orientation.x = ori.x();
+	pose.orientation.y = ori.y();
+	pose.orientation.z = ori.z();
+
+	return pose;
+}
+
+// geometry_msgs::Pose
+// rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+// {
+// 	geometry_msgs::Pose pose;
+
+// 	pose.position.x = pos[0];
+// 	pose.position.y = pos[1];
+// 	pose.position.z = pos[2];
+
+// 	pose.orientation.w = ori[0];
+// 	pose.orientation.x = ori[1];
+// 	pose.orientation.y = ori[2];
+// 	pose.orientation.z = ori[3];
+
+// 	return pose;
+// }
+
+geometry_msgs::Pose
+rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy)
+{
+	geometry_msgs::Pose pose;
+
+	pose.position.x = pos[0];
+	pose.position.y = pos[1];
+	pose.position.z = pos[2];
+
+	Eigen::Quaterniond quat;
+
+	quat = Eigen::AngleAxisd(rpy[2], Eigen::Vector3d::UnitZ()) *
+	       Eigen::AngleAxisd(rpy[1], Eigen::Vector3d::UnitY()) *
+	       Eigen::AngleAxisd(rpy[0], Eigen::Vector3d::UnitX()) ;
+
+	pose.orientation.w = quat.w();
+	pose.orientation.x = quat.x();
+	pose.orientation.y = quat.y();
+	pose.orientation.z = quat.z();
+
+	return pose;
+}
 
 moveit_msgs::CollisionObject
-moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+rovi_utils::make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
 	// 3D model of <name> object is expected to be located at
 	// package://rovi_gazebo/models/name/name.dae
@@ -50,7 +112,7 @@ moveit::make_mesh_cobj(const std::string& name, const std::string& frame, const 
 }
 
 std::vector<moveit_msgs::CollisionObject>
-moveit::get_gazebo_obj(const std::string& frame, const std::vector<std::string>& excludes)
+rovi_utils::get_gazebo_obj(const std::string& frame, const std::vector<std::string>& excludes)
 {
 	// get vector of all objects in gazebo as ModelState msgs
 	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
@@ -82,22 +144,22 @@ moveit::get_gazebo_obj(const std::string& frame, const std::vector<std::string>&
 }
 
 void
-moveit::move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos)
+rovi_utils::move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos)
 {	
 
-	static std::thread * threadptr = nullptr;
+	static std::thread * thread = nullptr;
 
-	if (threadptr != nullptr)
+	if (thread != nullptr)
 	{
-		auto handle = threadptr->native_handle();
+		auto handle = thread->native_handle();
 		pthread_cancel(handle);
 	}
 
-	threadptr = new std::thread([=]()
+	thread = new std::thread([=]()
 	{
-		const double time = 100;
-		static tf::TransformBroadcaster broadcaster;
-		ros::Rate lp(time);
+		constexpr auto FREQ = 100.; // Hz
+		tf::TransformBroadcaster broadcaster;
+		ros::Rate lp(FREQ); // Hz
 		
 		while (ros::ok())
 		{
@@ -105,10 +167,11 @@ moveit::move_base(const std::string& frame_id, const std::string& child, const s
 			(
 				tf::Transform( tf::Quaternion(0., 0., 0., 1.),
 				tf::Vector3(pos[0], pos[1], pos[2])),
-				ros::Time().now() + ros::Duration(1./time),
+				ros::Time().now() + ros::Duration(1./FREQ),
 				frame_id,
 				child
 			);
+
 			broadcaster.sendTransform(transform);
 			lp.sleep();
 		}

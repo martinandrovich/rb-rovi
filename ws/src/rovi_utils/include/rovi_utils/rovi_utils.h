@@ -4,15 +4,22 @@
 #include <array>
 #include <vector>
 
+#include <Eigen/Eigen>
+
+#include <geometry_msgs/Pose.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <geometric_shapes/shape_operations.h>
-#include <tf/transform_broadcaster.h>
 
-#include <thread>
-#include <pthread.h>
-
-namespace moveit
+namespace rovi_utils
 {
+	geometry_msgs::Pose
+	make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori);
+
+	// geometry_msgs::Pose
+	// make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori);
+
+	geometry_msgs::Pose
+	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
+
 	moveit_msgs::CollisionObject
 	make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori = { 1, 0, 0, 0 });
 
@@ -21,4 +28,7 @@ namespace moveit
 
 	void 
 	move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos);
+
+	void
+	spawn_obj();
 }

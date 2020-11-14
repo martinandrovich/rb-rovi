@@ -3,12 +3,14 @@
 #include <tuple>
 
 #include <ros/ros.h>
-#include <rovi_planner/rovi_planner.h>
 #include <kdl_conversions/kdl_msg.h>
 
 #include <ur5_controllers/PoseTwist.h>
 #include <geometry_msgs/Pose.h>
 #include <gazebo_msgs/LinkStates.h>
+
+#include <rovi_planner/rovi_planner.h>
+#include <rovi_utils/rovi_utils.h>
 
 int
 main(int argc, char** argv)
@@ -81,7 +83,7 @@ main(int argc, char** argv)
 		pos_z = dz;
 	}
 	
-	const auto pose_end = make_pose({ pos_x, pos_y, pos_z }, { pose_start.orientation.w, pose_start.orientation.x, pose_start.orientation.y, pose_start.orientation.z } );
+	const auto pose_end = rovi_utils::make_pose({ pos_x, pos_y, pos_z }, { pose_start.orientation.w, pose_start.orientation.x, pose_start.orientation.y, pose_start.orientation.z } );
 	ROS_INFO_STREAM("End pose:\n\n" << pose_end << "\n");
 
 	// define waypoints

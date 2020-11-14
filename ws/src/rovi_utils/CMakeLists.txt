@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.1.3)
-project(ur5_moveit_config)
+cmake_minimum_required(VERSION 2.8.3)
+project(rovi_utils)
 
 # C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -12,20 +12,10 @@ find_package(
 	roslib
 	xacro
 	gazebo_ros
-	rviz
-	tf2_ros
-	joint_state_publisher
-	robot_state_publisher
-	moveit_ros_move_group
-	moveit_fake_controller_manager
-	moveit_kinematics
-	moveit_planners_ompl
-	moveit_visual_tools
-	moveit_ros_visualization
-	moveit_setup_assistant
-	moveit_ros_planning_interface
-	ur5_description
-	rovi_utils
+	tf
+	geometry_msgs
+	moveit_msgs
+	geometric_shapes
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -48,52 +38,48 @@ endif()
 # declare a catkin package
 catkin_package(
 	INCLUDE_DIRS
+		include
 	LIBRARIES
+		rovi_utils
 	CATKIN_DEPENDS
 		roscpp
 		roslib
 		xacro
 		gazebo_ros
-		rviz
-		tf2_ros
-		joint_state_publisher
-		robot_state_publisher
-		moveit_ros_move_group
-		moveit_fake_controller_manager
-		moveit_kinematics
-		moveit_planners_ompl
-		moveit_visual_tools
-		moveit_ros_visualization
-		moveit_setup_assistant
-		moveit_ros_planning_interface
-		ur5_description
-		rovi_utils
+		tf
+		geometry_msgs
+		moveit_msgs
+		geometric_shapes
 	DEPENDS
 		EIGEN3
 )
 
-# include directories
+# include dirs
 include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
 )
 
-# moveit configs
-install(
-	DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-	PATTERN "setup_assistant.launch" EXCLUDE
-)
-
-install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
 ################################################################################################
 
-# nodes
+# libraries
 
-# rrt_test
-add_executable(rrt_test src/rrt_test.cpp)
-target_link_libraries(rrt_test ${catkin_LIBRARIES})
+## rovi_utils (rovi_utils/rovi_utils.h)
+add_library(rovi_utils src/lib_rovi_utils.cpp)
+target_link_libraries(rovi_utils ${catkin_LIBRARIES})
 
-add_executable(ur5_reachability src/ur5_reachability.cpp)
-target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
+install(
+	TARGETS
+		rovi_utils
+	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
+## install all project namespaced headers (package/include)
+install(
+	DIRECTORY
+		include/rovi_utils
+	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
