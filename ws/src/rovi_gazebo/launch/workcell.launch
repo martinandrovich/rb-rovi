@@ -59,9 +59,9 @@
 	
 	<!-- don't spawn all objects -->
 	<group if="$(arg all_objects)">
-  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.3 -y 0.5"/>
-		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.6 -y 0.8"/>
-		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.5 -y 0.4"/>
+  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.1 -y 1.0"/>
+		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.25 -y 1.0"/>
+		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.7 -y 1.0"/>
 	</group>
 	
 	<!-- ROS CONTROL -->
