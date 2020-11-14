@@ -25,11 +25,11 @@ rb-rovi/ws/src
     /ur5_description
     /ur5_controllers
     /ur5_dynamics
-	/ur5_moveit_config
+    /ur5_moveit_config
     /rovi_gazebo
     /rovi_planner
     /rovi_pose_estimator
-	/rovi_utils
+    /rovi_utils
     /rovi_system
         manipulator_reachability.cpp
         pose_estimator_test.cpp
