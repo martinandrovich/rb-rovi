@@ -177,3 +177,28 @@ rovi_utils::move_base(const std::string& frame_id, const std::string& child, con
 		}
 	});
 }
+
+void
+rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name)
+{
+	// RobotState has a floating virtual joint, which can be set.
+	// http://docs.ros.org/en/melodic/api/moveit_core/html/classmoveit_1_1core_1_1RobotState.html#ad08c92a61d43013714ec3894cd67a297
+
+	// ROS_ERROR_STREAM(state.getRobotModel()->getRootJointName());
+	// ROS_ERROR_STREAM(state.getRobotModel()->getRootJoint()->getTypeName());
+
+	// the position of the virtual joint is set by calling
+	// setVariablePositions(const std::map<std::string, double>& variable_map)
+
+	ROS_WARN_STREAM("Moving base (joint: " << virtual_joint_name <<") to: { " << offset[0] << ", " << offset[2] << ", " << offset[2] << "}");
+
+	state.setVariablePositions({
+		{ virtual_joint_name + "/trans_x", offset[0] },
+		{ virtual_joint_name + "/trans_y", offset[1] },
+		{ virtual_joint_name + "/trans_z", offset[2] }
+	});
+
+	// state.setVariablePosition(0, offset[0]);
+	// state.setVariablePosition(1, offset[1]);
+	// state.setVariablePosition(2, offset[2]);
+}
