@@ -25,9 +25,11 @@ rb-rovi/ws/src
     /ur5_description
     /ur5_controllers
     /ur5_dynamics
+	/ur5_moveit_config
     /rovi_gazebo
     /rovi_planner
     /rovi_pose_estimator
+	/rovi_utils
     /rovi_system
         manipulator_reachability.cpp
         pose_estimator_test.cpp
@@ -43,7 +45,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Dependencies
 
-The system is tested on Ubuntu `20.04.3 LTS`. The project is compiled using `GNU C++17`, built with `catkin` (CMake `2.8.3`) mainly depending on:
+The system is tested on Ubuntu `18.04.3 LTS` and Ubuntu `20.04.3 LTS`. The project is compiled using `GNU C++17`, built with `catkin` (CMake `2.8.3`), mainly depending on:
 
 * [ROS (noetic)][ros] - used as framework for robot operation
 * [Gazebo][gazebo] - used as robot simulation environment
@@ -54,21 +56,20 @@ The system is tested on Ubuntu `20.04.3 LTS`. The project is compiled using `GNU
 
 Installation of the system/workspace/package; the following configuration steps are necessary:
 
-1. Installing `ROS`
-2. Installing dependecies (OpenCV etc.)
+1. Installing ROS
+2. Installing external dependecies (OpenCV, PCL via `apt install`)
 3. Cloning repository (catkin workspace)
+4. Installing ROS dependencies and building catkin workspace
 
-Once the catkin directory is cloned, `rosdep` can be used to install any dependencies; start by [installing `rosdep`][rosdep]. Due to `noetic` being relatively new, some packages must be installed from the `ros-testing` repository; to do this, open the `/etc/apt/sources.list.d/ros-latest.list` file as `sudo` and change `ros` to `ros-testing`, making it `deb http://packages.ros.org/ros-testing/ubuntu focal main` - then run `sudo apt update`.
+Once the catkin directory is cloned, `rosdep` can be used to install any ROS dependencies; start by [installing `rosdep`][rosdep]. Since `noetic` is relatively new, some packages must be installed from the `ros-testing` repository. To do this, open the `/etc/apt/sources.list.d/ros-latest.list` file as `sudo` and change `/ros/` to `/ros-testing/` - then run `sudo apt update` and `sudo apt upgrade`.
 
-To install any ROS dependecies, from the `ws` directory, run `rosdep update` and then `rosdep install --from-paths src --ignore-src -r -y`. Once all dependencies are installed, the workspace can be built using `catkin_make` from the `ws` directory.
+To install ROS dependecies, run `rosdep update` from the `ws` directory, followed by `rosdep install --from-paths src --ignore-src -r -y`. Once all dependencies are installed, the workspace can be built using `catkin_make` from the `ws` directory.
 
 For auto-completion, linting etc., VS Code can be configured [as explained here][ros-vs-code]. VS Code should be launched from the `ws` directory (`code rb-rovi/ws`), where IntelliSense can then be automatically configured to fetch all necessary headers.
 
-Scripts for these steps will be available later.
-
 ### Usage
 
-Run `source rb-rovi/ws/devel/setup.bash` to load the necessary variables to access the commands to run the packages of this repository. The workspace simulation can be launched by running `roslaunch rovi_gazebo workcell.launch`.
+Navigate to `../rb-rovi/ws/` and run `source devel/setup.bash` to load the necessary environment variables to access the commands to run the packages of this repository. The workspace simulation can then be launched by running `roslaunch rovi_gazebo workcell.launch`.
 
 ### API & Troubleshooting
 
@@ -84,9 +85,7 @@ No license has been decided yet.
 
 ## Acknowledgments
 
-- [Erdal Perkel][erdal-git] - integration of Franka Emika Panda into Gazebo
 - [RoboGnome][erdal-git] - configuration of VS Code to run flawlessly with ROS
-
 
 [semver]: http://semver.org/
 [releases]: about:blank
