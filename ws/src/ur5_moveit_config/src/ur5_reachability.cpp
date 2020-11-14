@@ -26,7 +26,16 @@ main(int argc, char** argv)
     spinner.start();
 
     // create a planning scene
-    ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene", 1);
+    ros::Publisher planning_scene_diff_publisher = nh.advertise<moveit_msgs::PlanningScene>("planning_scene_2", 1);
+    ros::WallDuration sleep_t(0.5);
+
+    while(planning_scene_diff_publisher.getNumSubscribers() < 1)
+    {
+        sleep_t.sleep();
+    }
+
+    moveit_visual_tools::MoveItVisualTools visual_tools("ur5_link0");
+    visual_tools.deleteAllMarkers();
 
     // load robot model
     robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
@@ -36,7 +45,7 @@ main(int argc, char** argv)
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
     // we will use planning-scene interface to add and remove collision objects in our virtual world
-    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+    // moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
     // we need to add a planning_scene
     planning_scene::PlanningScene planning_scene(robot_kinematic_model);
@@ -45,8 +54,6 @@ main(int argc, char** argv)
     const auto joint_model_group = move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
     // visualization in rviz
-    moveit_visual_tools::MoveItVisualTools visual_tools("ur5_link0");
-    visual_tools.deleteAllMarkers();
 
     // init objects
     std::vector<moveit_msgs::CollisionObject> collision_objects
@@ -57,16 +64,18 @@ main(int argc, char** argv)
 
     moveit::move_base("world_new", "world", {0.1, 0.1, 0.75});
 
-    planning_scene_interface.addCollisionObjects(collision_objects);   
+    //planning_scene_interface.addCollisionObjects(collision_objects);   
 
-    // here ..>
+    // add obstacles
+    moveit_msgs::PlanningScene add_obj;
+    add_obj.world.collision_objects = collision_objects;
+    add_obj.is_diff = true;
+    planning_scene_diff_publisher.publish(planning_scene);
 
     Eigen::VectorXd joints;
     move_group.getCurrentState()->copyJointGroupPositions(joint_model_group, joints);
 
     ROS_INFO_STREAM(joints);
-
-    planning_scene.
 
     // robot_state::RobotState start_state(*move_group.getCurrentState());
     // geometry_msgs::Pose start_pose2;
