@@ -16,10 +16,6 @@
 
 	<buildtool_depend>catkin</buildtool_depend>
 
-	<build_depend>message_generation</build_depend>
-	<exec_depend>message_runtime</exec_depend>
-	<depend>std_msgs</depend>
-
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
 	<depend>Eigen3</depend>

@@ -8,4 +8,5 @@ rostopic pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64M
 rostopic pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: [20, 20]}'
 rostopic pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: [-20, -20]}'
 
+#Conversion of a model.ply to model.pcd  pcl_mesh2pcd source[.ply] dest[.pcd]
 
