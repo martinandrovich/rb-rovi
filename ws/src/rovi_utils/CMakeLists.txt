@@ -11,6 +11,8 @@ find_package(
 	roscpp
 	roslib
 	xacro
+	kdl_parser
+	eigen_conversions
 	gazebo_ros
 	tf
 	geometry_msgs
@@ -46,6 +48,8 @@ catkin_package(
 		roscpp
 		roslib
 		xacro
+		kdl_parser
+		eigen_conversions
 		gazebo_ros
 		tf
 		geometry_msgs
