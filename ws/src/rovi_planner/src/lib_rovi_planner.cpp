@@ -5,6 +5,7 @@
 #include <kdl/frames.hpp>
 #include <kdl/rotational_interpolation_sa.hpp>
 #include <kdl/path_point.hpp>
+#include <kdl/path_line.hpp>
 #include <kdl/path_roundedcomposite.hpp>
 #include <kdl/trajectory_segment.hpp>
 #include <kdl/trajectory_composite.hpp>
@@ -13,14 +14,16 @@
 #include <kdl/utilities/error.h>
 
 KDL::Trajectory_Composite
-rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max)
+rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double equiv_radius)
 {
-	if (waypoints.empty())
-		throw std::runtime_error("There must be at least one waypoint.");
+	// equivalent radius: serves to compare rotations and translations; the "amount of motion" (pos,vel,acc)
+	// of the rotation is taken to be the amount motion of a point at distance eqradius from the rotation axis.
+	
+	if (waypoints.size() < 2)
+		throw std::runtime_error("There must be at least two waypoints.");
 
 	auto interpolator    = new KDL::RotationalInterpolation_SingleAxis();
 	auto traj            = new KDL::Trajectory_Composite();
-	auto path            = new KDL::Path_Composite();
 	auto vel_profile     = new KDL::VelocityProfile_Trap(vel_max, acc_max);
 	
 	// convert vector<Pose> to vector<KDL::Frame>
@@ -36,11 +39,20 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 	// try creating the trajectory; catch any errors
 	try
 	{
-		// create a trajectory segment for each waypoint defined as a path point with some velocity profile
-		for (auto pt : frames)
+		// create a trajectory segment for each waypoint defined as a path line betwen the current and next point with some velocity profile
+		// http://docs.ros.org/en/melodic/api/orocos_kdl/html/classKDL_1_1Path__Line.html#a1ea3f21f577aee2a4252c5a802b6a7f2
+		
+		for (size_t i = 0; i < frames.size() - 1; ++i)
 		{
-			auto traj_seg = new KDL::Trajectory_Segment(new KDL::Path_Point(pt), vel_profile);
+			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator, 0.05);
+			vel_profile->SetProfile(0, path->PathLength());
+			const auto traj_seg = new KDL::Trajectory_Segment(path, vel_profile);
+			
 			traj->Add(traj_seg);
+
+			ROS_DEBUG_STREAM("path->PathLength(): " << path->PathLength());
+			ROS_DEBUG_STREAM("traj_seg->Duration(): " << traj_seg->Duration());
+			ROS_DEBUG_STREAM("traj->Duration(): " << traj->Duration());
 		}
 
 	}

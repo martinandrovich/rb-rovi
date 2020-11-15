@@ -1,4 +1,5 @@
 #include <fstream>
+#include <tuple>
 
 #include <ros/ros.h>
 #include <rovi_planner/rovi_planner.h>
@@ -29,21 +30,20 @@ main(int argc, char** argv)
 	std::vector<geometry_msgs::Pose> waypoints = 
 	{
 		make_pose({ 0.09, 0.12, 0.90 }, ori),
-		make_pose({ 0.50, 0.26, 0.50 }, ori),
-		// make_pose({ 0.07, 0.50, 0.50 }, ori2),
+		make_pose({ 0.50, 0.24, 0.90 }, ori),
+		make_pose({ 0.09, 0.02, 0.50 }, ori2),
 		// make_pose({ 0.09, 0.12, 0.90 }, ori),
 		// make_pose({ 0.52, 0.26, 0.90 }, ori),
 		// make_pose({ 0.30, 0.56, 0.50 }, ori),
 		// make_pose({ 0.60, 0.99, 0.74 }, ori),
 	};
 
-	auto traj = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.05);
-	// auto traj = rovi_planner::traj_linear(waypoints, 0.1, 0.1);
-
-	ROS_INFO_STREAM("Generated trajectory with duration: " << traj.Duration() << " sec");
+	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
+	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
 
 	// export to file
-	rovi_utils::export_traj(traj, "test.dat", 0.01);
+	rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
+	rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
 
 	// command trajectory to robot at 100 Hz
 
@@ -54,8 +54,11 @@ main(int argc, char** argv)
 	ur5_controllers::PoseTwist msg;
 	ros::Rate lr(100); // Hz
 
-	for (double t = 0.0; t < traj.Duration(); t += 0.01)
+	for (auto [t, traj] = std::tuple{ 0.0, traj_lin }; t < traj.Duration() and ros::ok(); t += 0.01)
 	{
+		
+		ROS_INFO_STREAM_ONCE("Executing trajectory with duration: " << traj.Duration() << " sec");
+
 		// KDL Frame
 		const auto& frame = traj.Pos(t);
 		const auto& twist = traj.Vel(t);
