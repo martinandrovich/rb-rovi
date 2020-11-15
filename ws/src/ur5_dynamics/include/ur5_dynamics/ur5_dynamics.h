@@ -52,6 +52,10 @@ public:
 	static Eigen::Vector6d
 	inv_kin(const T& frame, const Eigen::Vector6d& q);
 
+	template<typename T = Eigen::Matrix4d>
+	static Eigen::MatrixXd 
+	inv_kin(const T& frame);
+
 	template<typename T = Eigen::Vector6d>
 	static Eigen::Matrix6d
 	pinv_jac(const T& arg, const double eps = 1.0e-5);

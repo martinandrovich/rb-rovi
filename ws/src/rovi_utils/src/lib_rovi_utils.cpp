@@ -27,22 +27,14 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<
 	return pose;
 }
 
-// geometry_msgs::Pose
-// rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double, 4>& ori)
-// {
-// 	geometry_msgs::Pose pose;
-
-// 	pose.position.x = pos[0];
-// 	pose.position.y = pos[1];
-// 	pose.position.z = pos[2];
-
-// 	pose.orientation.w = ori[0];
-// 	pose.orientation.x = ori[1];
-// 	pose.orientation.y = ori[2];
-// 	pose.orientation.z = ori[3];
-
-// 	return pose;
-// }
+geometry_msgs::Pose
+rovi_utils::make_pose(const std::array<double, 6>& pose)
+{
+	return rovi_utils::make_pose( 
+									{ pose[0], pose[1], pose[2] }, 
+									{ pose[3], pose[4], pose[5] } 
+								);
+}
 
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy)
@@ -192,7 +184,7 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 	// the position of the virtual joint is set by calling
 	// setVariablePositions(const std::map<std::string, double>& variable_map)
 
-	ROS_WARN_STREAM("Moving base (joint: " << virtual_joint_name <<") to: { " << offset[0] << ", " << offset[2] << ", " << offset[2] << "}");
+	ROS_DEBUG_STREAM("Moving base (joint: " << virtual_joint_name <<") to: { " << offset[0] << ", " << offset[2] << ", " << offset[2] << "}");
 
 	state.setVariablePositions({
 		{ virtual_joint_name + "/trans_x", offset[0] },
