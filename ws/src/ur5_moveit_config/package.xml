@@ -40,6 +40,7 @@
 	<depend>moveit_ros_planning_interface</depend>
 
 	<depend>ur5_description</depend>
+	<depend>ur5_dynamics</depend>
 	<depend>rovi_utils</depend>
 
 </package>
