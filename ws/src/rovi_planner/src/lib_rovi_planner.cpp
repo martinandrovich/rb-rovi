@@ -13,11 +13,52 @@
 #include <kdl/utilities/error.h>
 
 KDL::Trajectory_Composite
-rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints)
+rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max)
 {
-	auto interpolator = KDL::RotationalInterpolation_SingleAxis();
+	if (waypoints.empty())
+		throw std::runtime_error("There must be at least one waypoint.");
 
-	return KDL::Trajectory_Composite();
+	auto interpolator    = new KDL::RotationalInterpolation_SingleAxis();
+	auto traj            = new KDL::Trajectory_Composite();
+	auto path            = new KDL::Path_Composite();
+	auto vel_profile     = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+	
+	// convert vector<Pose> to vector<KDL::Frame>
+	std::vector<KDL::Frame> frames;
+
+	for (const auto& pt : waypoints)
+	{
+		static KDL::Frame frame;
+		tf::poseMsgToKDL(pt, frame);
+		frames.push_back(frame);
+	}
+
+	// try creating the trajectory; catch any errors
+	try
+	{
+		// create a trajectory segment for each waypoint defined as a path point with some velocity profile
+		for (auto pt : frames)
+		{
+			auto traj_seg = new KDL::Trajectory_Segment(new KDL::Path_Point(pt), vel_profile);
+			traj->Add(traj_seg);
+		}
+
+	}
+	catch (const KDL::Error& e)
+	{
+		ROS_ERROR("Could not plan trajectory.");
+
+		ROS_INFO("Planning was attempted with following waypoints:\n\n");
+		for (auto const& point : frames)
+			std::cout << point << "\n\n";
+
+		std::cerr << e.Description() << std::endl;
+		std::cerr << e.GetType() << std::endl;
+
+		exit(-1);
+	}
+
+	return *traj;
 }
 
 KDL::Trajectory_Composite
