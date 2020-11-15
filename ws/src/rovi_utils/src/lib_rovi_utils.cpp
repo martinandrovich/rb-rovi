@@ -205,6 +205,10 @@ rovi_utils::export_traj(const T& traj, const std::string&& filename, const doubl
 	if (resolution <= 0)
 		throw std::runtime_error("Resolution must be positive.");
 
+	// MATLAB code:
+	// data = readmatrix("traj_lin.csv");
+	// plot3(data(:, 4), data(:, 8), data(:, 12))
+
 	std::ofstream fs(filename, std::ofstream::out);
 
 	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
@@ -228,7 +232,6 @@ rovi_utils::export_traj(const T& traj, const std::string&& filename, const doubl
 				fs << v(i) << ((i != v.size() - 1) ? ", " : "");
 
 			fs << "\n";
-
 		}
 	}
 
