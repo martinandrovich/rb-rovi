@@ -23,6 +23,12 @@ namespace rovi_utils
 	geometry_msgs::Pose
 	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
 
+	// -- trajectories ------------------------------------------------------------
+
+	template<typename T>
+	void
+	export_traj(const T& traj, const std::string&& filename, const double resolution = 0.01 /* [s] */);
+
 	// -- moveit ------------------------------------------------------------------
 
 	moveit_msgs::CollisionObject

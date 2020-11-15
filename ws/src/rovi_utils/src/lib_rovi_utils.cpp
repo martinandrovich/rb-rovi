@@ -7,6 +7,8 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <geometric_shapes/shape_operations.h>
 #include <tf/transform_broadcaster.h>
+#include <eigen_conversions/eigen_kdl.h>
+#include <kdl/trajectory_composite.hpp>
 
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori)
@@ -145,7 +147,7 @@ rovi_utils::get_gazebo_obj(const std::string& frame, const std::vector<std::stri
 
 void
 rovi_utils::move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos)
-{	
+{
 
 	static std::thread * thread = nullptr;
 
@@ -160,7 +162,7 @@ rovi_utils::move_base(const std::string& frame_id, const std::string& child, con
 		constexpr auto FREQ = 100.; // Hz
 		tf::TransformBroadcaster broadcaster;
 		ros::Rate lp(FREQ); // Hz
-		
+
 		while (ros::ok())
 		{
 			tf::StampedTransform transform = tf::StampedTransform
@@ -202,3 +204,42 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 	// state.setVariablePosition(1, offset[1]);
 	// state.setVariablePosition(2, offset[2]);
 }
+
+template<typename T>
+void
+rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
+{
+
+	if (resolution <= 0)
+		throw std::runtime_error("Resolution must be positive.");
+
+	std::ofstream fs(filename, std::ofstream::out);
+
+	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
+	{
+		for (double t = 0.0; t < traj.Duration(); t += resolution)
+		{
+			// KDL Frame
+			const auto& frame = traj.Pos(t);
+			const auto& twist = traj.Vel(t);
+
+			// convert KDL Frame to Eigen
+			static auto mat = Eigen::Affine3d();
+			tf::transformKDLToEigen(frame, mat);
+
+			// create flattened vector from Eigen (row major)
+			auto T_ = mat.matrix();
+			T_.transposeInPlace();
+			Eigen::VectorXd v(Eigen::Map<Eigen::VectorXd>(T_.data(), T_.size()));
+
+			for (size_t i = 0; i < v.size(); ++i)
+				fs << v(i) << ((i != v.size() - 1) ? ", " : "");
+
+		}
+	}
+
+	fs.close();
+
+}
+
+template void rovi_utils::export_traj<KDL::Trajectory_Composite>(const KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
