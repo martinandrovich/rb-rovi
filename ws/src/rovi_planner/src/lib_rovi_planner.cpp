@@ -11,6 +11,7 @@
 #include <kdl/trajectory_composite.hpp>
 #include <kdl/trajectory_stationary.hpp>
 #include <kdl/velocityprofile_trap.hpp>
+#include <kdl/velocityprofile_spline.hpp>
 #include <kdl/utilities/error.h>
 
 KDL::Trajectory_Composite
@@ -22,9 +23,8 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 	if (waypoints.size() < 2)
 		throw std::runtime_error("There must be at least two waypoints.");
 
-	auto interpolator    = new KDL::RotationalInterpolation_SingleAxis();
-	auto traj            = new KDL::Trajectory_Composite();
-	auto vel_profile     = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+	auto traj         = new KDL::Trajectory_Composite();
+	auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
 	
 	// convert vector<Pose> to vector<KDL::Frame>
 	std::vector<KDL::Frame> frames;
@@ -44,10 +44,16 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 		
 		for (size_t i = 0; i < frames.size() - 1; ++i)
 		{
-			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator, 0.05);
-			vel_profile->SetProfile(0, path->PathLength());
-			const auto traj_seg = new KDL::Trajectory_Segment(path, vel_profile);
 			
+			// create path
+			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator, equiv_radius);
+
+			// define velocity profile for path
+			auto vel_profile = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+			vel_profile->SetProfile(0, path->PathLength());
+
+			// construct segment from path and velocity profile
+			const auto traj_seg = new KDL::Trajectory_Segment(path, vel_profile);			
 			traj->Add(traj_seg);
 
 			ROS_DEBUG_STREAM("path->PathLength(): " << path->PathLength());
@@ -87,10 +93,9 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	if (waypoints.empty())
 		throw std::runtime_error("There must be at least one waypoint.");
 
-	auto interpolator    = new KDL::RotationalInterpolation_SingleAxis();
-	auto traj            = new KDL::Trajectory_Composite();
-	auto path            = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator);
-	auto vel_profile     = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+	auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
+	auto traj         = new KDL::Trajectory_Composite();
+	auto path         = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator);
 
 	// convert vector<Pose> to vector<KDL::Frame>
 	std::vector<KDL::Frame> frames;
@@ -116,7 +121,8 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 		// finish creating the path
 		path->Finish();
 
-		// configure velocity profile based on path start and end
+		// define velocity profile based on path start and end
+		auto vel_profile  = new KDL::VelocityProfile_Trap(vel_max, acc_max);
 		vel_profile->SetProfile(0, path->PathLength());
 
 		// add trajectory segment from path and velocity profile to final trajectory
@@ -126,7 +132,7 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	// there is a single waypoint (endpoint)
 	else
 	{
-		auto traj_seg = new KDL::Trajectory_Segment(new KDL::Path_Point(frames[0]), vel_profile);
+		auto traj_seg = new KDL::Trajectory_Segment(new KDL::Path_Point(frames[0]), new KDL::VelocityProfile_Trap(vel_max, acc_max));
 		traj->Add(traj_seg);
 	}
 

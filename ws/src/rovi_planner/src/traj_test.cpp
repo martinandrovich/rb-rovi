@@ -29,9 +29,9 @@ main(int argc, char** argv)
 
 	std::vector<geometry_msgs::Pose> waypoints = 
 	{
-		make_pose({ 0.09, 0.12, 0.90 }, ori),
-		make_pose({ 0.50, 0.24, 0.90 }, ori),
-		make_pose({ 0.09, 0.02, 0.50 }, ori2),
+		make_pose({ 0.0, 0.0, 0.0 }, ori),
+		make_pose({ 0.5, 2.0, 0.0 }, ori),
+		make_pose({ 0.5, 1.0, 1.0 }, ori),
 		// make_pose({ 0.09, 0.12, 0.90 }, ori),
 		// make_pose({ 0.52, 0.26, 0.90 }, ori),
 		// make_pose({ 0.30, 0.56, 0.50 }, ori),
