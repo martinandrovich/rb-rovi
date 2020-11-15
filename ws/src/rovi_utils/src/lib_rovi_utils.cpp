@@ -235,6 +235,8 @@ rovi_utils::export_traj(const T& traj, const std::string&& filename, const doubl
 			for (size_t i = 0; i < v.size(); ++i)
 				fs << v(i) << ((i != v.size() - 1) ? ", " : "");
 
+			fs << "\n";
+
 		}
 	}
 
