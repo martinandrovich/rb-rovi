@@ -18,6 +18,12 @@
 #include <pcl/features/spin_image.h>
 #include <pcl/common/random.h>
 
+#include <pcl/ModelCoefficients.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
+
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 
 
@@ -164,7 +170,7 @@ namespace rovi_pose_estimator
 		}
 
 		void 
-		global_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, pcl::PointCloud<pcl::PointXYZ>::Ptr& output)
+		global_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, pcl::PointCloud<pcl::PointXYZ>::Ptr& output, float inlier_tresh, int ransac_iterations)
 		{
 
 			pcl::PointCloud<pcl::Histogram<153>>::Ptr scene_spin_images (new pcl::PointCloud<pcl::Histogram<153>>);
@@ -186,7 +192,7 @@ namespace rovi_pose_estimator
 
 			std::cout << "Using ransac to find pose estimate: ..." << std::endl;
 			start_local = std::chrono::high_resolution_clock::now();
-			auto& pose_est = RANSAC_pose_est(scene, obj, match_indices, 10000, 0.005);
+			auto& pose_est = RANSAC_pose_est(scene, obj, match_indices, ransac_iterations, inlier_tresh);
 			stop_local = std::chrono::high_resolution_clock::now();
 			std::cout << " done: took " << std::chrono::duration_cast<std::chrono::seconds>(stop_local - start_local).count() << " Seconds" << std::endl;
 			std::cout << "Applying transform to global object..." << std::endl;
@@ -313,6 +319,44 @@ namespace rovi_pose_estimator
 
 		std::cerr << "PointCloud after moving least squares filtering: " << output_cloud->width * output_cloud->height 
 		<< " data points (" << pcl::getFieldsList (*output_cloud) << ")." << std::endl;
+	}
+
+	// Example found at https://pointclouds.org/documentation/tutorials/planar_segmentation.html
+	void
+    plane_segmentation(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::ModelCoefficients::Ptr& plane_coeff )
+	{
+		// Create the segmentation object
+		pcl::SACSegmentation<pcl::PointXYZ> seg;
+		// Optional
+		seg.setOptimizeCoefficients (true);
+		// Mandatory
+		seg.setModelType (pcl::SACMODEL_PLANE);
+		seg.setMethodType (pcl::SAC_RANSAC);
+		seg.setDistanceThreshold (0.015);
+
+		seg.setInputCloud(input_cloud);
+		seg.segment (*inlier_idices, *plane_coeff);
+
+		if (inlier_idices->indices.size () == 0)
+		{
+			ROS_ERROR("Could not estimate a planar model for the given dataset");
+		}
+
+	}
+
+	// Example found at https://pointclouds.org/documentation/tutorials/extract_indices.html
+    void
+    extract_indices(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud, bool inverse_extraction)
+	{
+		pcl::ExtractIndices<pcl::PointXYZ> extract;
+		// Extract the inliers
+		extract.setInputCloud (input_cloud);
+		extract.setIndices(inlier_idices);
+		extract.setNegative(inverse_extraction);
+		extract.filter(*output_cloud);
+		if(inverse_extraction) 	ROS_INFO("PointCloud representing any points BUT the plane: %i", output_cloud->width * output_cloud->height);
+		else ROS_INFO("PointCloud representing the planar component: %i", output_cloud->width * output_cloud->height);
+		
 	}
 
 

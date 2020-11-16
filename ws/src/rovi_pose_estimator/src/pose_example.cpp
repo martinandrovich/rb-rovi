@@ -25,38 +25,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_
 }
 
 
-
-typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> ColorHandlerT;
-
-int
-main(int argc, char** argv)
+void pose_estimation_example()
 {
-	// define ROS node
-	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
 
-	ros::init(argc, argv, "example_node");
-	ros::NodeHandle nh;
-	// cv::namedWindow("img");
-	// cv::waitKey(0);
+	typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> ColorHandlerT;
 
-	// log information
-	ROS_INFO("Initialized a single-thread ROS example node.");
-	//cv::namedWindow("stereo_left");
-	//cv::namedWindow("stereo_right");
-	//cv::startWindowThread();
-
-	// image_transport::ImageTransport it(nh);
-	// //image_transport::Subscriber sub = it.subscribe("rbrovi/camera_stereo/left/image_raw", 1, &imageCallback, image_transport::TransportHints("left_image"));
-	// image_transport::Subscriber sub2 = it.subscribe("rbrovi/camera_stereo/right/image_raw", 1, &imageCallback);
-	// ros::spin();
-	// cv::destroyAllWindows();
-
-	// const auto& sub = nh.subscribe("rbrovi/camera_stereo/left/image_raw", 1, &imageCallback);
-	// use rovi_gazebo library
-	// rovi_pose_estimator::test("test");
-	// cv::Mat img;
-
-	ros::Rate loop_rate(1000);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr obj (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed (new pcl::PointCloud<pcl::PointXYZ>);
@@ -83,9 +56,28 @@ main(int argc, char** argv)
 	visu.updatePointCloud(scene, "scene");
 	visu.spin();
 
-	rovi_pose_estimator::voxelGrid(scene, scene, 0.01q);
+	float leaf_size = 0.015;
+
+	rovi_pose_estimator::voxelGrid(scene, scene, leaf_size);
 	visu.updatePointCloud(scene, "scene");
+	rovi_pose_estimator::voxelGrid(obj, obj, leaf_size);
+	visu.updatePointCloud(obj, "object");
 	visu.spin();
+
+	pcl::ModelCoefficients::Ptr plane_coeff (new pcl::ModelCoefficients);
+ 	pcl::PointIndices::Ptr plane_inliers (new pcl::PointIndices);
+
+	rovi_pose_estimator::plane_segmentation(scene, plane_inliers, plane_coeff);
+
+	// pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_plane (new pcl::PointCloud<pcl::PointXYZ>);
+	rovi_pose_estimator::extract_indices(scene, plane_inliers, scene, true);
+	// visu.addPointCloud(segmented_plane, ColorHandlerT (obj, 255.0, 0.0, 0.0), "plane");
+	visu.updatePointCloud(scene, "scene");
+	ROS_INFO("Points after plane removal... %i", scene->height*scene->width);
+	visu.spin();
+
+
+
 
 	//rovi_pose_estimator::outlierRemoval(scene, scene);
 	//visu.updatePointCloud(scene, "scene");
@@ -96,7 +88,7 @@ main(int argc, char** argv)
 	//visu.updatePointCloud(scene, "scene");
 	//visu.spin();
 
-	rovi_pose_estimator::M2::global_pose_est(scene, obj, transformed);
+	rovi_pose_estimator::M2::global_pose_est(scene, obj, transformed, leaf_size, 5000);
 	visu.addPointCloud (transformed, ColorHandlerT (transformed, 0.0, 0.0, 255.0), "object_aligned");
 	pcl::PCDWriter writer;
 
@@ -104,8 +96,27 @@ main(int argc, char** argv)
 	ROS_INFO("Done performing global pose est...");
 	
 	visu.spin();
+}
 
 
+
+
+int
+main(int argc, char** argv)
+{
+	// define ROS node
+	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
+
+	ros::init(argc, argv, "example_node");
+	ros::NodeHandle nh;
+
+	ROS_INFO("Initialized a single-thread ROS example node.");
+
+	pose_estimation_example();
+
+
+	ros::Rate loop_rate(1000);
+	
 
 
 
