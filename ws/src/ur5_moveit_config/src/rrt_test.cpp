@@ -191,6 +191,8 @@ main(int argc, char** argv)
 	visual_tools.publishAxisLabeled(pose.pose, "goal_2");
 	visual_tools.trigger();
 
+	rovi_utils::export_traj(*res.trajectory_, "joint_trajectory.csv");
+
 	// moveit::core::RobotStatePtr rbt_ptr(new moveit::core::RobotState(robot_state));
 
 	// {
@@ -213,7 +215,6 @@ main(int argc, char** argv)
 	// 		lp.sleep();
 	// 	}
 	// }
-
 	return 0;
 }
 
