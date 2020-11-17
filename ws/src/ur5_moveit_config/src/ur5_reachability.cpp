@@ -97,10 +97,10 @@ void reachability(
 
     // load robot model and kinematic model, and use it to setup the planning scene
     robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-    robot_model::RobotModelPtr robot_kinematic_model(robot_model_loader->getModel());
+    robot_model::RobotModelPtr robot_model(robot_model_loader->getModel());
 
     // set up the planning scene for collision detection
-    planning_scene::PlanningScene planning_scene(robot_kinematic_model);
+    planning_scene::PlanningScene planning_scene(robot_model);
 
     // get robot state, this is a raw reference and pointers for arm_group and wsg_group
     auto& robot_state    = planning_scene.getCurrentStateNonConst();
