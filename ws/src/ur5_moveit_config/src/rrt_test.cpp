@@ -33,6 +33,9 @@ main(int argc, char** argv)
 	ros::AsyncSpinner spinner(1);
 	spinner.start();
 
+	// display publisher
+	ros::Publisher display_publisher = nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
+
 	// load robot model and kinematic model, and use it to setup the planning scene
     robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
     robot_model::RobotModelPtr robot_model(robot_model_loader->getModel());
@@ -42,7 +45,10 @@ main(int argc, char** argv)
 
 	// visualization in rviz
 	moveit_visual_tools::MoveItVisualTools visual_tools("ur5_link0");
+	visual_tools.loadRobotStatePub("/disp_robot_state");
+	visual_tools.enableBatchPublishing();
 	visual_tools.deleteAllMarkers();
+	visual_tools.trigger();
 	
     // get robot state, this is a raw reference and pointers for arm_group and wsg_group
     auto& robot_state    = planning_scene->getCurrentStateNonConst();
@@ -70,30 +76,60 @@ main(int argc, char** argv)
 	robot_state.setToDefaultValues(arm_group, "home");
 	robot_state.setToDefaultValues(wsg_group, "home");
 
-
-	// -------------------------------------------------------------------------------------------------------- //
-
+	// setup a plugin
 
 	boost::scoped_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
-
 	planning_interface::PlannerManagerPtr planner_instance;
-
 	planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
-
 	planner_instance.reset(planner_plugin_loader->createUnmanagedInstance(PLANNER_PLUGIN_NAME));
+
+	// success ?
 
 	if (!planner_instance->initialize(robot_model, nh.getNamespace()))
 	{
     	ROS_FATAL_STREAM("Could not initialize planner instance");
 		return -1;
 	}
-	
-	// Pose Goal
 
 	ROS_INFO_STREAM("Using planning interface '" << planner_instance->getDescription() << "'");
 
-	//visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
-	visual_tools.trigger();
+	// set the configuration
+	/*
+	planning_interface::PlannerConfigurationSettings settings;
+	settings.config.insert(std::pair<std::string, std::string>("type", "geometric::RRTConnect"));
+	settings.group = ARM_GROUP;
+	settings.name = "ur5";
+
+	moveit_msgs::
+	*/
+
+	// ros::V_string msg;
+	// planner_instance->getPlanningAlgorithms(msg);
+	// const auto &map = planner_instance->getPlannerConfigurations();
+
+	// for(auto it = map.begin(); it != map.end(); it++)
+	// {
+	// 	ROS_INFO_STREAM(it->second.group << ", " << it->second.name);
+
+	// 	for (auto [key, value] : it->second.config)
+	// 	{
+	// 		ROS_INFO_STREAM(key);
+	// 		//ROS_INFO_STREAM(value);
+	// 	}
+	// }
+
+	// for(auto& msg_ : msg)
+	// {
+	// 	ROS_INFO_STREAM(msg_);
+	// }
+
+	// planning_interface::PlannerConfigurationSettings settings;
+	// settings.config.insert(std::pair<std::string, std::string>("type", "geometric::RRTConnect"));
+	// settings.group = ARM_GROUP;
+	// settings.name = "ur5";
+
+	// follow the motion planning guide
+
 	planning_interface::MotionPlanRequest req;
 	planning_interface::MotionPlanResponse res;
 
@@ -122,6 +158,7 @@ main(int argc, char** argv)
 
 	planning_interface::PlanningContextPtr context = planner_instance->getPlanningContext(planning_scene, req, res.error_code_);
 
+
 	context->solve(res);
 
 	if (res.error_code_.val != res.error_code_.SUCCESS)
@@ -129,53 +166,53 @@ main(int argc, char** argv)
 		ROS_ERROR("Could not compute plan successfully");
 		return 0;
 	}
+
+	// put the orbot into 
+	visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
+	visual_tools.trigger();
 	
 	// visualize the result
-	ros::Publisher display_publisher = nh.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true);
 	moveit_msgs::DisplayTrajectory display_trajectory;
 
-	// visualize the trajectory
+	// prep for visualize the trajectory
 	moveit_msgs::MotionPlanResponse response;
 	res.getMessage(response);
 
 	display_trajectory.trajectory_start = response.trajectory_start;
 	display_trajectory.trajectory.push_back(response.trajectory);
-
 	visual_tools.publishTrajectoryLine(display_trajectory.trajectory.back(), arm_group);
-	
 	visual_tools.trigger();
-
 	display_publisher.publish(display_trajectory);
 
-	/* Set the state in the planning scene to the final state of the last plan */
+	/* set the state in the planning scene to the final state of the last plan */
 	robot_state.setJointGroupPositions(arm_group, response.trajectory.joint_trajectory.points.back().positions);
-	planning_scene->setCurrentState(robot_state);
 
-	//visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
+	visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
+	visual_tools.publishAxisLabeled(pose.pose, "goal_2");
 	visual_tools.trigger();
 
-	moveit::core::RobotStatePtr rbt_ptr(new moveit::core::RobotState(robot_state));
+	// moveit::core::RobotStatePtr rbt_ptr(new moveit::core::RobotState(robot_state));
 
-	{
-		ros::Rate lp(1);
-		while (ros::ok())
-		{
-			ROS_INFO_STREAM( "The plan: " << res.planning_time_);
+	// {
+	// 	ros::Rate lp(1);
+	// 	while (ros::ok())
+	// 	{
+	// 		ROS_INFO_STREAM( "The plan: " << res.planning_time_);
 
-			ROS_INFO("Lort");
+	// 		ROS_INFO("Lort");
 
-			auto traj = res.trajectory_->getStateAtDurationFromStart(0.1f, rbt_ptr);
+	// 		auto traj = res.trajectory_->getStateAtDurationFromStart(0.1f, rbt_ptr);
 
-			ROS_INFO("Lort2");
+	// 		ROS_INFO("Lort2");
 
-			if(traj)
-			{
-				rbt_ptr->printStatePositions();
-			}
+	// 		if(traj)
+	// 		{
+	// 			rbt_ptr->printStatePositions();
+	// 		}
 
-			lp.sleep();
-		}
-	}
+	// 		lp.sleep();
+	// 	}
+	// }
 
 	return 0;
 }
