@@ -27,7 +27,7 @@ namespace rovi_utils
 
 	template<typename T>
 	void
-	export_traj(const T& traj, const std::string&& filename, const double resolution = 0.01 /* [s] */);
+	export_traj(T& traj, const std::string&& filename, const double resolution = 0.01 /* [s] */);
 
 	// -- moveit ------------------------------------------------------------------
 
