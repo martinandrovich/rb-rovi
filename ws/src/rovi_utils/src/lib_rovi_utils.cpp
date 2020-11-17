@@ -10,6 +10,8 @@
 #include <eigen_conversions/eigen_kdl.h>
 #include <kdl/trajectory_composite.hpp>
 
+#include <moveit/planning_interface/planning_interface.h>
+
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori)
 {
@@ -30,9 +32,9 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 6>& pose)
 {
-	return rovi_utils::make_pose( 
-									{ pose[0], pose[1], pose[2] }, 
-									{ pose[3], pose[4], pose[5] } 
+	return rovi_utils::make_pose(
+									{ pose[0], pose[1], pose[2] },
+									{ pose[3], pose[4], pose[5] }
 								);
 }
 
@@ -199,7 +201,7 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 
 template<typename T>
 void
-rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
+rovi_utils::export_traj(T& traj, const std::string&& filename, const double resolution)
 {
 
 	if (resolution <= 0)
@@ -211,6 +213,7 @@ rovi_utils::export_traj(const T& traj, const std::string&& filename, const doubl
 
 	std::ofstream fs(filename, std::ofstream::out);
 
+	// KDL::Trajectory_Composite
 	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
 	{
 		for (double t = 0.0; t < traj.Duration(); t += resolution)
@@ -235,8 +238,34 @@ rovi_utils::export_traj(const T& traj, const std::string&& filename, const doubl
 		}
 	}
 
+	// robot_trajectory::RobotTrajectory
+	if constexpr (std::is_same<T, robot_trajectory::RobotTrajectory>::value)
+	{
+		auto robot_state = std::make_shared<moveit::core::RobotState>(*traj.getFirstWayPointPtr());
+
+		for (double t = 0.0; t < traj.getDuration(); t += resolution)
+		{
+
+			traj.getStateAtDurationFromStart(t, robot_state);
+			auto mat = robot_state->getGlobalLinkTransform("ur5_ee_tcp");
+
+			// create flattened vector from Eigen (row major)
+			auto T_ = mat.matrix();
+			T_.transposeInPlace();
+			Eigen::VectorXd v(Eigen::Map<Eigen::VectorXd>(T_.data(), T_.size()));
+
+			for (size_t i = 0; i < v.size(); ++i)
+				fs << v(i) << ((i != v.size() - 1) ? ", " : "");
+
+			fs << "\n";
+		}
+	}
+
 	fs.close();
 
 }
 
-template void rovi_utils::export_traj<KDL::Trajectory_Composite>(const KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
+
+// rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
+template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
+template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);
