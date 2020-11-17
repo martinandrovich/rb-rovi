@@ -12,6 +12,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <rovi_utils/rovi_utils.h>
+#include <rovi_planner/rovi_planner.h>
 
 // arm and robot_description
 constexpr auto ARM_GROUP    	 	= "ur5_arm";
@@ -157,8 +158,6 @@ main(int argc, char** argv)
 	req.goal_constraints.push_back(pose_goal);
 
 	planning_interface::PlanningContextPtr context = planner_instance->getPlanningContext(planning_scene, req, res.error_code_);
-
-
 	context->solve(res);
 
 	if (res.error_code_.val != res.error_code_.SUCCESS)
@@ -166,6 +165,14 @@ main(int argc, char** argv)
 		ROS_ERROR("Could not compute plan successfully");
 		return 0;
 	}
+
+	// export waypoints to file
+	rovi_utils::export_traj(*res.trajectory_, "traj_rrt_waypoints.csv");
+
+	// create trajectory using linear interpolation + export to file
+	auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
+	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
+	rovi_utils::export_traj(traj_lin, "traj_rrt_lin.csv");
 
 	// put the orbot into 
 	visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
@@ -184,37 +191,13 @@ main(int argc, char** argv)
 	visual_tools.trigger();
 	display_publisher.publish(display_trajectory);
 
-	/* set the state in the planning scene to the final state of the last plan */
+	//  set the state in the planning scene to the final state of the last plan
 	robot_state.setJointGroupPositions(arm_group, response.trajectory.joint_trajectory.points.back().positions);
 
 	visual_tools.publishRobotState(robot_state, rviz_visual_tools::GREEN);
 	visual_tools.publishAxisLabeled(pose.pose, "goal_2");
 	visual_tools.trigger();
 
-	rovi_utils::export_traj(*res.trajectory_, "joint_trajectory.csv");
-
-	// moveit::core::RobotStatePtr rbt_ptr(new moveit::core::RobotState(robot_state));
-
-	// {
-	// 	ros::Rate lp(1);
-	// 	while (ros::ok())
-	// 	{
-	// 		ROS_INFO_STREAM( "The plan: " << res.planning_time_);
-
-	// 		ROS_INFO("Lort");
-
-	// 		auto traj = res.trajectory_->getStateAtDurationFromStart(0.1f, rbt_ptr);
-
-	// 		ROS_INFO("Lort2");
-
-	// 		if(traj)
-	// 		{
-	// 			rbt_ptr->printStatePositions();
-	// 		}
-
-	// 		lp.sleep();
-	// 	}
-	// }
 	return 0;
 }
 

@@ -44,5 +44,6 @@
 	<depend>ur5_description</depend>
 	<depend>ur5_dynamics</depend>
 	<depend>rovi_utils</depend>
+	<depend>rovi_planner</depend>
 
 </package>
