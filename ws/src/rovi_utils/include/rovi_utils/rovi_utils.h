@@ -6,9 +6,9 @@
 
 #include <Eigen/Eigen>
 
+#include <moveit/planning_scene/planning_scene.h>
 #include <geometry_msgs/Pose.h>
 #include <moveit_msgs/CollisionObject.h>
-#include <moveit/planning_scene/planning_scene.h>
 
 namespace rovi_utils
 {
@@ -28,6 +28,9 @@ namespace rovi_utils
 	template<typename T>
 	void
 	export_traj(T& traj, const std::string&& filename, const double resolution = 0.01 /* [s] */);
+
+	std::vector<geometry_msgs::Pose>
+	waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj);
 
 	// -- moveit ------------------------------------------------------------------
 

@@ -267,6 +267,29 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 
 }
 
+std::vector<geometry_msgs::Pose>
+rovi_utils::waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj)
+{
+	if (not traj.getWayPointCount())
+		throw std::runtime_error("Trajectory is empty.");
+
+	std::vector<geometry_msgs::Pose> waypoints;
+
+	for (size_t i = 0; i < traj.getWayPointCount(); ++i)
+	{
+		// const auto robot_state = traj.getWayPoint(i);
+		const auto mat = traj.getWayPoint(i).getFrameTransform("ee_tcp");
+		const auto t   = mat.translation();
+		const auto r   = mat.rotation();
+		
+		// create pose from translation and rotation; add to vector
+		waypoints.emplace_back(make_pose( { t[0], t[1], t[2] }, Eigen::Quaternion<double>(r)));
+
+	}
+
+	return waypoints;
+}
+
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
 template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
 template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);
