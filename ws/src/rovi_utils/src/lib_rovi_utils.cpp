@@ -32,10 +32,11 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 6>& pose)
 {
-	return rovi_utils::make_pose(
-									{ pose[0], pose[1], pose[2] },
-									{ pose[3], pose[4], pose[5] }
-								);
+	return rovi_utils::make_pose
+	(
+		{ pose[0], pose[1], pose[2] },
+		{ pose[3], pose[4], pose[5] }
+	);
 }
 
 geometry_msgs::Pose
@@ -243,11 +244,12 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 	{
 		auto robot_state = std::make_shared<moveit::core::RobotState>(*traj.getFirstWayPointPtr());
 
-		for (double t = 0.0; t < traj.getDuration(); t += resolution)
-		{
+		ROS_WARN_STREAM("Exporting trajectory using waypoints; resolution (timestep) is ignored.");
 
-			traj.getStateAtDurationFromStart(t, robot_state);
-			auto mat = robot_state->getGlobalLinkTransform("ur5_ee_tcp");
+		for (size_t i = 0; i < traj.getWayPointCount(); ++i)
+		{
+			// auto robot_state = traj.getWayPoint(i);
+			auto mat = traj.getWayPoint(i).getFrameTransform("ee_tcp");
 
 			// create flattened vector from Eigen (row major)
 			auto T_ = mat.matrix();
@@ -264,7 +266,6 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 	fs.close();
 
 }
-
 
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
 template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
