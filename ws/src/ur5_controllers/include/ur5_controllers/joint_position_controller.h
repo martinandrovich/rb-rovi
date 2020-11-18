@@ -14,7 +14,7 @@
 #include <sensor_msgs/JointState.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <geometry_msgs/Pose.h>
-#include <ur5_controllers/PoseTwist.h>
+#include <sensor_msgs/JointState.h>
 #include <visualization_msgs/Marker.h>
 
 #include <Eigen/Core>
@@ -30,13 +30,13 @@ namespace ur5_controllers
 		static inline constexpr auto CONTROLLER_NAME = "JointPositionController";
 		static inline constexpr auto SATURATE_ROTATUM = true;
 		static inline constexpr auto TAU_DOT_MAX = 1000.;
-		static inline const std::vector<double> Q_D_INIT = { 0.f, -M_PI_2, 0.f, 0.f, 0.f, 0.f };
+		static inline const std::vector<double> Q_D_INIT = { 1.57, -1.57, 1.57, 1.57, 1.57, 0.0 };
 
 		std::vector<std::string> vec_joint_names;
 		size_t num_joints;
 
 		std::vector<hardware_interface::JointHandle> vec_joints;
-		realtime_tools::RealtimeBuffer<ur5_controllers::PoseTwist> commands_buffer;
+		realtime_tools::RealtimeBuffer<sensor_msgs::JointState> commands_buffer;
 
 		//Default Constructor
 		JointPositionController() {}
@@ -53,9 +53,6 @@ namespace ur5_controllers
 
 	private:
 		ros::Subscriber sub_command;
-		ros::Publisher pub_mani; 
-
-		Eigen::Vector6d x_dot_d;
 
 		Eigen::Vector6d q_d;
 		Eigen::Vector6d q_dot_d;
@@ -81,6 +78,6 @@ namespace ur5_controllers
 		saturate_rotatum(const Eigen::Vector6d& tau_des, const double period = 0.001 /* [s] */);
 
 		void
-		callback_command(const ur5_controllers::PoseTwistConstPtr& msg);
+		callback_command(const sensor_msgs::JointStateConstPtr& msg);
 	};
 }

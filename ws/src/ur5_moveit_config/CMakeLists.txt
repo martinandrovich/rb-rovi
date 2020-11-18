@@ -102,17 +102,17 @@ install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # nodes
 
 # rrt_test
-add_executable(rrt_test src/rrt_test.cpp)
-target_link_libraries(rrt_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+#add_executable(rrt_test src/rrt_test.cpp)
+#target_link_libraries(rrt_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 # ur5_reachability
-add_executable(ur5_reachability src/ur5_reachability.cpp)
-target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
+#add_executable(ur5_reachability src/ur5_reachability.cpp)
+#target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
 
 # plan_test
-add_executable(plan_test src/plan_test.cpp)
-target_link_libraries(plan_test ${catkin_LIBRARIES})
+#add_executable(plan_test src/plan_test.cpp)
+#target_link_libraries(plan_test ${catkin_LIBRARIES})
 
 # plan_test
-add_executable(plan_scene src/plan_scene.cpp)
-target_link_libraries(plan_scene ${catkin_LIBRARIES})
+#add_executable(plan_scene src/plan_scene.cpp)
+#target_link_libraries(plan_scene ${catkin_LIBRARIES})

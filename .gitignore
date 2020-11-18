@@ -2,6 +2,9 @@
 build/
 CMakeFiles/
 
+# Remove the .csv files
+ws/*.csv
+
 # CMake src/daniel
 ws/src/ur5_interface/
 
