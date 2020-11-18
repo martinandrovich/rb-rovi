@@ -29,7 +29,6 @@ find_package(
 	ur5_description
 	ur5_dynamics
 	rovi_utils
-	rovi_planner
 )
 
 find_package(Boost REQUIRED)
@@ -77,7 +76,6 @@ catkin_package(
 		ur5_description
 		ur5_dynamics
 		rovi_utils
-		rovi_planner
 	DEPENDS
 		EIGEN3
 )

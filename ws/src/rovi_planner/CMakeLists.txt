@@ -18,6 +18,7 @@ find_package(
 	kdl_conversions
 	ur5_dynamics
 	ur5_controllers
+	ur5_moveit_config
 	rovi_utils
 	# ompl
 )
@@ -56,6 +57,7 @@ catkin_package(
 		kdl_conversions
 		ur5_dynamics
 		ur5_controllers
+		ur5_moveit_config
 		rovi_utils
 		# ompl
 	DEPENDS

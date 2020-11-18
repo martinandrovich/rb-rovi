@@ -43,9 +43,6 @@ namespace rovi_utils
 	void
 	move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name = "world_offset");
 
-	void // DEPRECATED
-	move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos);
-
 	void
 	spawn_obj();
 

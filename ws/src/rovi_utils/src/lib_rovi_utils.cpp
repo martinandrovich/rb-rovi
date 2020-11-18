@@ -141,41 +141,6 @@ rovi_utils::get_gazebo_obj(const std::string& frame, const std::vector<std::stri
 }
 
 void
-rovi_utils::move_base(const std::string& frame_id, const std::string& child, const std::array<double, 3>& pos)
-{
-
-	static std::thread * thread = nullptr;
-
-	if (thread != nullptr)
-	{
-		auto handle = thread->native_handle();
-		pthread_cancel(handle);
-	}
-
-	thread = new std::thread([=]()
-	{
-		constexpr auto FREQ = 100.; // Hz
-		tf::TransformBroadcaster broadcaster;
-		ros::Rate lp(FREQ); // Hz
-
-		while (ros::ok())
-		{
-			tf::StampedTransform transform = tf::StampedTransform
-			(
-				tf::Transform( tf::Quaternion(0., 0., 0., 1.),
-				tf::Vector3(pos[0], pos[1], pos[2])),
-				ros::Time().now() + ros::Duration(1./FREQ),
-				frame_id,
-				child
-			);
-
-			broadcaster.sendTransform(transform);
-			lp.sleep();
-		}
-	});
-}
-
-void
 rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name)
 {
 	// RobotState has a floating virtual joint, which can be set.
@@ -279,12 +244,12 @@ rovi_utils::waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj)
 	{
 		// const auto robot_state = traj.getWayPoint(i);
 		const auto mat = traj.getWayPoint(i).getFrameTransform("ee_tcp");
-		const auto t   = mat.translation();
+		// ffs martin :D
+		const auto t   = mat.translation() - traj.getWayPoint(i).getFrameTransform("ur5_link0").translation();
 		const auto r   = mat.rotation();
 		
 		// create pose from translation and rotation; add to vector
 		waypoints.emplace_back(make_pose( { t[0], t[1], t[2] }, Eigen::Quaternion<double>(r)));
-
 	}
 
 	return waypoints;

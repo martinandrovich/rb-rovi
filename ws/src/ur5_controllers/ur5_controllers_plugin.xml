@@ -16,7 +16,7 @@
   </class>
   <class name="ur5_controllers/JointPositionController" type="ur5_controllers::JointPositionController" base_class_type="controller_interface::ControllerBase">
     <description>
-      Hybrid force/position controller for the WSG end-effector.
+      Joint Position Controller using inverse dynamics of the UR5 Robot.
     </description>
   </class>
 </library>

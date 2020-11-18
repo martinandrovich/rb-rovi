@@ -46,7 +46,7 @@
 	<!-- spawn URDF robot model with gripper in gazebo -->
 	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5
 		$(arg robot_pose)
-		-J ur5_joint1 0 -J ur5_joint2 -1.57 -J ur5_joint3 0 -J ur5_joint4 0 -J ur5_joint5 0 -J ur5_joint6 0
+		-J ur5_joint1 1.57 -J ur5_joint2 -1.57 -J ur5_joint3 1.57 -J ur5_joint4 1.57 -J ur5_joint5 1.57 -J ur5_joint6 0
 		-J wsg_base_mount_right_joint 0 -J wsg_base_mount_left_joint 0"/>
 
 	<!-- spawn sensor(s) -->
@@ -71,19 +71,12 @@
 	<rosparam file="$(find ur5_controllers)/config/wsg_controllers.yaml" command="load"/>
 
 	<!-- load the controllers -->
-	<!-- <node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_cartesian_pose_controller"/> -->
-	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_cartesian_pose_controller"/>
-	<!-- <node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/> -->
-	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_hybrid_controller"/>
-
-	<!--
-	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_position_pd_gravity_controller"/>
-	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_group_controller"/>
-	-->
+	<!-- <node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_position_controller"/> -->
+	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_cartesian_pose_controller"/>
+	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/>
 
 	<!-- publish default setpoints for controllers -->
 	<!-- <node pkg="rostopic" type="rostopic" name="default_wgc_setpoint" args="pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: 20.0 }'" output="screen"/> -->
-	<node pkg="rostopic" type="rostopic" name="default_ur5_setpoint" args="pub /ur5_joint_position_pd_gravity_controller/command std_msgs/Float64MultiArray '{data: [0, -1.57, 0, 0, 0, 0]}'" output="screen"/>
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
