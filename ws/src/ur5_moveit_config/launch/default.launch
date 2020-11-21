@@ -20,4 +20,8 @@
     <arg name="rviz_config" value="$(find ur5_moveit_config)/launch/moveit.rviz"/>
   </include>
 
+  <include file="$(find ur5_moveit_config)/launch/test_ompl.launch">
+  </include>
+
+
 </launch>

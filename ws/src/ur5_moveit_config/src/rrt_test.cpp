@@ -70,7 +70,7 @@ main(int argc, char** argv)
 	std::vector<moveit_msgs::CollisionObject> collision_objects
 	{
 		rovi_utils::make_mesh_cobj("table",  planning_scene->getPlanningFrame() , {0.4, 0.6, 0.64}),
-		rovi_utils::make_mesh_cobj("bottle", planning_scene->getPlanningFrame() , {0.5, 1.0, 0.75})
+		rovi_utils::make_mesh_cobj("bottle", planning_scene->getPlanningFrame() , {0.6, 0.999023, 0.75})
 	};
 
 	// set default state
@@ -93,43 +93,6 @@ main(int argc, char** argv)
 	}
 
 	ROS_INFO_STREAM("Using planning interface '" << planner_instance->getDescription() << "'");
-
-	// set the configuration
-	/*
-	planning_interface::PlannerConfigurationSettings settings;
-	settings.config.insert(std::pair<std::string, std::string>("type", "geometric::RRTConnect"));
-	settings.group = ARM_GROUP;
-	settings.name = "ur5";
-
-	moveit_msgs::
-	*/
-
-	// ros::V_string msg;
-	// planner_instance->getPlanningAlgorithms(msg);
-	// const auto &map = planner_instance->getPlannerConfigurations();
-
-	// for(auto it = map.begin(); it != map.end(); it++)
-	// {
-	// 	ROS_INFO_STREAM(it->second.group << ", " << it->second.name);
-
-	// 	for (auto [key, value] : it->second.config)
-	// 	{
-	// 		ROS_INFO_STREAM(key);
-	// 		//ROS_INFO_STREAM(value);
-	// 	}
-	// }
-
-	// for(auto& msg_ : msg)
-	// {
-	// 	ROS_INFO_STREAM(msg_);
-	// }
-
-	// planning_interface::PlannerConfigurationSettings settings;
-	// settings.config.insert(std::pair<std::string, std::string>("type", "geometric::RRTConnect"));
-	// settings.group = ARM_GROUP;
-	// settings.name = "ur5";
-
-	// follow the motion planning guide
 
 	planning_interface::MotionPlanRequest req;
 	planning_interface::MotionPlanResponse res;

@@ -21,6 +21,9 @@ namespace rovi_planner
 	KDL::Trajectory_Composite
 	traj_moveit(const geometry_msgs::Pose & pose_des, std::string planner = "RRTConnect", std::vector<double> q = {}, double vel_max = 1.0 /* [m/s] */, double acc_max = 1.0 /* [m/s^2] */, double corner_radius = 0.05 /* [m] */ );
 
+	KDL::Trajectory_Composite
+	traj_moveit_static(const geometry_msgs::Pose & pose_des, std::string planner = "RRTConnect", std::vector<double> q = {}, double vel_max = 1.0 /* [m/s] */, double acc_max = 1.0 /* [m/s^2] */, double corner_radius = 0.05 /* [m] */ );
+
 	// reachability planner
 
 	void 

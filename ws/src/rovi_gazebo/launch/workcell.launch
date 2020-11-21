@@ -3,7 +3,7 @@
 	<!-- ARGUMENTS -->
 
 	<!-- robot pose [x, y, z] -->
-	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.1 -z 0.75"/>
+	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
@@ -80,5 +80,9 @@
 
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
+
+	<include file="$(find ur5_moveit_config)/launch/default.launch">
+  	</include>
+
 
 </launch>
