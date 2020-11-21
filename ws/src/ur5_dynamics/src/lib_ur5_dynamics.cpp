@@ -112,6 +112,9 @@ ur5_dynamics::coriolis(const Eigen::Vector6d& q, const Eigen::Vector6d& qdot)
 template<typename T>
 T ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 {
+	// forward kinematics
+	// computed with respect to end-effector link of robot, i.e. /end/ of link6 (ur5_ee)
+
 	static_assert(std::is_same<T, Eigen::Matrix4d>::value || std::is_same<T, geometry_msgs::Pose>::value,
 	              "Wrong type use Matrix4d or Pose.");
 
@@ -160,21 +163,23 @@ T ur5_dynamics::fwd_kin(const Eigen::Vector6d& q)
 template<typename T>
 Eigen::MatrixXd ur5_dynamics::inv_kin(const T& pose)
 {
+	// inverse kinematics; returns ALL 8 solutions
+	// computed with respect to end-effector link of robot, i.e. /end/ of link6 (ur5_ee)
 
 	static_assert(std::is_same<T, Eigen::Matrix4d>::value || std::is_same<T, geometry_msgs::Pose>::value,
 	              "Wrong type use Matrix4d or Pose.");
 
 	Eigen::Matrix4d frame = ( Eigen::Matrix4d() <<  1, 0, 0, 0, 
-													0, 1, 0, 0, 
-													0, 0, 1, 0, 
-													0, 0, 0, 1 ).finished();
+	                                                0, 1, 0, 0, 
+	                                                0, 0, 1, 0, 
+	                                                0, 0, 0, 1 ).finished();
 
 	if constexpr (std::is_same<T, geometry_msgs::Pose>::value)
 	{
-		// Position
+		// position
 		frame.topRightCorner<3, 1>() << pose.position.x, pose.position.y, pose.position.z;
 
-		// Orientation
+		// orientation
 		Eigen::Quaterniond quat(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
 		frame.topLeftCorner<3, 3>() = quat.toRotationMatrix();
 	}
@@ -185,9 +190,9 @@ Eigen::MatrixXd ur5_dynamics::inv_kin(const T& pose)
 	}
 
 	static auto T_z = (Eigen::Matrix4d() << 0, -1, 0, 0, 
-											1,  0, 0, 0, 
-											0,  0, 1, 0, 
-											0,  0, 0, 1).finished();
+	                                        1,  0, 0, 0, 
+	                                        0,  0, 1, 0, 
+	                                        0,  0, 0, 1).finished();
 
 	Eigen::MatrixXd q_sol = inverse(frame * T_z);
 
@@ -215,20 +220,24 @@ Eigen::MatrixXd ur5_dynamics::inv_kin(const T& pose)
 template<typename T>
 Eigen::Vector6d ur5_dynamics::inv_kin(const T& pose, const Eigen::Vector6d& q)
 {
+
+	// inverse kinematics, returns the best Euclidean solution given initial robot configuration, q
+	// computed with respect to end-effector link of robot, i.e. /end/ of link6 (ur5_ee)
+
 	static_assert(std::is_same<T, Eigen::Matrix4d>::value || std::is_same<T, geometry_msgs::Pose>::value,
 	              "Wrong type use Matrix4d or Pose.");
 
 	Eigen::Matrix4d frame = ( Eigen::Matrix4d() <<  1, 0, 0, 0, 
-													0, 1, 0, 0, 
-													0, 0, 1, 0, 
-													0, 0, 0, 1 ).finished();
+	                                                0, 1, 0, 0, 
+	                                                0, 0, 1, 0, 
+	                                                0, 0, 0, 1 ).finished();
 
 	if constexpr (std::is_same<T, geometry_msgs::Pose>::value)
 	{
-		// Position
+		// position
 		frame.topRightCorner<3, 1>() << pose.position.x, pose.position.y, pose.position.z;
 
-		// Orientation
+		// orientation
 		Eigen::Quaterniond quat(pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z);
 		frame.topLeftCorner<3, 3>() = quat.toRotationMatrix();
 	}
@@ -239,9 +248,9 @@ Eigen::Vector6d ur5_dynamics::inv_kin(const T& pose, const Eigen::Vector6d& q)
 	}
 
 	static auto T_z = (Eigen::Matrix4d() << 0, -1, 0, 0, 
-											1,  0, 0, 0, 
-											0,  0, 1, 0, 
-											0,  0, 0, 1).finished();
+	                                        1,  0, 0, 0, 
+	                                        0,  0, 1, 0, 
+	                                        0,  0, 0, 1).finished();
 
 	Eigen::MatrixXd q_sol = inverse(frame * T_z);
 

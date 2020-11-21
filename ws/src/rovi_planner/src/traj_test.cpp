@@ -16,40 +16,50 @@
 int
 main(int argc, char** argv)
 {
+
 	using namespace rovi_utils;
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
 
-	// create a parabolic trajectory
+	// joint interpolation test
+
+	// sensor_msgs::JointState state1, state2;
+	// state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
+	// state2.position = { 1,0, 0., 0., 0., 0., 0. };
+
+	// auto traj_joint = rovi_planner::traj_linear({ state1, state2 });
+	// rovi_utils::export_traj(traj_joint, "traj_joint.csv", 0.01);
+
+	// std::cout << "\n Press [ENTER] to continue..." << std::endl;
+	// std::cin.ignore();
+
+	// create a linear, parabolic and rrt trajectories
 
 	Eigen::Quaternion ori(1.0, 0.0, 0.0, 0.0);
-	Eigen::Quaternion ori2(0.707, 0.707, 0.0, 0.0);
-	Eigen::Quaternion ori3(0.707, 0.0, 0.707, 0.0);
+
+	auto pose_ee_current = rovi_utils::get_current_tcp_pose();
+	auto pose_ee_desired = rovi_utils::make_pose({ 0.1, 0.15, 0.90 }, ori);
 
 	std::vector<geometry_msgs::Pose> waypoints = 
 	{
-		make_pose({ 0.0, 0.0, 0.0 }, ori),
-		make_pose({ 0.5, 2.0, 0.0 }, ori),
-		make_pose({ 0.5, 1.0, 1.0 }, ori),
-		// make_pose({ 0.09, 0.12, 0.90 }, ori),
-		// make_pose({ 0.52, 0.26, 0.90 }, ori),
-		// make_pose({ 0.30, 0.56, 0.50 }, ori),
-		// make_pose({ 0.60, 0.99, 0.74 }, ori),
+		pose_ee_current,
+		pose_ee_desired
 	};
 
-	//auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
-	//auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
+	// auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
+	// auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
+	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRT");
 
-	auto pose = make_pose({ 0.09, 0.12, 0.90 }, ori);
-	auto traj_moveit = rovi_planner::traj_moveit(pose, "RRTstar");
+	ROS_WARN("OUT!");
+	std::cin.ignore();
 
 	// export to file
-	//rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
-	//rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
+	// rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
+	// rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
+	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
 	// command trajectory to robot at 100 Hz
-	
 	std::cout << "Press [ENTER] to execute trajectory...\n";
 	std::cin.ignore();
 
@@ -57,7 +67,7 @@ main(int argc, char** argv)
 	ur5_controllers::PoseTwist msg;
 	ros::Rate lr(100); // Hz
 
-	for (auto [t, traj] = std::tuple{ 0.0, traj_moveit }; t < traj.Duration() and ros::ok(); t += 0.01)
+	for (auto [t, traj] = std::tuple{ 0.0, traj_rrt }; t < traj.Duration() and ros::ok(); t += 0.01)
 	{
 		
 		ROS_INFO_STREAM_ONCE("Executing trajectory with duration: " << traj.Duration() << " sec");

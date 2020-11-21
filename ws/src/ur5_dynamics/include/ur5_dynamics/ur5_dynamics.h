@@ -17,9 +17,7 @@
 
 #include <geometry_msgs/Pose.h>
 
-
-#include <Eigen/Core>
-#include <Eigen/SVD>
+#include <Eigen/Eigen>
 
 namespace Eigen
 {
@@ -79,8 +77,9 @@ public:
 	static inline const std::string  BASE_LINK         = ROBOT_NAME + "_link0";
 	static inline const std::string  LAST_LINK         = ROBOT_NAME + "_ee";
 
-	// with end-effector
-	// static inline const std::string  END_EFFECTOR	   = "wsg_base";
+	// transforms (defined in ur5_arm.xacro)
+	static inline const auto         l6_T_ee           = Eigen::Translation3d(0, 0.0823, 0);
+	static inline const auto         ee_T_tcp          = Eigen::Translation3d(0, 0.1507, 0);
 
 private:
 
