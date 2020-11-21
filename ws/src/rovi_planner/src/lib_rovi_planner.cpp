@@ -268,16 +268,10 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	robot_state.setJointGroupPositions(ARM_GROUP, q);
 	robot_state.setJointGroupPositions(WSG_GROUP, std::vector({ 0.05, 0.05 }));
 
-<<<<<<< HEAD
-	// move the base 
-	auto model_states 	= ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
-	for(int i = 0; model_states->name.size() > i ; ++i)
-=======
 	// move the base
 	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
 	auto model_states = ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
 	for(size_t i = 0; model_states->name.size() > i ; ++i)
->>>>>>> eb1712e639eb5f29bd28cdbdde100443f5acb252
 	{
 		if(model_states->name[i] == "ur5")
 		{
@@ -343,13 +337,19 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 		// do some error handling here
 	}
 
-	// export waypoints to file
-	rovi_utils::export_traj(*res.trajectory_, "rrt_way.csv");
-
-	// create trajectory using linear interpolation + export to file
+	// create Cartesian trajectory using linear interpolation
 	auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
-	auto traj_lin = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.001, 0.001);
-	rovi_utils::export_traj(traj_lin, "rrt_linear.csv");
+	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
+
+	// // create joint trajectory using linear interpolation
+	auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
+	auto traj_joint = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
+	rovi_utils::export_traj(traj_joint, "traj_joint_rrt.csv");
+
+	planner_instance->terminate();
+
+	std::cout << "\nPress [ENTER] to return from traj_moveit()..." << std::endl;
+	std::cin.ignore();
 
 	return traj_lin;
 }
@@ -502,101 +502,6 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 	constexpr auto WSG_GROUP 	    	= "wsg";
 	constexpr auto ROBOT_DESCRIPTION 	= "robot_description";
 
-<<<<<<< HEAD
-    // load robot model and kinematic model, and use it to setup the planning scene
-    robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-    robot_model::RobotModelPtr robot_model(robot_model_loader->getModel());
-
-    // set up the planning scene for collision detection
-    planning_scene::PlanningScene planning_scene(robot_model);
-
-    // get robot state, this is a raw reference and pointers for arm_group and wsg_group
-    auto& robot_state    = planning_scene.getCurrentStateNonConst();
-    const auto arm_group = robot_state.getJointModelGroup(ARM_GROUP);
-    const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
-
-    // set gripper default
-    std::vector gripper_state{0.05, 0.05};
-    robot_state.setJointGroupPositions(wsg_group, gripper_state);
-
-    // generate transformations to grasp from, so this should be the input
-    auto generate_trans = [](const std::array<double, 3>& pos, const double theta, const std::array<double, 3>& axis)
-    { 
-        // constant transformation
-        Eigen::Affine3d trans = Eigen::Translation3d(pos[0], pos[1], pos[2]) * Eigen::AngleAxisd(theta, Eigen::Vector3d{axis[0],axis[1],axis[2]});
-        
-        return trans.matrix();
-    };
-
-    Eigen::Matrix4d w_T_obj      = generate_trans( obj,          0, {0, 0, 1} );
-    Eigen::Matrix4d obj_T_offset = generate_trans( offset,       0, {0, 0, 1} );
-    Eigen::Matrix4d l6_T_ee      = generate_trans( {0, 0.15, 0}, 0, {0, 0, 1} );
-
-    // move the base around
-    for (const auto& base_pt : base_pts)
-    {
-        // make a scene message to update scene
-        moveit_msgs::PlanningScene planning_scene_msg;
-
-        // move the base of the robot
-        rovi_utils::move_base(robot_state, base_pt);
-
-        // insert table and other constant objects into the planning scene
-        std::vector<moveit_msgs::CollisionObject> collision_objects
-        {
-            rovi_utils::make_mesh_cobj("table",  planning_scene.getPlanningFrame() , table),
-            rovi_utils::make_mesh_cobj(obj_name, planning_scene.getPlanningFrame() , obj)
-        };
-
-        // how to change color
-        // std_msgs::ColorRGBA color;
-        // color.a = 1.0;
-        // color.b = 0.0;
-        // color.g = 0.0;
-        // color.r = 1.0;
-
-        // generate the matrices used to calculate the desired pose
-        Eigen::Matrix4d w_T_base = generate_trans( base_pt,      0, {0, 0, 1} );
-        {
-            // this is only to visualie in RViz
-            ros::Rate lp(5); 
-
-            for (int i = 0; i < resolution+1; i++)
-            {
-                // update orientation
-                double ori = 2.0 * M_PI / (double)resolution * double(i);
-
-                Eigen::Matrix4d T_rotate = generate_trans({0, 0, 0}, ori, axis);
-                
-                // the inverse does always exist in this case
-                Eigen::Matrix4d b_T_offset = w_T_base.inverse().matrix() * w_T_obj * obj_T_offset * T_rotate * l6_T_ee.inverse().matrix();
-
-                // calculate the inverse_kinematics to the pose
-                auto q_solutions = ur5_dynamics::inv_kin(b_T_offset);
-
-                for (int j = 0; j < q_solutions.rows(); j++)
-                {
-                    // update the robot state
-                    robot_state.setJointGroupPositions(arm_group, q_solutions.row(j).transpose());
-
-                    // get the planning msg
-                    planning_scene.getPlanningSceneMsg(planning_scene_msg);
-                    planning_scene_msg.world.collision_objects = collision_objects;
-                    planning_scene.setPlanningSceneDiffMsg(planning_scene_msg);
-                    // planning_scene.setObjectColor("table", color);
-                    
-                    // publish
-                    planning_scene_pub.publish(planning_scene_msg);
-                    lp.sleep();
-                }
-
-            }
-
-        }
-
-    }
-    
-=======
 	// load robot model and kinematic model, and use it to setup the planning scene
 	robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
 	robot_model::RobotModelPtr robot_model(robot_model_loader->getModel());
@@ -691,5 +596,4 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 
 	}
 
->>>>>>> eb1712e639eb5f29bd28cdbdde100443f5acb252
 }
