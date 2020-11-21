@@ -375,6 +375,28 @@ rovi_utils::waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj)
 	return waypoints;
 }
 
+std::vector<sensor_msgs::JointState>
+rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj)
+{
+	if (not traj.getWayPointCount())
+		throw std::runtime_error("Trajectory is empty.");
+
+	std::vector<sensor_msgs::JointState> joint_states;
+
+	for (size_t i = 0; i < traj.getWayPointCount(); ++i)
+	{
+		std::vector<double> q;
+		sensor_msgs::JointState joint_state;
+
+		// get joint values, define joint statee and add to vector of states
+		traj.getWayPoint(i).copyJointGroupPositions("ur5_arm", q);
+		joint_state.position = q;
+		joint_states.push_back(joint_state);
+	}
+
+	return joint_states;
+}
+
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
 template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
 template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);

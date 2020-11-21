@@ -49,6 +49,9 @@ namespace rovi_utils
 	std::vector<geometry_msgs::Pose>
 	waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj);
 
+	std::vector<sensor_msgs::JointState>
+	joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj);
+
 	// -- moveit ------------------------------------------------------------------
 
 	moveit_msgs::CollisionObject
