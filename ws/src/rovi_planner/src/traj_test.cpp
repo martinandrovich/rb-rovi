@@ -24,20 +24,12 @@ main(int argc, char** argv)
 
 	// joint interpolation test
 
-	sensor_msgs::JointState state1, state2;
-	state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
-	state2.position = { 1,0, 0., 0., 0., 0., 0. };
+	// sensor_msgs::JointState state1, state2;
+	// state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
+	// state2.position = { 1,0, 0., 0., 0., 0., 0. };
 
-	auto traj_joint = rovi_planner::traj_linear({ state1, state2 });
-	rovi_utils::export_traj(traj_joint, "traj_joint.csv", 0.01);
-
-	std::cout << "\n Press [ENTER] to continue..." << std::endl;
-	std::cin.ignore();
-
-	// link pose tests
-
-	// std::cout << "link6:\n" << rovi_utils::get_current_link6_pose() << std::endl;
-	// std::cout << "ee:\n" << rovi_utils::get_current_ee_pose() << std::endl;
+	// auto traj_joint = rovi_planner::traj_linear({ state1, state2 });
+	// rovi_utils::export_traj(traj_joint, "traj_joint.csv", 0.01);
 
 	// std::cout << "\n Press [ENTER] to continue..." << std::endl;
 	// std::cin.ignore();
@@ -55,13 +47,16 @@ main(int argc, char** argv)
 		pose_ee_desired
 	};
 
-	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
-	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
-	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	// auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
+	// auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
+	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRT");
+
+	ROS_WARN("OUT!");
+	std::cin.ignore();
 
 	// export to file
-	rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
-	rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
+	// rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
+	// rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
 	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
 	// command trajectory to robot at 100 Hz
@@ -72,7 +67,7 @@ main(int argc, char** argv)
 	ur5_controllers::PoseTwist msg;
 	ros::Rate lr(100); // Hz
 
-	for (auto [t, traj] = std::tuple{ 0.0, traj_lin }; t < traj.Duration() and ros::ok(); t += 0.01)
+	for (auto [t, traj] = std::tuple{ 0.0, traj_rrt }; t < traj.Duration() and ros::ok(); t += 0.01)
 	{
 		
 		ROS_INFO_STREAM_ONCE("Executing trajectory with duration: " << traj.Duration() << " sec");
