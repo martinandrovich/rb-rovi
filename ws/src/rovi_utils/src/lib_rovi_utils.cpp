@@ -4,13 +4,18 @@
 #include <pthread.h>
 
 #include <ros/ros.h>
-#include <gazebo_msgs/ModelStates.h>
-#include <geometric_shapes/shape_operations.h>
 #include <tf/transform_broadcaster.h>
 #include <eigen_conversions/eigen_kdl.h>
+#include <eigen_conversions/eigen_msg.h>
 #include <kdl/trajectory_composite.hpp>
 
 #include <moveit/planning_interface/planning_interface.h>
+
+#include <gazebo_msgs/ModelStates.h>
+#include <gazebo_msgs/LinkStates.h>
+#include <geometric_shapes/shape_operations.h>
+
+#include <ur5_dynamics/ur5_dynamics.h>
 
 geometry_msgs::Pose
 rovi_utils::make_pose(const std::array<double, 3>& pos, const Eigen::Quaternion<double>& ori)
@@ -51,8 +56,8 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double,
 	Eigen::Quaterniond quat;
 
 	quat = Eigen::AngleAxisd(rpy[2], Eigen::Vector3d::UnitZ()) *
-	       Eigen::AngleAxisd(rpy[1], Eigen::Vector3d::UnitY()) *
-	       Eigen::AngleAxisd(rpy[0], Eigen::Vector3d::UnitX()) ;
+		   Eigen::AngleAxisd(rpy[1], Eigen::Vector3d::UnitY()) *
+		   Eigen::AngleAxisd(rpy[0], Eigen::Vector3d::UnitX()) ;
 
 	pose.orientation.w = quat.w();
 	pose.orientation.x = quat.x();
@@ -60,6 +65,97 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double,
 	pose.orientation.z = quat.z();
 
 	return pose;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_link6_given_ee(const geometry_msgs::Pose& pose_ee)
+{
+	// define all transformations
+	Eigen::Isometry3d B_T_ee, B_T_l6;
+	tf::poseMsgToEigen(pose_ee, B_T_ee);
+
+	// computre for link 6
+	B_T_l6 = B_T_ee * ur5_dynamics::l6_T_ee.inverse();
+
+	// return as pose
+	geometry_msgs::Pose pose_l6;
+	tf::poseEigenToMsg(B_T_l6, pose_l6);
+
+	return pose_l6;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp)
+{
+	// define all transformations
+	Eigen::Isometry3d B_T_ee_tcp, B_T_l6, l6_T_ee;
+	tf::poseMsgToEigen(pose_tcp, B_T_ee_tcp);
+
+	// compute for link 6
+	B_T_l6 = B_T_ee_tcp * ur5_dynamics::ee_T_tcp.inverse() * ur5_dynamics::l6_T_ee.inverse();
+
+	// return as pose
+	geometry_msgs::Pose pose_l6;
+	tf::poseEigenToMsg(B_T_l6, pose_l6);
+
+	return pose_l6;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_current_link6_pose()
+{
+	// get link states from gazebo
+	ROS_INFO_STREAM("Waiting for gazebo_msgs::LinkStates...");
+	const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
+
+	// get current pose of base and link6 in world frame
+	const auto& link_names = link_states->name;
+	size_t idx_base  = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link0"));
+	size_t idx_link6 = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link6"));
+
+	const auto offset = link_states->pose[idx_base];
+	auto pose_current = link_states->pose[idx_link6];
+
+	// controller uses pose given in robot base frame; offset from world
+	pose_current.position.x -= offset.position.x;
+	pose_current.position.y -= offset.position.y;
+	pose_current.position.z -= offset.position.z;
+
+	return pose_current;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_current_ee_pose()
+{
+	auto pose_l6 = get_current_link6_pose();
+	Eigen::Isometry3d B_T_l6, B_T_ee;
+
+	tf::poseMsgToEigen(pose_l6, B_T_l6);
+
+	B_T_ee = B_T_l6 * ur5_dynamics::l6_T_ee * ur5_dynamics::ee_T_tcp;
+
+	// return as pose
+	geometry_msgs::Pose pose_ee;
+	tf::poseEigenToMsg(B_T_ee, pose_ee);
+
+	return pose_ee;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_current_tcp_pose()
+{
+	auto pose_l6 = get_current_link6_pose();
+	Eigen::Isometry3d B_T_l6, B_T_tcp;
+
+	tf::poseMsgToEigen(pose_l6, B_T_l6);
+
+	B_T_tcp = B_T_l6 * ur5_dynamics::l6_T_ee * ur5_dynamics::ee_T_tcp;
+
+	// return as pose
+	geometry_msgs::Pose pose_tcp;
+	tf::poseEigenToMsg(B_T_tcp, pose_tcp);
+
+	return pose_tcp;
 }
 
 moveit_msgs::CollisionObject
@@ -170,9 +266,6 @@ void
 rovi_utils::export_traj(T& traj, const std::string&& filename, const double resolution)
 {
 
-	if (resolution <= 0)
-		throw std::runtime_error("Resolution must be positive.");
-
 	// MATLAB code:
 	// data = readmatrix("traj_lin.csv");
 	// plot3(data(:, 4), data(:, 8), data(:, 12))
@@ -182,6 +275,10 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 	// KDL::Trajectory_Composite
 	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
 	{
+
+		if (resolution <= 0)
+			throw std::runtime_error("Resolution must be positive.");
+
 		for (double t = 0.0; t < traj.Duration(); t += resolution)
 		{
 			// KDL Frame
@@ -228,6 +325,30 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 		}
 	}
 
+	// std::array<KDL::Trajectory_Composite, 6>
+	if constexpr (std::is_same<T, std::array<KDL::Trajectory_Composite, 6>>::value)
+	{
+		if (resolution <= 0)
+			throw std::runtime_error("Resolution must be positive.");
+
+		const auto num_joints = traj.size();
+		const auto max_dur = std::max_element(traj.begin(), traj.end(), [&](auto& a, auto& b) {
+			return a.Duration() < b.Duration();
+		})->Duration();
+
+		for (double t = 0.0; t < max_dur; t += resolution)
+		{
+			std::string str = "";
+			for (size_t i = 0; i < num_joints; ++i)
+			{
+				double angle = traj[i].Pos(t).p.data[0];
+				str += (str.empty() ? "" : ", ") + std::to_string(angle);
+			}
+
+			fs << str << "\n";
+		}
+	}
+
 	fs.close();
 
 }
@@ -242,12 +363,11 @@ rovi_utils::waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj)
 
 	for (size_t i = 0; i < traj.getWayPointCount(); ++i)
 	{
-		// const auto robot_state = traj.getWayPoint(i);
+		// const auto mat = traj.getWayPoint(i).getFrameTransform("ur5_link6");
 		const auto mat = traj.getWayPoint(i).getFrameTransform("ee_tcp");
-		// ffs martin :D
 		const auto t   = mat.translation() - traj.getWayPoint(i).getFrameTransform("ur5_link0").translation();
 		const auto r   = mat.rotation();
-		
+
 		// create pose from translation and rotation; add to vector
 		waypoints.emplace_back(make_pose( { t[0], t[1], t[2] }, Eigen::Quaternion<double>(r)));
 	}
@@ -258,3 +378,4 @@ rovi_utils::waypoints_from_traj(const robot_trajectory::RobotTrajectory& traj)
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
 template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
 template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);
+template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite, 6>>(std::array<KDL::Trajectory_Composite, 6>& traj, const std::string&& filename, const double resolution);

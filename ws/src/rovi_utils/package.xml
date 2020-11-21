@@ -27,7 +27,8 @@
 	<depend>moveit_msgs</depend>
 	<depend>geometric_shapes</depend>
 	<depend>moveit_ros_planning_interface</depend>
-
+	<depend>ur5_dynamics</depend>
+	
 	<depend>Eigen3</depend>
 
 </package>

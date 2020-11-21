@@ -19,6 +19,7 @@ find_package(
 	moveit_msgs
 	geometric_shapes
 	moveit_ros_planning_interface
+	ur5_dynamics
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -56,6 +57,7 @@ catkin_package(
 		moveit_msgs
 		geometric_shapes
 		moveit_ros_planning_interface
+		ur5_dynamics
 	DEPENDS
 		EIGEN3
 )

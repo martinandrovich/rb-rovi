@@ -23,6 +23,23 @@ namespace rovi_utils
 	geometry_msgs::Pose
 	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
 
+	// -- gazebo ------------------------------------------------------------------
+
+	geometry_msgs::Pose
+	get_link6_given_ee(const geometry_msgs::Pose& pose_ee);
+
+	geometry_msgs::Pose
+	get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp);
+
+	geometry_msgs::Pose
+	get_current_link6_pose();
+
+	geometry_msgs::Pose
+	get_current_ee_pose();
+
+	geometry_msgs::Pose
+	get_current_tcp_pose();
+
 	// -- trajectories ------------------------------------------------------------
 
 	template<typename T>
@@ -42,8 +59,5 @@ namespace rovi_utils
 
 	void
 	move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name = "world_offset");
-
-	void
-	spawn_obj();
 
 }
