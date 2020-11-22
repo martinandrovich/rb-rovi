@@ -326,22 +326,22 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 	}
 
 	// std::array<KDL::Trajectory_Composite, 6>
-	if constexpr (std::is_same<T, std::array<KDL::Trajectory_Composite, 6>>::value)
+	if constexpr (std::is_same<T, std::array<KDL::Trajectory_Composite*, 6>>::value)
 	{
 		if (resolution <= 0)
 			throw std::runtime_error("Resolution must be positive.");
 
 		const auto num_joints = traj.size();
-		const auto max_dur = std::max_element(traj.begin(), traj.end(), [&](auto& a, auto& b) {
-			return a.Duration() < b.Duration();
-		})->Duration();
+		const auto max_dur = (*std::max_element(traj.begin(), traj.end(), [&](auto& a, auto& b) {
+			return a->Duration() < b->Duration();
+		}))->Duration();
 
 		for (double t = 0.0; t < max_dur; t += resolution)
 		{
 			std::string str = "";
 			for (size_t i = 0; i < num_joints; ++i)
 			{
-				double angle = traj[i].Pos(t).p.data[0];
+				double angle = traj[i]->Pos(t).p.data[0];
 				str += (str.empty() ? "" : ", ") + std::to_string(angle);
 			}
 
@@ -400,4 +400,4 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
 template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
 template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);
-template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite, 6>>(std::array<KDL::Trajectory_Composite, 6>& traj, const std::string&& filename, const double resolution);
+template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite*, 6>>(std::array<KDL::Trajectory_Composite*, 6>& traj, const std::string&& filename, const double resolution);
