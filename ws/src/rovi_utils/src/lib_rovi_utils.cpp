@@ -68,40 +68,6 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double,
 }
 
 geometry_msgs::Pose
-rovi_utils::get_link6_given_ee(const geometry_msgs::Pose& pose_ee)
-{
-	// define all transformations
-	Eigen::Isometry3d B_T_ee, B_T_l6;
-	tf::poseMsgToEigen(pose_ee, B_T_ee);
-
-	// computre for link 6
-	B_T_l6 = B_T_ee * ur5_dynamics::l6_T_ee.inverse();
-
-	// return as pose
-	geometry_msgs::Pose pose_l6;
-	tf::poseEigenToMsg(B_T_l6, pose_l6);
-
-	return pose_l6;
-}
-
-geometry_msgs::Pose
-rovi_utils::get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp)
-{
-	// define all transformations
-	Eigen::Isometry3d B_T_ee_tcp, B_T_l6, l6_T_ee;
-	tf::poseMsgToEigen(pose_tcp, B_T_ee_tcp);
-
-	// compute for link 6
-	B_T_l6 = B_T_ee_tcp * ur5_dynamics::ee_T_tcp.inverse() * ur5_dynamics::l6_T_ee.inverse();
-
-	// return as pose
-	geometry_msgs::Pose pose_l6;
-	tf::poseEigenToMsg(B_T_l6, pose_l6);
-
-	return pose_l6;
-}
-
-geometry_msgs::Pose
 rovi_utils::get_current_link6_pose()
 {
 	// get link states from gazebo
@@ -158,8 +124,42 @@ rovi_utils::get_current_tcp_pose()
 	return pose_tcp;
 }
 
+geometry_msgs::Pose
+rovi_utils::get_link6_given_ee(const geometry_msgs::Pose& pose_ee)
+{
+	// define all transformations
+	Eigen::Isometry3d B_T_ee, B_T_l6;
+	tf::poseMsgToEigen(pose_ee, B_T_ee);
+
+	// computre for link 6
+	B_T_l6 = B_T_ee * ur5_dynamics::l6_T_ee.inverse();
+
+	// return as pose
+	geometry_msgs::Pose pose_l6;
+	tf::poseEigenToMsg(B_T_l6, pose_l6);
+
+	return pose_l6;
+}
+
+geometry_msgs::Pose
+rovi_utils::get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp)
+{
+	// define all transformations
+	Eigen::Isometry3d B_T_ee_tcp, B_T_l6, l6_T_ee;
+	tf::poseMsgToEigen(pose_tcp, B_T_ee_tcp);
+
+	// compute for link 6
+	B_T_l6 = B_T_ee_tcp * ur5_dynamics::ee_T_tcp.inverse() * ur5_dynamics::l6_T_ee.inverse();
+
+	// return as pose
+	geometry_msgs::Pose pose_l6;
+	tf::poseEigenToMsg(B_T_l6, pose_l6);
+
+	return pose_l6;
+}
+
 moveit_msgs::CollisionObject
-rovi_utils::make_mesh_cobj(const std::string& name, const std::string& frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
 	// 3D model of <name> object is expected to be located at
 	// package://rovi_gazebo/models/name/name.dae
@@ -186,7 +186,7 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& frame, co
 	co.mesh_poses.resize(1);
 
 	co.meshes[0] = mesh;
-	co.header.frame_id = frame;
+	co.header.frame_id = planning_frame;
 
 	co.mesh_poses[0].position.x = pos[0];
 	co.mesh_poses[0].position.y = pos[1];
@@ -205,7 +205,7 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& frame, co
 }
 
 std::vector<moveit_msgs::CollisionObject>
-rovi_utils::get_gazebo_obj(const std::string& frame, const std::vector<std::string>& excludes)
+rovi_utils::get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes)
 {
 	// get vector of all objects in gazebo as ModelState msgs
 	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
@@ -227,7 +227,7 @@ rovi_utils::get_gazebo_obj(const std::string& frame, const std::vector<std::stri
 
 			// construct and add colision object
 			ROS_INFO_STREAM("Adding object: " << obj << " at " << "[" << pos.x << ", " << pos.y << ", " << pos.z << "]");
-			collision_objects.emplace_back(make_mesh_cobj(obj, frame, { pos.x, pos.y, pos.z }));
+			collision_objects.emplace_back(make_mesh_cobj(obj, planning_frame, { pos.x, pos.y, pos.z }));
 		}
 		else
 			ROS_WARN_STREAM("Excluding object: " << obj);
