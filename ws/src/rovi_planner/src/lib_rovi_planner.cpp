@@ -39,8 +39,8 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 	if (waypoints.size() < 2)
 		throw std::runtime_error("There must be at least two waypoints.");
 
-	auto traj         = new KDL::Trajectory_Composite();
-	auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
+	auto traj                = new KDL::Trajectory_Composite();
+	static auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
 
 	// convert vector<Pose> to vector<KDL::Frame>
 	std::vector<KDL::Frame> frames;
@@ -96,22 +96,15 @@ rovi_planner::traj_linear(const std::vector<sensor_msgs::JointState>& joint_stat
 	if (joint_states.size() < 2)
 		throw std::runtime_error("There must be at least two joint states.");
 
-	auto trajs        = std::array<KDL::Trajectory_Composite* , 6>();
+	auto trajs               = std::array<KDL::Trajectory_Composite* , 6>();
+	static auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
 
+	// populate array with new trajectory composites
 	for (int i = 0; i < 6; ++i)
-	{
 		trajs[i] = new KDL::Trajectory_Composite();
-	}
 	
-	auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
-
-	auto angle_to_frame = [](auto& angle) 
-	{ 
-		return KDL::Frame(
-							KDL::Rotation::RPY(0, 0, 0), 
-							KDL::Vector(angle, 0, 0)
-			   			 ); 
-		};
+	// lambda to convert angle to KDL frame
+	auto angle_to_frame = [](auto& angle) { return KDL::Frame(KDL::Rotation::RPY(0, 0, 0), KDL::Vector(angle, 0, 0)); };
 
 	// try creating the trajectory; catch any errors
 	try
@@ -119,7 +112,6 @@ rovi_planner::traj_linear(const std::vector<sensor_msgs::JointState>& joint_stat
 		for (size_t i = 0; i < joint_states.size() - 1; ++i)
 		{
 			const auto NUM_JOINTS = joint_states[i].position.size();
-			// ROS_WARN_STREAM("traj_linear(): number of joints set to: " << NUM_JOINTS);
 
 			for (size_t j = 0; j < NUM_JOINTS; ++j)
 			{
@@ -149,10 +141,7 @@ rovi_planner::traj_linear(const std::vector<sensor_msgs::JointState>& joint_stat
 		exit(-1);
 	}
 
-	//delete interpolator;
-
-	ROS_INFO_STREAM("Hello");
-
+	// return array of KDL trajectory composites
 	return trajs;
 }
 
@@ -243,7 +232,7 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	constexpr auto ROBOT_DESCRIPTION   = "robot_description";
 	constexpr auto PLANNER_PLUGIN_NAME = "ompl_interface/OMPLPlanner";
 	constexpr auto DEFAULT_PLANNER     = "RRTConnect";
-		const auto AVAILABLE_PLANNERS  = { "RRT", "RRTstar" };
+		const auto AVAILABLE_PLANNERS  = { "RRT", "RRTConnect", "RRTstar" };
 
 	// this sets the current planner
 	auto check_planner = [&]()
@@ -318,9 +307,9 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	// check for success
 	if (!planner_instance->initialize(robot_model, ros::this_node::getNamespace()))
 	{
+		// do some error handling here
 		ROS_FATAL_STREAM("Could not initialize planner instance");
 		exit(-1);
-		// do some error handling here
 	}
 
 	// make a motion plan request / response msg
@@ -349,23 +338,21 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 
 	if (res.error_code_.val != res.error_code_.SUCCESS)
 	{
-		ROS_FATAL_STREAM("It was not possible to generate a trajectory");
 		// do some error handling here
+		ROS_FATAL_STREAM("It was not possible to generate a trajectory");
 	}
 
 	// create Cartesian trajectory using linear interpolation
 	auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
-	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
+	auto traj_lin  = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
 
-	// // create joint trajectory using linear interpolation
+	// create joint trajectory using linear interpolation
 	auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
-	auto traj_joints = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
-	rovi_utils::export_traj(traj_joints, "traj_joint_rrt.csv");
+	auto traj_joints  = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
+	rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
 
+	// terminate planner instance
 	planner_instance->terminate();
-
-	std::cout << "\nPress [ENTER] to return from traj_moveit()..." << std::endl;
-	std::cin.ignore();
 
 	return traj_lin;
 }
@@ -375,9 +362,9 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 						   ros::Publisher& planning_scene_pub, int resolution, const std::string& obj_name, const std::array<double, 3>& table)
 {
 	// arm, ee and robot defines
-	constexpr auto ARM_GROUP    	 	= "ur5_arm";
-	constexpr auto WSG_GROUP 	    	= "wsg";
-	constexpr auto ROBOT_DESCRIPTION 	= "robot_description";
+	constexpr auto ARM_GROUP         = "ur5_arm";
+	constexpr auto WSG_GROUP         = "wsg";
+	constexpr auto ROBOT_DESCRIPTION = "robot_description";
 
 	// load robot model and kinematic model, and use it to setup the planning scene
 	robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
@@ -400,7 +387,7 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 	{
 		// constant transformation
 		Eigen::Affine3d trans = Eigen::Translation3d(pos[0], pos[1], pos[2]) *
-								Eigen::AngleAxisd(theta, Eigen::Vector3d{axis[0],axis[1],axis[2]});
+		                        Eigen::AngleAxisd(theta, Eigen::Vector3d{axis[0], axis[1], axis[2]});
 
 		return trans.matrix();
 	};
@@ -421,8 +408,8 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 		// insert table and other constant objects into the planning scene
 		std::vector<moveit_msgs::CollisionObject> collision_objects
 		{
-			rovi_utils::make_mesh_cobj("table",  planning_scene.getPlanningFrame() , table),
-			rovi_utils::make_mesh_cobj(obj_name, planning_scene.getPlanningFrame() , obj)
+			rovi_utils::make_mesh_cobj("table",  planning_scene.getPlanningFrame(), table),
+			rovi_utils::make_mesh_cobj(obj_name, planning_scene.getPlanningFrame(), obj)
 		};
 
 		// how to change color
@@ -433,7 +420,7 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 		// color.r = 1.0;
 
 		// generate the matrices used to calculate the desired pose
-		Eigen::Matrix4d w_T_base = generate_trans( base_pt,      0, {0, 0, 1} );
+		Eigen::Matrix4d w_T_base = generate_trans(base_pt, 0, { 0, 0, 1 });
 		{
 			// this is only to visualie in RViz
 			ros::Rate lp(5);
@@ -466,11 +453,7 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 					planning_scene_pub.publish(planning_scene_msg);
 					lp.sleep();
 				}
-
 			}
-
 		}
-
 	}
-
 }

@@ -47,16 +47,13 @@ main(int argc, char** argv)
 		pose_ee_desired
 	};
 
-	// auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
-	// auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
-	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRT");
-
-	ROS_WARN("OUT!");
-	std::cin.ignore();
+	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
+	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
+	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
 
 	// export to file
-	// rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
-	// rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
+	rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
+	rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
 	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
 	// command trajectory to robot at 100 Hz
