@@ -360,7 +360,7 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 				double qdot = traj[i]->Vel(t).vel.data[0];
 
 				str_q    +=    (str_q.empty() ? "" : ", ") + std::to_string(q);
-				str_qdot += (str_qdot.empty() ? "" : ", ") + std::to_string(q);
+				str_qdot += (str_qdot.empty() ? "" : ", ") + std::to_string(qdot);
 			}
 
 			fs_q    << str_q    << "\n";
