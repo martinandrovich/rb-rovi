@@ -25,11 +25,12 @@ main(int argc, char** argv)
 	// joint interpolation test
 
 	sensor_msgs::JointState state1, state2;
-	state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
-	state2.position = { 1,0, 0., 0., 0., 0., 0. };
+	// state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
+	state1.position = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.5 };
+	state2.position = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-	auto traj_joint = rovi_planner::traj_linear({ state1, state2 });
-	rovi_utils::export_traj(traj_joint, "traj_joint_test.csv", 0.001);
+	auto traj_joint = rovi_planner::traj_linear({ state1, state2 }, 1.0, 1.0, 0.001);
+	rovi_utils::export_traj(traj_joint, "traj_jnt_test.csv", 0.01);
 
 	// create a linear, parabolic and rrt trajectories
 
