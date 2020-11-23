@@ -10,6 +10,7 @@
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 
 	<arg name="all_objects" default="false" />
+	<arg name="moveit" default="true" />
 
 	<!-- GAZEBO -->
 
@@ -80,8 +81,7 @@
 	<!-- run a robot state publisher to take the joint values and publish them to tf -->
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
 
-	<include file="$(find ur5_moveit_config)/launch/default.launch">
-  	</include>
-
+	<!-- MOVE IT with OMPL -->
+	<include if="$(arg moveit)" file="$(find ur5_moveit_config)/launch/default.launch" />
 
 </launch>
