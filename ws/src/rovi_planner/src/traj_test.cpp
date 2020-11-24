@@ -29,8 +29,11 @@ main(int argc, char** argv)
 	state1.position = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.5 };
 	state2.position = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-	auto traj_joint = rovi_planner::traj_linear({ state1, state2 }, 1.0, 1.0, 0.001);
-	rovi_utils::export_traj(traj_joint, "traj_jnt_test.csv", 0.01);
+	auto traj_joint_lin = rovi_planner::traj_linear({ state1, state2 }, 1.0, 1.0, 0.001);
+	rovi_utils::export_traj(traj_joint_lin, "traj_jnt_test_lin.csv", 0.01);
+	
+	auto traj_joint_par = rovi_planner::traj_parabolic({ state1, state2 }, 1.0, 1.0, 0.001, 0.001);
+	rovi_utils::export_traj(traj_joint_par, "traj_jnt_test_par.csv", 0.01);
 
 	// create a linear, parabolic and rrt trajectories
 
