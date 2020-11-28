@@ -12,6 +12,7 @@
 #include <Eigen/Eigen>
 
 #include <rovi_utils/rovi_utils.h>
+#include <ur5_controllers/interface.h>
 
 int
 main(int argc, char** argv)
@@ -21,19 +22,21 @@ main(int argc, char** argv)
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
+	
+	ur5_controllers::wsg::grasp();
 
 	// joint interpolation test
 
-	sensor_msgs::JointState state1, state2;
-	// state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
-	state1.position = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.5 };
-	state2.position = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+	// sensor_msgs::JointState state1, state2;
+	// // state1.position = { 0.5, 1.0, 0.45, 3.14, 1.12, 1.23 };
+	// state1.position = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.5 };
+	// state2.position = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-	auto traj_joint_lin = rovi_planner::traj_linear({ state1, state2 }, 1.0, 1.0, 0.001);
-	rovi_utils::export_traj(traj_joint_lin, "traj_jnt_test_lin.csv", 0.01);
+	// auto traj_joint_lin = rovi_planner::traj_linear({ state1, state2 }, 1.0, 1.0, 0.001);
+	// rovi_utils::export_traj(traj_joint_lin, "traj_jnt_test_lin.csv", 0.01);
 	
-	auto traj_joint_par = rovi_planner::traj_parabolic({ state1, state2 }, 1.0, 1.0, 0.001, 0.001);
-	rovi_utils::export_traj(traj_joint_par, "traj_jnt_test_par.csv", 0.01);
+	// auto traj_joint_par = rovi_planner::traj_parabolic({ state1, state2 }, 1.0, 1.0, 0.001, 0.001);
+	// rovi_utils::export_traj(traj_joint_par, "traj_jnt_test_par.csv", 0.01);
 
 	// create a linear, parabolic and rrt trajectories
 
@@ -50,16 +53,20 @@ main(int argc, char** argv)
 
 	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
 	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
-	//auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	
+	auto rrt_plan = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	auto jnt_states = rovi_utils::joint_states_from_traj(*rrt_plan.trajectory_);
+	auto traj_rrt = rovi_planner::traj_parabolic(jnt_states, 1.0, 1.0, 0.001, 0.001);
 
 	// export to file
-	rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
-	rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
-	//rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
+	// rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
+	// rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
+	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
-	// // command trajectory to robot at 100 Hz
-	// std::cout << "Press [ENTER] to execute trajectory...\n";
-	// std::cin.ignore();
+	// command trajectory to robot at 100 Hz
+	std::cout << "Press [ENTER] to execute trajectory...\n";
+	std::cin.ignore();
+	exit(0);
 
 	// const auto pub = nh.advertise<ur5_controllers::PoseTwist>("/ur5_cartesian_pose_controller/command", 1);
 	// ur5_controllers::PoseTwist msg;
