@@ -402,16 +402,29 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 
 	std::vector<sensor_msgs::JointState> joint_states;
 
+	static std::ofstream fs("write_to_file.csv", std::ofstream::out);
+
 	for (size_t i = 0; i < traj.getWayPointCount(); ++i)
 	{
-		std::vector<double> q;
+		std::vector<double> q, qdot, qddot;
 		sensor_msgs::JointState joint_state;
 
 		// get joint values, define joint statee and add to vector of states
 		traj.getWayPoint(i).copyJointGroupPositions("ur5_arm", q);
 		joint_state.position = q;
+
+		traj.getWayPoint(i).copyJointGroupVelocities("ur5_arm", qdot);
+		joint_state.velocity = qdot;
+
+		traj.getWayPoint(i).copyJointGroupVelocities("ur5_arm", qddot);
+		joint_state.effort = qddot;
+			
 		joint_states.push_back(joint_state);
+
+		fs << joint_state.position[0] << ", " << joint_state.position[1] << ", " <<  joint_state.position[2] << ", " << joint_state.position[3] << ", " << joint_state.position[4] << ", " << joint_state.position[5] << ", " << std::endl;
 	}
+
+	fs.close();
 
 	return joint_states;
 }

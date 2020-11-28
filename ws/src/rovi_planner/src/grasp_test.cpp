@@ -27,10 +27,14 @@
 #include <std_msgs/Float64.h>
 #include <trajectory_interface/trajectory_interface.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
+
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#include <moveit/trajectory_processing/trajectory_tools.h>
 
 #include <pluginlib/class_loader.h>
 #include <boost/scoped_ptr.hpp>
+#include <thread>
 
 #include <Eigen/Eigen>
 
@@ -60,49 +64,85 @@ main(int argc, char** argv)
 	ros::NodeHandle nh;
 
 	// publisher_scene
-	ros::Publisher joint_state_pub	    = nh.advertise<sensor_msgs::JointState>(JOINT_POS_TOPIC, 1);
-	ros::Publisher wsg_state_pub 		= nh.advertise<std_msgs::Float64>(WSG_TORQUE_TOPIC, 1);
-	ros::Publisher planning_scene_pub 	= nh.advertise<moveit_msgs::PlanningScene>(PLANNING_SCENE_TOPIC, 1);
-	ros::Publisher traj_pub 			= nh.advertise<moveit_msgs::DisplayTrajectory>(TRAJECTORY_TOPIC, 1);
+	ros::Publisher joint_state_pub	    = nh.advertise<sensor_msgs::JointState>(		JOINT_POS_TOPIC, 1);
+	ros::Publisher wsg_state_pub 		= nh.advertise<std_msgs::Float64>(				WSG_TORQUE_TOPIC, 1);
+	ros::Publisher planning_scene_pub 	= nh.advertise<moveit_msgs::PlanningScene>(		PLANNING_SCENE_TOPIC, 1);
+	ros::Publisher traj_pub 			= nh.advertise<moveit_msgs::DisplayTrajectory>(	TRAJECTORY_TOPIC, 1);
 
-	std_msgs::Float64 wsg_msg;
-	wsg_msg.data = 100;
-	wsg_state_pub.publish(wsg_msg);
+	auto lambda = std::thread([&]()
+	{
+		ros::Rate lp(100);
+		while(ros::ok())
+		{
+			std_msgs::Float64 wsg_msg;
+			wsg_msg.data = 100;
+			wsg_state_pub.publish(wsg_msg);
+			lp.sleep();
+		}
+	});
 
-	auto request = rovi_planner::traj_moveit(make_pose({0.5, 0.499, 0.1, 0, 0, 0}), "RRTstar");
+	// auto request = rovi_planner::traj_moveit(make_pose({0.50, 0.40, 0.1, 0, 0, 0}), "RRTConnect");
 
-	// trajectory_processing::IterativeParabolicTimeParameterization parabolic(500, 0.001);
+	// //trajectory_processing::IterativeParabolicTimeParameterization parabolic(500, 0.001);
+	// trajectory_processing::TimeOptimalTrajectoryGeneration totg(0.001, 0.001, 0.001);
 
-	// if ( !parabolic.computeTimeStamps(*request.trajectory_, 1.0, 1.0) )
+	// // if ( !parabolic.computeTimeStamps(*request.trajectory_, 1.0, 1.0) )
+	// // {
+	// // 	ROS_FATAL_STREAM("Not able to compute TimeStamps... exiting");
+	// // 	exit(-1);
+	// // }
+
+	// totg.computeTimeStamps(*request.trajectory_, 0.2, 0.1);
+	
+	// //moveit::planning_interface::MoveGroupInterface move_group(ARM_GROUP);
+
+
+	// // create joint trajectory using linear interpolation
+	// auto joint_states = rovi_utils::joint_states_from_traj(*request.trajectory_);
+
+	// ROS_INFO_STREAM("The amount of joint_states: " << joint_states.size());
+
+	// ROS_INFO_STREAM("The joint states are taken..");
+
+	// //auto traj_joints  = rovi_planner::traj_parabolic(joint_states, 3, 2, 0.001, 0.001);
+
+	// ROS_INFO_STREAM("Parabolic trajectory is computed...");
+
+	// ros::Rate lp(1000);
+
+	// auto ref = ros::Time::now();
+
+	// for(auto joint_msg : joint_states)
 	// {
-	// 	ROS_FATAL_STREAM("Not able to compute TimeStamps... exiting");
-	// 	exit(-1);
+
+	// 	joint_state_pub.publish(joint_msg);
+
+	// 	// ROS_INFO_STREAM(joint_msg);
+
+	// 	// ROS_INFO_STREAM("Joint State: ");
+
+	// 	lp.sleep();
 	// }
 
-	// create joint trajectory using linear interpolation
-	auto joint_states = rovi_utils::joint_states_from_traj(*request.trajectory_);
-	ROS_INFO_STREAM("The joint states are computed...");
-	auto traj_joints  = rovi_planner::traj_linear(joint_states, 1, 1, 0.001);
-	ROS_INFO_STREAM("The trajec joints are computed...");
+	// while( ros::ok() )
+	// {
+	// 	auto now = ros::Time::now();
 
-	ros::Rate lp(100);
-	auto ref = ros::Time::now();
-	while(ros::ok())
-	{
-		auto now = ros::Time::now();
+	// 	sensor_msgs::JointState joint_state;
 
-		sensor_msgs::JointState joint_state;
+	// 	// for (const auto & traj_joint : traj_joints)
+	// 	// {
+	// 	// 	joint_state.position.push_back( traj_joint->Pos((now-ref).toSec()).p.x() );
 
-		for (const auto & traj_joint : traj_joints)
-		{
-			joint_state.position.push_back(traj_joint->Pos((now-ref).toSec()).p.x());
-			joint_state.velocity.push_back(traj_joint->Vel((now-ref).toSec()).vel.x());
-		}
+	// 	// 	joint_state.velocity.push_back( traj_joint->Vel((now-ref).toSec()).vel.x() );
+	// 	// }
 
-		ROS_INFO_STREAM((now-ref).toSec());
-		joint_state_pub.publish(joint_state);
-		lp.sleep();
-	}
+	// 	// ROS_INFO_STREAM( (now-ref).toSec() );
+
+	// 	// joint_state_pub.publish(joint_state);
+
+	// 	// lp.sleep();
+	// }
 
 	//rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
 	
