@@ -54,14 +54,14 @@ main(int argc, char** argv)
 	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
 	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
 	
-	auto rrt_plan = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
-	auto jnt_states = rovi_utils::joint_states_from_traj(*rrt_plan.trajectory_);
-	auto traj_rrt = rovi_planner::traj_parabolic(jnt_states, 1.0, 1.0, 0.001, 0.001);
+	// auto rrt_plan = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	// auto jnt_states = rovi_utils::joint_states_from_traj(*rrt_plan.trajectory_);
+	// auto traj_rrt = rovi_planner::traj_parabolic(jnt_states, 1.0, 1.0, 0.001, 0.001);
 
 	// export to file
 	// rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
 	// rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
-	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
+	// rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
 	// command trajectory to robot at 100 Hz
 	std::cout << "Press [ENTER] to execute trajectory...\n";

@@ -272,7 +272,11 @@ bool
 rovi_planner::moveit_planner::init(ros::NodeHandle & nh)
 {
 	// create the model of the robot
-	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(new robot_model_loader::RobotModelLoader(std::string(ROBOT_DESCRIPTION)));
+	// FIX: it needs an object, not a pointer -> NO NEW, just constructor
+	
+	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
+	// robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION)); // OLD (broken)
+	
 	robot_model = robot_model_loader->getModel();
 
 	// create planning scene
