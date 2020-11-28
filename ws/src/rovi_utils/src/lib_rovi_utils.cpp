@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <pthread.h>
+#include <boost/filesystem.hpp>
 
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
@@ -270,14 +271,18 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 	// data = readmatrix("traj_lin.csv");
 	// plot3(data(:, 4), data(:, 8), data(:, 12))
 
-	std::ofstream fs(filename, std::ofstream::out);
+	// get filename stem and extension
+	const auto extension = boost::filesystem::path(filename).extension().string();
+	const auto stem      = boost::filesystem::path(filename).stem().string();
 
-	// KDL::Trajectory_Composite
+	// KDL::Trajectory_Composite (Cartesian space)
 	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
 	{
 
 		if (resolution <= 0)
 			throw std::runtime_error("Resolution must be positive.");
+
+		std::ofstream fs(filename, std::ofstream::out);
 
 		for (double t = 0.0; t < traj.Duration(); t += resolution)
 		{
@@ -299,14 +304,17 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 
 			fs << "\n";
 		}
+
+		fs.close();
 	}
 
-	// robot_trajectory::RobotTrajectory
+	// robot_trajectory::RobotTrajectory (Cartesian space, waypoints)
 	if constexpr (std::is_same<T, robot_trajectory::RobotTrajectory>::value)
 	{
 		auto robot_state = std::make_shared<moveit::core::RobotState>(*traj.getFirstWayPointPtr());
-
 		ROS_WARN_STREAM("Exporting trajectory using waypoints; resolution (timestep) is ignored.");
+
+		std::ofstream fs(filename, std::ofstream::out);
 
 		for (size_t i = 0; i < traj.getWayPointCount(); ++i)
 		{
@@ -323,13 +331,18 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 
 			fs << "\n";
 		}
+
+		fs.close();
 	}
 
-	// std::array<KDL::Trajectory_Composite, 6>
+	// std::array<KDL::Trajectory_Composite*, 6> (Joint space)
 	if constexpr (std::is_same<T, std::array<KDL::Trajectory_Composite*, 6>>::value)
 	{
 		if (resolution <= 0)
 			throw std::runtime_error("Resolution must be positive.");
+
+		std::ofstream fs_q(stem + "_q" + extension, std::ofstream::out);
+		std::ofstream fs_qdot(stem + "_qdot" + extension, std::ofstream::out);
 
 		const auto num_joints = traj.size();
 		const auto max_dur = (*std::max_element(traj.begin(), traj.end(), [&](auto& a, auto& b) {
@@ -338,19 +351,25 @@ rovi_utils::export_traj(T& traj, const std::string&& filename, const double reso
 
 		for (double t = 0.0; t < max_dur; t += resolution)
 		{
-			std::string str = "";
+			std::string str_q    = "";
+			std::string str_qdot = "";
+
 			for (size_t i = 0; i < num_joints; ++i)
 			{
-				double angle = traj[i]->Pos(t).p.data[0];
-				str += (str.empty() ? "" : ", ") + std::to_string(angle);
+				double q = traj[i]->Pos(t).p.data[0];
+				double qdot = traj[i]->Vel(t).vel.data[0];
+
+				str_q    +=    (str_q.empty() ? "" : ", ") + std::to_string(q);
+				str_qdot += (str_qdot.empty() ? "" : ", ") + std::to_string(qdot);
 			}
 
-			fs << str << "\n";
+			fs_q    << str_q    << "\n";
+			fs_qdot << str_qdot << "\n";
 		}
+
+		fs_q.close();
+		fs_qdot.close();
 	}
-
-	fs.close();
-
 }
 
 std::vector<geometry_msgs::Pose>

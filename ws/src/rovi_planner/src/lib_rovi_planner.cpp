@@ -1,12 +1,10 @@
 #include "rovi_planner/rovi_planner.h"
 
-
 #include <tf_conversions/tf_kdl.h>
 #include <pluginlib/class_loader.h>
 #include <boost/scoped_ptr.hpp>
 
 #include <kdl/frames.hpp>
-#include <kdl/rotational_interpolation_sa.hpp>
 #include <kdl/path_point.hpp>
 #include <kdl/path_line.hpp>
 #include <kdl/path_roundedcomposite.hpp>
@@ -15,6 +13,7 @@
 #include <kdl/trajectory_stationary.hpp>
 #include <kdl/velocityprofile_trap.hpp>
 #include <kdl/velocityprofile_spline.hpp>
+#include <kdl/rotational_interpolation_sa.hpp>
 #include <kdl/utilities/error.h>
 
 #include <moveit/robot_model_loader/robot_model_loader.h>
@@ -128,6 +127,67 @@ rovi_planner::traj_linear(const std::vector<sensor_msgs::JointState>& joint_stat
 				const auto traj_seg = new KDL::Trajectory_Segment(path, vel_profile);
 				trajs[j]->Add(traj_seg);
 			}
+		}
+	}
+	catch (const KDL::Error& e)
+	{
+		ROS_ERROR("Could not plan trajectory.");
+
+		std::cerr << e.Description() << std::endl;
+		std::cerr << e.GetType() << std::endl;
+
+		exit(-1);
+	}
+
+	// return array of KDL trajectory composites
+	return trajs;
+}
+
+std::array<KDL::Trajectory_Composite*, 6>
+rovi_planner::traj_parabolic(const std::vector<sensor_msgs::JointState>& joint_states, double vel_max, double acc_max, double corner_radius, double equiv_radius)
+{
+	// parabolic joint trajectory interpolation
+
+	if (joint_states.empty())
+		throw std::runtime_error("There must be at least one joint state.");
+
+	auto trajs                = std::array<KDL::Trajectory_Composite* , 6>();
+	auto paths                = std::array<KDL::Path_RoundedComposite* , 6>();
+	constexpr auto NUM_JOINTS = trajs.size();
+	static auto interpolator  = new KDL::RotationalInterpolation_SingleAxis();
+
+	// populate array with new trajectory composites
+	for (size_t i = 0; i < NUM_JOINTS; ++i)
+	{
+		trajs[i] = new KDL::Trajectory_Composite();
+		paths[i] = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator);
+	}
+	
+	// lambda to convert angle to KDL frame
+	auto angle_to_frame = [](auto& angle) { return KDL::Frame(KDL::Rotation::RPY(0, 0, 0), KDL::Vector(angle, 0, 0)); };
+
+	// try creating the trajectory; catch any errors
+	try
+	{
+		// add all waypoints (frames) to path
+		for (size_t n = 0; n < NUM_JOINTS; ++n)
+		{
+			for (size_t i = 0; i < joint_states.size(); ++i)
+			{
+				const auto angle = joint_states[i].position[n];
+				paths[n]->Add(angle_to_frame(angle));
+			}
+			
+			// finish creating path for joint n
+			paths[n]->Finish();
+
+			// define velocity profile based on path start and end
+			auto vel_profile  = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+			vel_profile->SetProfile(0, paths[n]->PathLength());
+
+			// add trajectory segment from path and velocity profile to final trajectory
+			auto traj_seg = new KDL::Trajectory_Segment(paths[n], vel_profile);
+			trajs[n]->Add(traj_seg);
 		}
 	}
 	catch (const KDL::Error& e)
@@ -362,17 +422,17 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 		exit(-1);
 	}
 
-	// // create Cartesian trajectory using linear interpolation
-	// auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
-	// auto traj_lin  = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
+	// terminate
+	planner_instance->terminate();
 
 	// // create joint trajectory using linear interpolation
 	// auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
-	// auto traj_joints  = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
-	// rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
-
-	// // terminate planner instance
-	// planner_instance->terminate();
+	// auto traj_joints_lin  = rovi_planner::traj_linear(joint_states, 1.0, 1.0, 0.01);
+	// rovi_utils::export_traj(traj_joints_lin, "traj_jnt_rrt_lin.csv");
+	
+	// // create joint trajectory using parabolic interpolation
+	// auto traj_joints_par  = rovi_planner::traj_parabolic(joint_states, 1.0, 1.0, 0.001, 0.001);
+	// rovi_utils::export_traj(traj_joints_par, "traj_jnt_rrt_par.csv");
 
 	return res;
 }
