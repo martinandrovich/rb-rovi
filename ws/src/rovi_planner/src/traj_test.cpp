@@ -49,38 +49,38 @@ main(int argc, char** argv)
 
 	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
 	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
-	auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	//auto traj_rrt = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
 
 	// export to file
 	rovi_utils::export_traj(traj_lin, "traj_lin.csv", 0.01);
 	rovi_utils::export_traj(traj_par, "traj_par.csv", 0.01);
-	rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
+	//rovi_utils::export_traj(traj_rrt, "traj_rrt.csv", 0.01);
 
-	// command trajectory to robot at 100 Hz
-	std::cout << "Press [ENTER] to execute trajectory...\n";
-	std::cin.ignore();
+	// // command trajectory to robot at 100 Hz
+	// std::cout << "Press [ENTER] to execute trajectory...\n";
+	// std::cin.ignore();
 
-	const auto pub = nh.advertise<ur5_controllers::PoseTwist>("/ur5_cartesian_pose_controller/command", 1);
-	ur5_controllers::PoseTwist msg;
-	ros::Rate lr(100); // Hz
+	// const auto pub = nh.advertise<ur5_controllers::PoseTwist>("/ur5_cartesian_pose_controller/command", 1);
+	// ur5_controllers::PoseTwist msg;
+	// ros::Rate lr(100); // Hz
 
-	for (auto [t, traj] = std::tuple{ 0.0, traj_rrt }; t < traj.Duration() and ros::ok(); t += 0.01)
-	{
+	// for (auto [t, traj] = std::tuple{ 0.0, traj_rrt }; t < traj.Duration() and ros::ok(); t += 0.01)
+	// {
 		
-		ROS_INFO_STREAM_ONCE("Executing trajectory with duration: " << traj.Duration() << " sec");
+	// 	ROS_INFO_STREAM_ONCE("Executing trajectory with duration: " << traj.Duration() << " sec");
 
-		// KDL Frame
-		const auto& frame = traj.Pos(t);
-		const auto& twist = traj.Vel(t);
+	// 	// KDL Frame
+	// 	const auto& frame = traj.Pos(t);
+	// 	const auto& twist = traj.Vel(t);
 
-		// Convert from KDL to Eigen
-		tf::poseKDLToMsg(frame, msg.pose);
-		tf::twistKDLToMsg(twist, msg.twist);
+	// 	// Convert from KDL to Eigen
+	// 	tf::poseKDLToMsg(frame, msg.pose);
+	// 	tf::twistKDLToMsg(twist, msg.twist);
 
-		pub.publish(msg);
+	// 	pub.publish(msg);
 
-		lr.sleep();
-	}
+	// 	lr.sleep();
+	// }
 
 	return 0;
 }

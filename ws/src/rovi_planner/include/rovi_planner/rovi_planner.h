@@ -9,7 +9,8 @@
 
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
-
+ 
+#include <moveit/planning_interface/planning_interface.h>
 #include <kdl/trajectory_composite.hpp>
 
 namespace rovi_planner
@@ -25,11 +26,8 @@ namespace rovi_planner
 	KDL::Trajectory_Composite
 	traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max = 1.0 /* [m/s] */, double acc_max = 1.0 /* [m/s^2] */, double corner_radius = 0.05 /* [m] */, double equiv_radius = 0.05 /* [m] */);
 
-	KDL::Trajectory_Composite
-	traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner = "RRTConnect", std::vector<double> q = {}, double vel_max = 1.0 /* [m/s] */, double acc_max = 1.0 /* [m/s^2] */, double corner_radius = 0.05 /* [m] */ );
-
-	KDL::Trajectory_Composite
-	traj_moveit_static(const geometry_msgs::Pose & pose_des, std::string planner = "RRTConnect", std::vector<double> q = {}, double vel_max = 1.0 /* [m/s] */, double acc_max = 1.0 /* [m/s^2] */, double corner_radius = 0.05 /* [m] */ );
+	planning_interface::MotionPlanResponse
+	traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner = "RRTConnect", std::vector<double> q = {} );
 
 	// reachability planner
 

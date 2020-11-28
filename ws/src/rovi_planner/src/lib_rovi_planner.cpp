@@ -19,7 +19,6 @@
 
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/planning_scene/planning_scene.h>
-#include <moveit/planning_interface/planning_interface.h>
 #include <moveit/kinematic_constraints/utils.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit_msgs/ApplyPlanningScene.h>
@@ -223,8 +222,8 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	return *traj;
 }
 
-KDL::Trajectory_Composite
-rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q, double vel_max, double acc_max, double corner_radius)
+planning_interface::MotionPlanResponse
+rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q)
 {
 	// arm and robot_description
 	constexpr auto ARM_GROUP           = "ur5_arm";
@@ -248,11 +247,11 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	ros::param::set(std::string(ARM_GROUP) + "/default_planner_config", check_planner());
 
 	// create the model of the robot
-	robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-	robot_model::RobotModelPtr              robot_model(robot_model_loader->getModel());
+	static robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
+	static robot_model::RobotModelPtr              robot_model(robot_model_loader->getModel());
 
 	// create the planning-scene
-	planning_scene::PlanningScenePtr planning_scene(new planning_scene::PlanningScene(robot_model));
+	static planning_scene::PlanningScenePtr planning_scene(new planning_scene::PlanningScene(robot_model));
 
 	// get robot state, this is a raw reference and pointers for arm_group and wsg_group
 	auto& robot_state    = planning_scene->getCurrentStateNonConst();
@@ -263,15 +262,18 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	if (q.size() != 6 )
 	{
 		ROS_INFO_STREAM("Waiting for sensor_msgs::JointState...");
+		
 		auto q_gazebo = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 		q             = std::vector<double>(q_gazebo->position.begin(), q_gazebo->position.end() - 2);
 		Eigen::Matrix<double, 6, 1> mat(q.data());
+
 		ROS_INFO_STREAM("Got joint states:\n\n" << mat << "\n");
 	}
 
 	// set the robot state
+	const std::vector<double> HOME_WSG{0.05, 0.05};
 	robot_state.setJointGroupPositions(ARM_GROUP, q);
-	robot_state.setJointGroupPositions(WSG_GROUP, std::vector({ 0.05, 0.05 }));
+	robot_state.setJointGroupPositions(WSG_GROUP, HOME_WSG);
 
 	// move the base
 	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
@@ -299,17 +301,24 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	planning_scene->setPlanningSceneDiffMsg(planning_scene_msg);
 
 	// setup the runtime plugin
-	boost::scoped_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
-	planning_interface::PlannerManagerPtr planner_instance;
-	planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
-	planner_instance.reset(planner_plugin_loader->createUnmanagedInstance(PLANNER_PLUGIN_NAME));
+	static bool init = false;
+	static boost::scoped_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
+	static planning_interface::PlannerManagerPtr planner_instance;
 
-	// check for success
-	if (!planner_instance->initialize(robot_model, ros::this_node::getNamespace()))
+	if(!init)
 	{
-		// do some error handling here
-		ROS_FATAL_STREAM("Could not initialize planner instance");
-		exit(-1);
+		planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
+		planner_instance.reset(planner_plugin_loader->createUnmanagedInstance(PLANNER_PLUGIN_NAME));
+
+		// check for success
+		if (!planner_instance->initialize(robot_model, ros::this_node::getNamespace()))
+		{
+			// do some error handling here
+			ROS_FATAL_STREAM("Could not initialize planner instance... exiting...");
+			exit(-1);
+		}
+
+		init = true;
 	}
 
 	// make a motion plan request / response msg
@@ -330,6 +339,16 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 
 	// specify plan group and pushback the goal_constraints?
 	req.group_name = ARM_GROUP;
+
+	// planning time 
+	req.allowed_planning_time = 2;
+	req.num_planning_attempts = 5000;
+
+	// scale factor velocity / acceleration
+	req.max_acceleration_scaling_factor = 1.0;
+	req.max_velocity_scaling_factor = 1.0;
+
+	// pushback the requirements
 	req.goal_constraints.push_back(pose_goal);
 
 	// get the planningcontext
@@ -339,22 +358,23 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	if (res.error_code_.val != res.error_code_.SUCCESS)
 	{
 		// do some error handling here
-		ROS_FATAL_STREAM("It was not possible to generate a trajectory");
+		ROS_FATAL_STREAM("It was not possible to generate a trajectory... exiting...");
+		exit(-1);
 	}
 
-	// create Cartesian trajectory using linear interpolation
-	auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
-	auto traj_lin  = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
+	// // create Cartesian trajectory using linear interpolation
+	// auto waypoints = rovi_utils::waypoints_from_traj(*res.trajectory_);
+	// auto traj_lin  = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.01);
 
-	// create joint trajectory using linear interpolation
-	auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
-	auto traj_joints  = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
-	rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
+	// // create joint trajectory using linear interpolation
+	// auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
+	// auto traj_joints  = rovi_planner::traj_linear(joint_states, 0.1, 0.1, 0.01);
+	// rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
 
-	// terminate planner instance
-	planner_instance->terminate();
+	// // terminate planner instance
+	// planner_instance->terminate();
 
-	return traj_lin;
+	return res;
 }
 
 void

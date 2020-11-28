@@ -53,10 +53,12 @@ namespace ur5_controllers
 		{
 			q_d(i) = Q_D_INIT[i];
 			q_dot_d(i) = 0.0f;
+			//q_ddot_d(i) = 0.0f;
 		}
 
 		q_state.position = std::vector<double>(q_d.data(), q_d.data() + q_d.size());
 		q_state.velocity = std::vector<double>(q_dot_d.data(), q_dot_d.data() + q_dot_d.size());
+		//q_state.effort = std::vector<double>(q_ddot_d.data(), q_ddot_d.data() + q_ddot_d.size());
 
 		commands_buffer.writeFromNonRT(q_state);
 	}
@@ -74,6 +76,8 @@ namespace ur5_controllers
 		// write the commanded velocity in joint space
 		q_d 	= Eigen::Vector6d(command.position.data());
 		q_dot_d = Eigen::Vector6d(command.velocity.data());
+		//q_ddot_d = Eigen::Vector6d(command.effort.data());
+
 
 		// read joint states
 		const auto q = get_position();
