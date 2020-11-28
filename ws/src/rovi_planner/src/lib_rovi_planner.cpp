@@ -1,8 +1,6 @@
 #include "rovi_planner/rovi_planner.h"
 
 #include <tf_conversions/tf_kdl.h>
-#include <pluginlib/class_loader.h>
-#include <boost/scoped_ptr.hpp>
 
 #include <kdl/frames.hpp>
 #include <kdl/path_point.hpp>
@@ -15,18 +13,6 @@
 #include <kdl/velocityprofile_spline.hpp>
 #include <kdl/rotational_interpolation_sa.hpp>
 #include <kdl/utilities/error.h>
-
-#include <moveit/robot_model_loader/robot_model_loader.h>
-#include <moveit/planning_scene/planning_scene.h>
-#include <moveit/kinematic_constraints/utils.h>
-#include <moveit_visual_tools/moveit_visual_tools.h>
-#include <moveit_msgs/ApplyPlanningScene.h>
-
-#include <gazebo_msgs/ModelStates.h>
-#include <sensor_msgs/JointState.h>
-
-#include <ur5_dynamics/ur5_dynamics.h>
-#include <rovi_utils/rovi_utils.h>
 
 KDL::Trajectory_Composite
 rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double equiv_radius)
@@ -282,17 +268,42 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	return *traj;
 }
 
-planning_interface::MotionPlanResponse
-rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q)
+bool
+rovi_planner::moveit_planner::init(ros::NodeHandle & nh)
 {
-	// arm and robot_description
-	constexpr auto ARM_GROUP           = "ur5_arm";
-	constexpr auto WSG_GROUP           = "wsg";
-	constexpr auto ROBOT_DESCRIPTION   = "robot_description";
-	constexpr auto PLANNER_PLUGIN_NAME = "ompl_interface/OMPLPlanner";
-	constexpr auto DEFAULT_PLANNER     = "RRTConnect";
-		const auto AVAILABLE_PLANNERS  = { "RRT", "RRTConnect", "RRTstar" };
+	// create the model of the robot
+	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(new robot_model_loader::RobotModelLoader(std::string(ROBOT_DESCRIPTION)));
+	robot_model = robot_model_loader->getModel();
 
+	// create planning scene
+	// planning_scene = std::make_shared<planning_scene::PlanningScene>(new planning_scene::PlanningScene(robot_model));
+
+	// create planner objects
+	planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
+	planner_instance.reset(planner_plugin_loader->createUnmanagedInstance(PLANNER_PLUGIN_NAME));
+
+	// create publishers
+	ros::Publisher planning_scene_pub 	= nh.advertise<moveit_msgs::PlanningScene>(		PLANNING_SCENE_TOPIC, 1);
+	ros::Publisher traj_pub 			= nh.advertise<moveit_msgs::DisplayTrajectory>(	TRAJECTORY_TOPIC, 1);
+
+	// check for success
+	if (!planner_instance->initialize(robot_model, ros::this_node::getNamespace()))
+	{
+		// do some error handling here
+		ROS_FATAL_STREAM("Could not initialize planner instance... exiting...");
+		is_init = false;
+	}
+	else
+	{
+		is_init = true;
+	}
+
+	return is_init;
+}
+
+planning_interface::MotionPlanResponse
+rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q)
+{
 	// this sets the current planner
 	auto check_planner = [&]()
 	{
@@ -306,14 +317,7 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	// set the planner
 	ros::param::set(std::string(ARM_GROUP) + "/default_planner_config", check_planner());
 
-	// create the model of the robot
-	static robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-	static robot_model::RobotModelPtr              robot_model(robot_model_loader->getModel());
-
-	// create the planning-scene
-	static planning_scene::PlanningScenePtr planning_scene(new planning_scene::PlanningScene(robot_model));
-
-	// get robot state, this is a raw reference and pointers for arm_group and wsg_group
+	// set robot_state, arm_group and wsg_group ptrs
 	auto& robot_state    = planning_scene->getCurrentStateNonConst();
 	const auto arm_group = robot_state.getJointModelGroup(ARM_GROUP);
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
@@ -337,6 +341,7 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 
 	// move the base
 	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
+
 	auto model_states = ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
 	for(size_t i = 0; model_states->name.size() > i ; ++i)
 	{
@@ -359,27 +364,6 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	planning_scene->getPlanningSceneMsg(planning_scene_msg);
 	planning_scene_msg.world.collision_objects = collision_objects;
 	planning_scene->setPlanningSceneDiffMsg(planning_scene_msg);
-
-	// setup the runtime plugin
-	static bool init = false;
-	static boost::scoped_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
-	static planning_interface::PlannerManagerPtr planner_instance;
-
-	if(!init)
-	{
-		planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
-		planner_instance.reset(planner_plugin_loader->createUnmanagedInstance(PLANNER_PLUGIN_NAME));
-
-		// check for success
-		if (!planner_instance->initialize(robot_model, ros::this_node::getNamespace()))
-		{
-			// do some error handling here
-			ROS_FATAL_STREAM("Could not initialize planner instance... exiting...");
-			exit(-1);
-		}
-
-		init = true;
-	}
 
 	// make a motion plan request / response msg
 	planning_interface::MotionPlanRequest req;
@@ -419,22 +403,41 @@ rovi_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string
 	{
 		// do some error handling here
 		ROS_FATAL_STREAM("It was not possible to generate a trajectory... exiting...");
-		exit(-1);
 	}
 
-	// terminate
-	planner_instance->terminate();
-
-	// // create joint trajectory using linear interpolation
-	// auto joint_states = rovi_utils::joint_states_from_traj(*res.trajectory_);
-	// auto traj_joints_lin  = rovi_planner::traj_linear(joint_states, 1.0, 1.0, 0.01);
-	// rovi_utils::export_traj(traj_joints_lin, "traj_jnt_rrt_lin.csv");
-	
-	// // create joint trajectory using parabolic interpolation
-	// auto traj_joints_par  = rovi_planner::traj_parabolic(joint_states, 1.0, 1.0, 0.001, 0.001);
-	// rovi_utils::export_traj(traj_joints_par, "traj_jnt_rrt_par.csv");
-
 	return res;
+}
+
+void 
+rovi_planner::moveit_planner::start_async_publisher(const std::string & node, const double & seconds)
+{
+
+	auto find_pub = [&]()
+	{
+		for (auto & [ name, pub ]: { std::tuple(AVAILABLE_PUBS.begin()[0], planning_scene_pub), std::tuple(AVAILABLE_PUBS.begin()[1], disp_traj_pub) } )
+		{
+			if ( node == name )
+			{
+				return pub;
+			}
+		}
+		return planning_scene_pub;
+	};
+	
+	auto make_thread = std::thread([&]()
+	{
+		auto tic = ros::Time::now();
+		while (ros::ok())
+		{
+			auto toc = ros::Time::now();
+			auto dur = toc - tic;
+			if ( dur.toSec() > seconds )
+				return; 
+		}
+	}
+	);
+
+	make_thread.detach();
 }
 
 void
