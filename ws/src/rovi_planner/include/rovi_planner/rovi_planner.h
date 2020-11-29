@@ -102,7 +102,7 @@ namespace rovi_planner
 			execution(
 				planning_interface::MotionPlanResponse & req, 
 				ros::Publisher & pub, 
-				const double & tol = 0.001, 
+				const double & tol = 0.0001, 
 				const double & period = 0.001
 			);
 

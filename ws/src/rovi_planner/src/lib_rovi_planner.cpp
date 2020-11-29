@@ -375,6 +375,7 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 	planning_scene->getPlanningSceneMsg(planning_scene_msg);
 	planning_scene_msg.world.collision_objects = collision_objects;
 	planning_scene->setPlanningSceneDiffMsg(planning_scene_msg);
+	
 	// make a motion plan request / response msg
 	planning_interface::MotionPlanRequest req;
 	planning_interface::MotionPlanResponse res;
@@ -394,8 +395,8 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 	req.group_name = ARM_GROUP;
 
 	// planning time 
-	req.allowed_planning_time = 2;
-	req.num_planning_attempts = 5000;
+	req.allowed_planning_time = 1;
+	req.num_planning_attempts = 10;
 
 	// scale factor velocity / acceleration
 	req.max_acceleration_scaling_factor = 1.0;
@@ -461,7 +462,7 @@ rovi_planner::moveit_planner::execution(planning_interface::MotionPlanResponse &
 	auto joint_states = rovi_utils::joint_states_from_traj(*req.trajectory_);
 
 	ros::Rate lp(1000);
-	
+
 	for(auto joint_msg : joint_states)
 	{
 

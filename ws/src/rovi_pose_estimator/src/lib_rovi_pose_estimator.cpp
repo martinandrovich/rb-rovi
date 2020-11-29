@@ -14,8 +14,6 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/conversions.h>
 
-
-
 void
 rovi_pose_estimator::test(const std::string& str)
 {
@@ -24,8 +22,13 @@ rovi_pose_estimator::test(const std::string& str)
 
 
 namespace rovi_pose_estimator
-
 {
+
+	namespace M1
+	{
+
+	}
+
 	namespace M2
 	{
 		void

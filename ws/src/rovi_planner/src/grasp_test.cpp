@@ -20,6 +20,7 @@
 #include <thread>
 
 #include <rovi_utils/rovi_utils.h>
+#include <ur5_controllers/interface.h>
 
 constexpr auto ARM_GROUP    	 	= "ur5_arm";
 constexpr auto WSG_GROUP 	    	= "wsg";
@@ -53,8 +54,10 @@ main(int argc, char** argv)
 	// init moveit_object
 	rovi_planner::moveit_planner::init(nh);
 
+	ur5_controllers::wsg::release();
+
 	auto req = rovi_planner::moveit_planner::traj_moveit(
-														make_pose({0.50, 0.40, 0.1, 0, 0, 0}), 
+														make_pose({0.50, 0.49, 0.1, 0, 0, 0}), 
 														"RRTConnect"
 														);
 
@@ -63,7 +66,25 @@ main(int argc, char** argv)
 											joint_state_pub
 											);
 
+	
+
 	rovi_planner::moveit_planner::destruct();
+
+	ur5_controllers::wsg::grasp();
+
+	ros::Duration(2).sleep();
+
+	req = rovi_planner::moveit_planner::traj_moveit(
+														make_pose({0.50, 0.49, 0.1, 0, 0, 0}), 
+														"RRTConnect"
+														);
+
+	rovi_planner::moveit_planner::execution(
+											req, 
+											joint_state_pub
+											);
+
+	while(ros::ok());
 
 	//rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
 	

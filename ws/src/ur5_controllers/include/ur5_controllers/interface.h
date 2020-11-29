@@ -49,8 +49,8 @@ namespace ur5_controllers
 
 		static inline const std::string	COMMAND_TOPIC = "/wsg_hybrid_controller/command";
 		static inline const double      PUB_FREQ = 100.; // Hz
-		static inline const double      EFFORT_GRASP = 100.; // Nm
-		static inline const double      EFFORT_RELEASE = -100.; // Nm
+		static inline const double      EFFORT_GRASP = -30.; // Nm
+		static inline const double      EFFORT_RELEASE = 30.; // Nm
 
 	private:
 
