@@ -2,6 +2,10 @@
 
 #include <tf_conversions/tf_kdl.h>
 
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#include <moveit/trajectory_processing/trajectory_tools.h>
+
 #include <kdl/frames.hpp>
 #include <kdl/path_point.hpp>
 #include <kdl/path_line.hpp>
@@ -272,15 +276,11 @@ bool
 rovi_planner::moveit_planner::init(ros::NodeHandle & nh)
 {
 	// create the model of the robot
-	// FIX: it needs an object, not a pointer -> NO NEW, just constructor
-	
-	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-	// robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION)); // OLD (broken)
-	
+	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(ROBOT_DESCRIPTION);
 	robot_model = robot_model_loader->getModel();
 
 	// create planning scene
-	// planning_scene = std::make_shared<planning_scene::PlanningScene>(new planning_scene::PlanningScene(robot_model));
+	planning_scene = std::make_shared<planning_scene::PlanningScene>(robot_model);
 
 	// create planner objects
 	planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
@@ -305,6 +305,12 @@ rovi_planner::moveit_planner::init(ros::NodeHandle & nh)
 	return is_init;
 }
 
+void
+rovi_planner::moveit_planner::destruct()
+{
+	planner_instance->terminate();
+}
+
 planning_interface::MotionPlanResponse
 rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q)
 {
@@ -323,6 +329,7 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 
 	// set robot_state, arm_group and wsg_group ptrs
 	auto& robot_state    = planning_scene->getCurrentStateNonConst();
+
 	const auto arm_group = robot_state.getJointModelGroup(ARM_GROUP);
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
 
@@ -368,7 +375,6 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 	planning_scene->getPlanningSceneMsg(planning_scene_msg);
 	planning_scene_msg.world.collision_objects = collision_objects;
 	planning_scene->setPlanningSceneDiffMsg(planning_scene_msg);
-
 	// make a motion plan request / response msg
 	planning_interface::MotionPlanRequest req;
 	planning_interface::MotionPlanResponse res;
@@ -381,7 +387,6 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 	// specify the tolerances for the pose
 	std::vector<double> tol_pos(3, 0.005);
 	std::vector<double> tol_ori(3, 0.005);
-
 	// set the kinematic_constraint
 	moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("ee_tcp", pose, tol_pos, tol_ori);
 
@@ -415,7 +420,6 @@ rovi_planner::moveit_planner::traj_moveit(const geometry_msgs::Pose& pose_des, c
 void 
 rovi_planner::moveit_planner::start_async_publisher(const std::string & node, const double & seconds)
 {
-
 	auto find_pub = [&]()
 	{
 		for (auto & [ name, pub ]: { std::tuple(AVAILABLE_PUBS.begin()[0], planning_scene_pub), std::tuple(AVAILABLE_PUBS.begin()[1], disp_traj_pub) } )
@@ -442,6 +446,31 @@ rovi_planner::moveit_planner::start_async_publisher(const std::string & node, co
 	);
 
 	make_thread.detach();
+}
+
+void 
+rovi_planner::moveit_planner::execution(planning_interface::MotionPlanResponse & req, ros::Publisher & pub, const double & tol, const double & period)
+{
+	ROS_INFO_STREAM("The trajectory is about to be executed");
+
+	trajectory_processing::TimeOptimalTrajectoryGeneration totg( tol, period);
+
+	totg.computeTimeStamps(*req.trajectory_, 0.2, 0.1);
+
+	// create joint trajectory using linear interpolation
+	auto joint_states = rovi_utils::joint_states_from_traj(*req.trajectory_);
+
+	ros::Rate lp(1000);
+	
+	for(auto joint_msg : joint_states)
+	{
+
+		pub.publish(joint_msg);
+
+		lp.sleep();
+	}
+
+	ROS_INFO_STREAM("The joint states are sent.");
 }
 
 void

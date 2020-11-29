@@ -89,11 +89,21 @@ namespace rovi_planner
 
 			static bool init(ros::NodeHandle & nh);
 
+			static void destruct();
+
 			static planning_interface::MotionPlanResponse
 			traj_moveit(
 				const geometry_msgs::Pose& pose_des,
 				const std::string& planner = "RRTConnect",
 				std::vector<double> q      = {}
+			);
+
+			static void
+			execution(
+				planning_interface::MotionPlanResponse & req, 
+				ros::Publisher & pub, 
+				const double & tol = 0.001, 
+				const double & period = 0.001
 			);
 
 			static void 
@@ -106,7 +116,7 @@ namespace rovi_planner
 
 			// less common moveit objects
 			static inline bool is_init = false;
-			static inline std::unique_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
+			static inline boost::shared_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
 			static inline planning_interface::PlannerManagerPtr planner_instance;
 
 			// common moveit objects

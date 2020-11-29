@@ -6,18 +6,7 @@
 #include <geometry_msgs/Pose.h>
 #include <tf_conversions/tf_eigen.h>
 #include <eigen_conversions/eigen_kdl.h>
-#include <ur5_controllers/PoseTwist.h>
 
-#include <moveit/robot_model_loader/robot_model_loader.h>
-#include <moveit/planning_scene/planning_scene.h>
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_interface/planning_interface.h>
-#include <moveit/kinematic_constraints/utils.h>
-
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_state/conversions.h>
-
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <moveit_msgs/Grasp.h>
 
 #include <moveit_msgs/ApplyPlanningScene.h>
@@ -28,15 +17,7 @@
 #include <trajectory_interface/trajectory_interface.h>
 #include <moveit/robot_trajectory/robot_trajectory.h>
 
-#include <moveit/trajectory_processing/iterative_time_parameterization.h>
-#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit/trajectory_processing/trajectory_tools.h>
-
-#include <pluginlib/class_loader.h>
-#include <boost/scoped_ptr.hpp>
 #include <thread>
-
-#include <Eigen/Eigen>
 
 #include <rovi_utils/rovi_utils.h>
 
@@ -49,8 +30,8 @@ constexpr auto TRAJECTORY_TOPIC     = "/move_group/display_planned_path";
 constexpr auto JOINT_POS_TOPIC 		= "/ur5_joint_position_controller/command";
 constexpr auto WSG_TORQUE_TOPIC 	= "/wsg_hybrid_controller/command";
 
-const std::vector<double> HOME_ARM{0, -1.57, 1.57, 1.57, 1.57, 0};
-const std::vector<double> HOME_WSG{0.05, 0.05};
+const std::vector<double>   HOME_ARM{0, -1.57, 1.57, 1.57, 1.57, 0};
+const std::vector<double>   HOME_WSG{0.05, 0.05};
 const std::array<double, 3> TABLE_POS{0.4, 0.6, 0.64};
 const std::array<double, 3> BOTTLE_POS{0.6, 0.999023, 0.75};
 const std::array<double, 3> BASE_OFFSET{0.1, 0.5, 0.75};
@@ -62,87 +43,27 @@ main(int argc, char** argv)
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
+	ros::AsyncSpinner spin(2);
+	spin.start();
 
 	// publisher_scene
-	ros::Publisher joint_state_pub	    = nh.advertise<sensor_msgs::JointState>(		JOINT_POS_TOPIC, 1);
-	ros::Publisher wsg_state_pub 		= nh.advertise<std_msgs::Float64>(				WSG_TORQUE_TOPIC, 1);
-	ros::Publisher planning_scene_pub 	= nh.advertise<moveit_msgs::PlanningScene>(		PLANNING_SCENE_TOPIC, 1);
-	ros::Publisher traj_pub 			= nh.advertise<moveit_msgs::DisplayTrajectory>(	TRAJECTORY_TOPIC, 1);
+	ros::Publisher joint_state_pub	    = nh.advertise<sensor_msgs::JointState>(JOINT_POS_TOPIC, 1);
+	ros::Publisher wsg_state_pub 		= nh.advertise<std_msgs::Float64>(WSG_TORQUE_TOPIC, 1);
 
-	auto lambda = std::thread([&]()
-	{
-		ros::Rate lp(100);
-		while(ros::ok())
-		{
-			std_msgs::Float64 wsg_msg;
-			wsg_msg.data = 100;
-			wsg_state_pub.publish(wsg_msg);
-			lp.sleep();
-		}
-	});
+	// init moveit_object
+	rovi_planner::moveit_planner::init(nh);
 
-	// auto request = rovi_planner::traj_moveit(make_pose({0.50, 0.40, 0.1, 0, 0, 0}), "RRTConnect");
+	auto req = rovi_planner::moveit_planner::traj_moveit(
+														make_pose({0.50, 0.40, 0.1, 0, 0, 0}), 
+														"RRTConnect"
+														);
 
-	// //trajectory_processing::IterativeParabolicTimeParameterization parabolic(500, 0.001);
-	// trajectory_processing::TimeOptimalTrajectoryGeneration totg(0.001, 0.001, 0.001);
+	rovi_planner::moveit_planner::execution(
+											req, 
+											joint_state_pub
+											);
 
-	// // if ( !parabolic.computeTimeStamps(*request.trajectory_, 1.0, 1.0) )
-	// // {
-	// // 	ROS_FATAL_STREAM("Not able to compute TimeStamps... exiting");
-	// // 	exit(-1);
-	// // }
-
-	// totg.computeTimeStamps(*request.trajectory_, 0.2, 0.1);
-	
-	// //moveit::planning_interface::MoveGroupInterface move_group(ARM_GROUP);
-
-
-	// // create joint trajectory using linear interpolation
-	// auto joint_states = rovi_utils::joint_states_from_traj(*request.trajectory_);
-
-	// ROS_INFO_STREAM("The amount of joint_states: " << joint_states.size());
-
-	// ROS_INFO_STREAM("The joint states are taken..");
-
-	// //auto traj_joints  = rovi_planner::traj_parabolic(joint_states, 3, 2, 0.001, 0.001);
-
-	// ROS_INFO_STREAM("Parabolic trajectory is computed...");
-
-	// ros::Rate lp(1000);
-
-	// auto ref = ros::Time::now();
-
-	// for(auto joint_msg : joint_states)
-	// {
-
-	// 	joint_state_pub.publish(joint_msg);
-
-	// 	// ROS_INFO_STREAM(joint_msg);
-
-	// 	// ROS_INFO_STREAM("Joint State: ");
-
-	// 	lp.sleep();
-	// }
-
-	// while( ros::ok() )
-	// {
-	// 	auto now = ros::Time::now();
-
-	// 	sensor_msgs::JointState joint_state;
-
-	// 	// for (const auto & traj_joint : traj_joints)
-	// 	// {
-	// 	// 	joint_state.position.push_back( traj_joint->Pos((now-ref).toSec()).p.x() );
-
-	// 	// 	joint_state.velocity.push_back( traj_joint->Vel((now-ref).toSec()).vel.x() );
-	// 	// }
-
-	// 	// ROS_INFO_STREAM( (now-ref).toSec() );
-
-	// 	// joint_state_pub.publish(joint_state);
-
-	// 	// lp.sleep();
-	// }
+	rovi_planner::moveit_planner::destruct();
 
 	//rovi_utils::export_traj(traj_joints, "traj_jnt_rrt_lin.csv");
 	
