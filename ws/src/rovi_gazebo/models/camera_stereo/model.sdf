@@ -14,13 +14,13 @@
 
     <!-- <pose frame=''>-0.118317 0.002195 0.004205 -0 -0 -3.12703</pose> -->
 
-    <visual name='visual'>
+    <!-- <visual name='visual'>
       <geometry>
         <box>
           <size>0.1 0.1 0.1</size>
         </box>
       </geometry>
-    </visual>
+    </visual> -->
 
     <inertial>
       <mass>0.1</mass>
@@ -40,8 +40,9 @@
       <update_rate>30.0</update_rate>
 
       <camera name="left">
+        <visualize>true</visualize>
+        <pose>0 0 0 0 0 0</pose>
 
-        <pose>0 0.03 0 0 0 0</pose>
         <horizontal_fov>1.3962634</horizontal_fov>
 
         <image>
@@ -65,7 +66,7 @@
 
       <camera name="right">
 
-        <pose>0 -0.03 0 0 0 0</pose>
+        <pose>0 -0.06 0 0 0 0</pose>
         <horizontal_fov>1.3962634</horizontal_fov>
 
         <image>
@@ -94,16 +95,14 @@
         <cameraName>rbrovi/camera_stereo</cameraName>
         <imageTopicName>image_raw</imageTopicName>
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-        <!-- <frameName>left_camera_optical_frame</frameName> -->
-        <!-- <rightFrameName>right_camera_optical_frame</rightFrameName> -->
-
-        <hackBaseline>0.07</hackBaseline>
+        <frameName>left_camera_optical_frame</frameName>
+        <rightFrameName>right_camera_optical_frame</rightFrameName>
+        <hackBaseline>0.06</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
         <distortionK3>0.0</distortionK3>
         <distortionT1>0.0</distortionT1>
         <distortionT2>0.0</distortionT2>
-
       </plugin>
     </sensor>
 

@@ -5,13 +5,13 @@
 
       <link name="projector_link">
 
-        <visual name='visual'>
+        <!-- <visual name='visual'>
           <geometry>
             <box>
               <size>0.1 0.1 0.1</size>
             </box>
           </geometry>
-        </visual>
+        </visual> -->
 
         <projector name="texture_projector">
             <pose>0 0 0 0 -1.57 0</pose>
@@ -21,17 +21,17 @@
             <far_clip>1.5</far_clip>
         </projector>
 
-        <plugin name="projector_controller" filename="libgazebo_ros_projector.so">
-          <projector>texture_projector</projector>
-          <alwaysOn>true</alwaysOn>
-          <updateRate>1.0</updateRate>
-          <textureName>stereo_projection_pattern_high_res_red.png</textureName>
-          <filterTextureName>stereo_projection_pattern_filter.png</filterTextureName>        
-          <textureTopicName>projector_controller/image</textureTopicName>
-          <projectorTopicName>projector_controller/projector</projectorTopicName>
-        </plugin>
-
       </link>
+
+      <plugin name="projector_controller" filename="libgazebo_ros_projector.so">
+        <projector>projector_link/texture_projector</projector>
+        <alwaysOn>false</alwaysOn>
+        <updateRate>10</updateRate>
+        <textureName>stereo_projection_pattern_high_res_red.png</textureName>
+        <filterTextureName>stereo_projection_pattern_filter.png</filterTextureName>        
+        <textureTopicName>projector_controller/image</textureTopicName>
+        <projectorTopicName>projector_controller/projector</projectorTopicName>
+      </plugin>
       
       <static>true</static>
 
