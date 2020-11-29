@@ -89,15 +89,15 @@ namespace ur5_controllers
 
 		Eigen::Vector2d torque(command.data, command.data);
 
-		Eigen::Vector2d q = get_position();
+		// Eigen::Vector2d q = get_position();
 
-		const auto& ori = ori_ee_buffer.readFromNonRT()->orientation;
-		Eigen::Quaterniond quat{ori.w, ori.x, ori.y, ori.z};
-		Eigen::Matrix3d R = quat.toRotationMatrix();
-		Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, 1.5*9.80665);
+		// const auto& ori = ori_ee_buffer.readFromNonRT()->orientation;
+		// Eigen::Quaterniond quat{ori.w, ori.x, ori.y, ori.z};
+		// Eigen::Matrix3d R = quat.toRotationMatrix();
+		// Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, 1.5*9.80665);
 
-		for (size_t i = 0; i < 2; i++)
-			torque(i) += (i == 0) ? g(0) : -g(0);
+		// for (size_t i = 0; i < 2; i++)
+		// 	torque(i) += (i == 0) ? g(0) : -g(0);
 		
 		Eigen::Vector2d torque_des = saturate_rotatum(torque);
 

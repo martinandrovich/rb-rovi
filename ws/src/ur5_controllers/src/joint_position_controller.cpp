@@ -36,7 +36,7 @@ namespace ur5_controllers
 		}
 
 		// subscribe to joint position command
-		sub_command = nh.subscribe<ur5_controllers::PoseTwist>("command", 1, &JointPositionController::callback_command, this);
+		sub_command = nh.subscribe<sensor_msgs::JointState>("command", 1, &JointPositionController::callback_command, this);
 
 		// init complete
 		ROS_INFO_STREAM_NAMED(CONTROLLER_NAME, "Loaded " << CONTROLLER_NAME << " with kp = " << kp << ", kd = " << kd);
@@ -46,25 +46,21 @@ namespace ur5_controllers
 	void
 	JointPositionController::starting(const ros::Time& time)
 	{
-		geometry_msgs::Pose x_d;
-		geometry_msgs::Twist x_dot_d;
+		sensor_msgs::JointState q_state;
 
 		// initial desired position
 		for (size_t i = 0; i < Q_D_INIT.size(); i++)
 		{
 			q_d(i) = Q_D_INIT[i];
 			q_dot_d(i) = 0.0f;
+			//q_ddot_d(i) = 0.0f;
 		}
-		
-		// Init pose and command buffer
-		x_d = ur5_dynamics::fwd_kin<geometry_msgs::Pose>(q_d);
-		x_dot_d.angular.x = 0.0f; x_dot_d.angular.y = 0.0f; x_dot_d.angular.z = 0.0f;
-		x_dot_d.linear.x = 0.0f; x_dot_d.linear.y = 0.0f; x_dot_d.linear.z = 0.0f;
 
-		PoseTwist pose_twist;
-		pose_twist.pose = x_d; pose_twist.twist = x_dot_d;
+		q_state.position = std::vector<double>(q_d.data(), q_d.data() + q_d.size());
+		q_state.velocity = std::vector<double>(q_dot_d.data(), q_dot_d.data() + q_dot_d.size());
+		//q_state.effort = std::vector<double>(q_ddot_d.data(), q_ddot_d.data() + q_ddot_d.size());
 
-		commands_buffer.writeFromNonRT(pose_twist);
+		commands_buffer.writeFromNonRT(q_state);
 	}
 
 	void
@@ -77,6 +73,12 @@ namespace ur5_controllers
 		// get desired joint efforts
 		const auto & command = *commands_buffer.readFromRT();
 
+		// write the commanded velocity in joint space
+		q_d 	= Eigen::Vector6d(command.position.data());
+		q_dot_d = Eigen::Vector6d(command.velocity.data());
+		//q_ddot_d = Eigen::Vector6d(command.effort.data());
+
+
 		// read joint states
 		const auto q = get_position();
 		const auto q_dot = get_velocity();
@@ -86,30 +88,6 @@ namespace ur5_controllers
 		const auto m = ur5_dynamics::mass(q);
 		const auto c = ur5_dynamics::coriolis(q, q_dot);
 
-		// compute kinematics (via KDL)
-		const auto jac = ur5_dynamics::jac(q);
-		const auto pinv_jac = ur5_dynamics::pinv_jac(jac, 0.05);
-
-		// calculate the difference, dx
-		Eigen::Vector6d dx;
-		Eigen::Vector6d dx_dot;
-
-		// define pose and twist
-		{
-			geometry_msgs::Pose x_d = command.pose;
-			
-			// insert into vvector
-			x_dot_d << 	command.twist.linear.x, 
-						command.twist.linear.y, 
-						command.twist.linear.z,
-						command.twist.angular.x, 
-						command.twist.angular.y, 
-						command.twist.angular.z;
-
-			// ik
-			q_d = ur5_dynamics::inv_kin<geometry_msgs::Pose>(x_d, q);
-		} 
-
 		Eigen::Vector6d tau_des;
 		{
 			Eigen::DiagonalMatrix<double, 6, 6> kp_m;
@@ -118,7 +96,7 @@ namespace ur5_controllers
 			Eigen::DiagonalMatrix<double, 6, 6> kd_m;
 			kd_m.diagonal() << kd, kd, kd, kd, kd, kd;
 
-			const auto y = m * ( kp_m * ( q_d - q ) + kd_m * ( pinv_jac * x_dot_d - q_dot ) );
+			const auto y = m * ( kp_m * ( q_d - q ) + kd_m * ( q_dot_d - q_dot ) );
 
 			tau_des = y + g + c;
 		}
@@ -175,7 +153,7 @@ namespace ur5_controllers
 	}
 
 	void
-	JointPositionController::callback_command(const ur5_controllers::PoseTwistConstPtr& msg)
+	JointPositionController::callback_command(const sensor_msgs::JointStateConstPtr& msg)
 	{
 		// write commands to command buffer
 		commands_buffer.writeFromNonRT(*msg);

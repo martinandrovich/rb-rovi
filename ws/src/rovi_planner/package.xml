@@ -27,6 +27,7 @@
 	<depend>rviz</depend>
 	<depend>ur5_dynamics</depend>
 	<depend>ur5_controllers</depend>
+	<depend>ur5_moveit_config</depend>
 	<depend>rovi_utils</depend>
 	<!-- <depend>ompl</depend> -->
 

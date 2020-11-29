@@ -14,8 +14,10 @@ find_package(
 	gazebo_ros
 	rviz
 	tf2_ros
+	pluginlib
 	joint_state_publisher
 	robot_state_publisher
+	moveit_core
 	moveit_ros_move_group
 	moveit_fake_controller_manager
 	moveit_kinematics
@@ -25,8 +27,11 @@ find_package(
 	moveit_setup_assistant
 	moveit_ros_planning_interface
 	ur5_description
+	ur5_dynamics
 	rovi_utils
 )
+
+find_package(Boost REQUIRED)
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
 # all the way back to saucy.  First we look for the Eigen3 cmake module
@@ -56,8 +61,10 @@ catkin_package(
 		gazebo_ros
 		rviz
 		tf2_ros
+		pluginlib
 		joint_state_publisher
 		robot_state_publisher
+		moveit_core
 		moveit_ros_move_group
 		moveit_fake_controller_manager
 		moveit_kinematics
@@ -67,6 +74,7 @@ catkin_package(
 		moveit_setup_assistant
 		moveit_ros_planning_interface
 		ur5_description
+		ur5_dynamics
 		rovi_utils
 	DEPENDS
 		EIGEN3
@@ -92,8 +100,17 @@ install(DIRECTORY config DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 # nodes
 
 # rrt_test
-add_executable(rrt_test src/rrt_test.cpp)
-target_link_libraries(rrt_test ${catkin_LIBRARIES})
+#add_executable(rrt_test src/rrt_test.cpp)
+#target_link_libraries(rrt_test ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
-# add_executable(ur5_reachability src/ur5_reachability.cpp)
-# target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
+# ur5_reachability
+#add_executable(ur5_reachability src/ur5_reachability.cpp)
+#target_link_libraries(ur5_reachability ${catkin_LIBRARIES})
+
+# plan_test
+#add_executable(plan_test src/plan_test.cpp)
+#target_link_libraries(plan_test ${catkin_LIBRARIES})
+
+# plan_test
+#add_executable(plan_scene src/plan_scene.cpp)
+#target_link_libraries(plan_scene ${catkin_LIBRARIES})

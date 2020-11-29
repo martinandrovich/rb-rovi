@@ -13,7 +13,11 @@ find_package(
 	sensor_msgs
 	cv_bridge
 	image_transport
+	message_generation
+	pcl_ros
+	std_msgs
 	)
+
 find_package(
 	OpenCV REQUIRED
 	)
