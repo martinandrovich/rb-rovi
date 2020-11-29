@@ -3,8 +3,8 @@
 void
 ur5_controllers::ur5::init()
 {
-	ROS_INFO_STREAM("Creating private ~wsg_cmd_publisher node handle (once)...");
-	
+	ROS_WARN_STREAM("Creating private ~wsg_cmd_publisher node handle (once)...");
+
 	nh = new ros::NodeHandle("~wsg_cmd_publisher");
 	pub_cmd = nh->advertise<std_msgs::Float64>(COMMAND_TOPIC, 1);
 }
@@ -14,7 +14,7 @@ ur5_controllers::ur5::execute_traj(const std::vector<sensor_msgs::JointState>& t
 {
 
 	if (not nh)
-		init();
+		ur5::init();
 
 	ROS_INFO_STREAM("Commanding UR5 joint rajectory (position controller) at " << freq << " [Hz]...");
 
@@ -29,13 +29,13 @@ ur5_controllers::ur5::execute_traj(const std::vector<sensor_msgs::JointState>& t
 void
 ur5_controllers::wsg::init()
 {
-	ROS_INFO_STREAM("Creating private ~wsg_cmd_publisher node handle (once)...");
-	
+	ROS_WARN_STREAM("Creating private ~wsg_cmd_publisher node handle (once)...");
+
 	nh = new ros::NodeHandle("~wsg_cmd_publisher");
 	pub_cmd = nh->advertise<std_msgs::Float64>(COMMAND_TOPIC, 1);
 
 	thread_pub = new std::thread([&]()
-	{	
+	{
 		ros::Rate lp(PUB_FREQ);
 		std_msgs::Float64 wsg_msg;
 		while (ros::ok())
@@ -51,18 +51,16 @@ void
 ur5_controllers::wsg::grasp()
 {
 	if (not thread_pub)
-		init();
-	
-	else
-		tau_des = EFFORT_GRASP;
+		wsg::init();
+
+	tau_des = EFFORT_GRASP;
 }
 
 void
 ur5_controllers::wsg::release()
 {
 	if (not thread_pub)
-		init();
-	
-	else
-		tau_des = EFFORT_RELEASE;
+		wsg::init();
+
+	tau_des = EFFORT_RELEASE;
 }
