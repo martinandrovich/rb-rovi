@@ -9,7 +9,14 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <chrono>
 #include <thread>
+#include <pcl/io/ply_io.h>
 
+#include <pcl/common/common.h>
+#include <pcl/io/obj_io.h>
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+
+#include <filesystem>
 
 void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_window)
 {
@@ -23,16 +30,71 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_
     ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
   }
 }
+void pose_estimation_exampleM2();
+void pose_estimation_exampleM4(const std::string& ply_path, int pointsize);
 
 
-void pose_estimation_example()
+
+
+
+
+
+int
+main(int argc, char** argv)
+{
+	// define ROS node
+	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
+
+	ros::init(argc, argv, "example_node");
+	ros::NodeHandle nh;
+
+	ROS_INFO("Initialized a single-thread ROS example node.");
+	std::cout << "CWD is: " << std::filesystem::current_path() << '\n';
+
+	//pose_estimation_exampleM2();
+	pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
+
+
+	ros::Rate loop_rate(1000);
+	
+
+
+
+	//while (ros::ok())
+	//{
+	//	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
+	//	// const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw", ros::Duration(1/30.0));
+//
+	//	if (msg)
+	//	{
+	//		ROS_INFO("Got new image!");
+	//		const auto img = cv_bridge::toCvShare(msg, "bgr8")->image;
+	//		cv::imshow("stereo_right", img);
+	//		cv::waitKey(1);
+	//	}
+	//	loop_rate.sleep();
+//
+	//}
+	
+	//nh.subscribe("/rbrovi/camera_stereo/left/image_raw");
+	
+	// give full control over to ROS to handle callbacks etc.
+	//ros::spin();
+}
+
+
+
+
+
+void pose_estimation_exampleM2()
 {
 
 	typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> ColorHandlerT;
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr scene (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr obj (new pcl::PointCloud<pcl::PointXYZ>);
-	pcl::PointCloud<pcl::PointXYZ>::Ptr transformed (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr global_transformed (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr local_transformed (new pcl::PointCloud<pcl::PointXYZ>);
 
 	rovi_pose_estimator::M2::get_point_cloud(scene, true);
 	ROS_INFO("Scene loaded..");
@@ -67,7 +129,7 @@ void pose_estimation_example()
 	pcl::ModelCoefficients::Ptr plane_coeff (new pcl::ModelCoefficients);
  	pcl::PointIndices::Ptr plane_inliers (new pcl::PointIndices);
 
-	rovi_pose_estimator::plane_segmentation(scene, plane_inliers, plane_coeff);
+	rovi_pose_estimator::plane_segmentation(scene, plane_inliers, plane_coeff, leaf_size);
 
 	// pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_plane (new pcl::PointCloud<pcl::PointXYZ>);
 	rovi_pose_estimator::extract_indices(scene, plane_inliers, scene, true);
@@ -76,7 +138,12 @@ void pose_estimation_example()
 	ROS_INFO("Points after plane removal... %i", scene->height*scene->width);
 	visu.spin();
 
+	//rovi_pose_estimator::plane_segmentation(obj, plane_inliers, plane_coeff, leaf_size);
+	//rovi_pose_estimator::extract_indices(obj, plane_inliers, obj, true);
 
+	//visu.updatePointCloud(obj, "object");
+	//ROS_INFO("Points for bottle after plane removal... %i", obj->height*obj->width);
+	//visu.spin();
 
 
 	//rovi_pose_estimator::outlierRemoval(scene, scene);
@@ -87,58 +154,96 @@ void pose_estimation_example()
 	//rovi_pose_estimator::smoothing(scene, scene);
 	//visu.updatePointCloud(scene, "scene");
 	//visu.spin();
+	pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 global_pose_est;
+	pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 local_pose_est;
 
-	rovi_pose_estimator::M2::global_pose_est(scene, obj, transformed, leaf_size, 5000);
-	visu.addPointCloud (transformed, ColorHandlerT (transformed, 0.0, 0.0, 255.0), "object_aligned");
+	rovi_pose_estimator::M2::global_pose_est(scene, obj, global_transformed, global_pose_est, leaf_size, 5000);
+	visu.addPointCloud(global_transformed, ColorHandlerT(global_transformed, 0.0, 0.0, 255.0), "object_aligned_global");
+	std::cout << "Transformation matrix Global..\n" << global_pose_est << std::endl;
+	visu.spin();
+	std::cout << "Performing ICP to align better.." << std::endl;
+	rovi_pose_estimator::ICP(scene, global_transformed, local_transformed, local_pose_est, leaf_size, 500);
+	std::cout << "Transformation matrix local..\n" << local_pose_est << std::endl;
+	visu.addPointCloud(local_transformed, ColorHandlerT (local_transformed, 255.0, 0.0, 0.0), "object_aligned_local");
+	visu.spin();
+
+	visu.removePointCloud("object_aligned_global");
+	visu.spin();
+
 	pcl::PCDWriter writer;
 
-	writer.write<pcl::PointXYZ>("transformed.pcd", *transformed);
+	writer.write<pcl::PointXYZ>("transformed.pcd", *local_transformed);
 	ROS_INFO("Done performing global pose est...");
 	
-	visu.spin();
 }
 
 
-
-
-int
-main(int argc, char** argv)
+void pose_estimation_exampleM4(const std::string& ply_path, int point_size)
 {
-	// define ROS node
-	// https://yuzhangbit.github.io/tools/several-ways-of-writing-a-ros-node/
+	typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> ColorHandlerT;
 
-	ros::init(argc, argv, "example_node");
-	ros::NodeHandle nh;
-
-	ROS_INFO("Initialized a single-thread ROS example node.");
-
-	pose_estimation_example();
-
-
-	ros::Rate loop_rate(1000);
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr model (new pcl::PointCloud<pcl::PointXYZRGB>);
 	
+	if(!ply_path.empty())
+	{
+		if(pcl::io::loadPLYFile<pcl::PointXYZRGB>(ply_path, *model) == -1) // load the file
+		{
+			pcl::console::print_error ("Couldn't read file %s!\n", ply_path);
+		}
+		else
+		{
+			std::cout << "Cloud size : " << model->height*model->width << std::endl;
+		}
+	}
+
+	
+	pcl::TextureMesh mesh_milk;
+	//pcl::io::loadOBJFile("milkobj.obj", mesh_milk);
+	//pcl::io::loa ("milkobj.obj", mesh_milk);
 
 
-
-	//while (ros::ok())
-	//{
-	//	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
-	//	// const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw", ros::Duration(1/30.0));
+	//pcl::TextureMesh mesh1;
+	//pcl::io::loadPolygonFileOBJ ("milkobj.obj", mesh1);
 //
-	//	if (msg)
-	//	{
-	//		ROS_INFO("Got new image!");
-	//		const auto img = cv_bridge::toCvShare(msg, "bgr8")->image;
-	//		cv::imshow("stereo_right", img);
-	//		cv::waitKey(1);
-	//	}
-	//	loop_rate.sleep();
+	//pcl::TextureMesh mesh2;
+	//pcl::io::loadOBJFile("milkobj.obj", mesh2);
 //
-	//}
+	//mesh1.tex_materials = mesh2.tex_materials;c
+	//pcl::visualization::PCLVisualizer visu_mesh("Test");
+	//visu_mesh.addTextureMesh (mesh1,"texture");
+	//visu_mesh.spin();
+
+
+	//std::cout << "Size of mesh.." << mesh2.cloud.width* mesh2.cloud.height << std::endl;
+
+	//pcl::visualization::PCLVisualizer visuMesh("Milk");
+	//visuMesh.addTextureMesh(mesh_milk,  "milk_mesh");
+	//visuMesh.spin();
+
 	
-	//nh.subscribe("/rbrovi/camera_stereo/left/image_raw");
+	pcl::PointIndices::Ptr feature_idices (new pcl::PointIndices);
+	rovi_pose_estimator::M4::Harris_keypoints_example(model, feature_idices);
+	std::cout << "Done performing Harris_keypoints_example... " << std::endl;
+
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr key_points (new pcl::PointCloud<pcl::PointXYZRGB>);
+	//pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(model);
+	//pcl::visualization::PointCloudColorHandlerRGB<pcl::PointXYZRGB> rgb(point_cloud_ptr);
+
+	rovi_pose_estimator::extract_indices(model, feature_idices, key_points, false);
+
 	
-	// give full control over to ROS to handle callbacks etc.
-	//ros::spin();
+	//pcl::visualization::PCLVisualizer visu("Model and feautures");
+	pcl::visualization::PCLVisualizer::Ptr visu (new pcl::visualization::PCLVisualizer("Model and features"));
+	pcl::visualization::PCLVisualizer::Ptr features (new pcl::visualization::PCLVisualizer("features"));
+
+
+    visu->addPointCloud(model, "model");
+    visu->addPointCloud(key_points, ColorHandlerT (key_points, 255.0, 255.0, 0.0), "features");
+	visu->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, point_size, "features");
+
+	features->addPointCloud(key_points, ColorHandlerT (key_points, 255.0, 255.0, 0.0), "features");
+	visu->spin();
+
+	
+
 }
-

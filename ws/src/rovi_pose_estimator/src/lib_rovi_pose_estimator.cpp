@@ -24,6 +24,9 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
 
+#include <pcl/registration/icp.h>
+#include <pcl/keypoints/harris_3d.h>
+
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 
 
@@ -170,7 +173,7 @@ namespace rovi_pose_estimator
 		}
 
 		void 
-		global_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, pcl::PointCloud<pcl::PointXYZ>::Ptr& output, float inlier_tresh, int ransac_iterations)
+		global_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, pcl::PointCloud<pcl::PointXYZ>::Ptr& output, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& transformation, float inlier_tresh, int ransac_iterations)
 		{
 
 			pcl::PointCloud<pcl::Histogram<153>>::Ptr scene_spin_images (new pcl::PointCloud<pcl::Histogram<153>>);
@@ -192,12 +195,13 @@ namespace rovi_pose_estimator
 
 			std::cout << "Using ransac to find pose estimate: ..." << std::endl;
 			start_local = std::chrono::high_resolution_clock::now();
-			auto& pose_est = RANSAC_pose_est(scene, obj, match_indices, ransac_iterations, inlier_tresh);
+			transformation = RANSAC_pose_est(scene, obj, match_indices, ransac_iterations, inlier_tresh);
 			stop_local = std::chrono::high_resolution_clock::now();
 			std::cout << " done: took " << std::chrono::duration_cast<std::chrono::seconds>(stop_local - start_local).count() << " Seconds" << std::endl;
 			std::cout << "Applying transform to global object..." << std::endl;
-			pcl::transformPointCloud(*obj, *output, pose_est);
+			pcl::transformPointCloud(*obj, *output, transformation);
 			std::cout << "Whole process took: " << std::chrono::duration_cast<std::chrono::seconds>(stop_local- start_total).count() << " Seconds" << std::endl;
+
 		}
 				
 
@@ -323,7 +327,7 @@ namespace rovi_pose_estimator
 
 	// Example found at https://pointclouds.org/documentation/tutorials/planar_segmentation.html
 	void
-    plane_segmentation(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::ModelCoefficients::Ptr& plane_coeff )
+    plane_segmentation(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::ModelCoefficients::Ptr& plane_coeff, float leaf_size)
 	{
 		// Create the segmentation object
 		pcl::SACSegmentation<pcl::PointXYZ> seg;
@@ -332,10 +336,10 @@ namespace rovi_pose_estimator
 		// Mandatory
 		seg.setModelType (pcl::SACMODEL_PLANE);
 		seg.setMethodType (pcl::SAC_RANSAC);
-		seg.setDistanceThreshold (0.015);
+		seg.setDistanceThreshold(leaf_size/2.0);
 
 		seg.setInputCloud(input_cloud);
-		seg.segment (*inlier_idices, *plane_coeff);
+		seg.segment(*inlier_idices, *plane_coeff);
 
 		if (inlier_idices->indices.size () == 0)
 		{
@@ -358,8 +362,19 @@ namespace rovi_pose_estimator
 		else ROS_INFO("PointCloud representing the planar component: %i", output_cloud->width * output_cloud->height);
 		
 	}
-
-
+	// added for RGB pointCloud...
+	void
+    extract_indices(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& output_cloud, bool inverse_extraction)
+	{
+		pcl::ExtractIndices<pcl::PointXYZRGB> extract;
+		// Extract the inliers
+		extract.setInputCloud (input_cloud);
+		extract.setIndices(inlier_idices);
+		extract.setNegative(inverse_extraction);
+		extract.filter(*output_cloud);
+		if(inverse_extraction) 	ROS_INFO("PointCloud representing any points BUT the indices: %i", output_cloud->width * output_cloud->height);
+		else ROS_INFO("PointCloud representing extracted indices %i", output_cloud->width * output_cloud->height);
+	}
 
 	void 
 	CheckforNans(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud)
@@ -369,5 +384,53 @@ namespace rovi_pose_estimator
 		pcl::removeNaNFromPointCloud(*input_cloud, *output_cloud, tmp);
 		ROS_INFO("PointCloud after nan check: %i ..., data points ( %s )", output_cloud->width * output_cloud->height, pcl::getFieldsList(*output_cloud).c_str());
 	}
+
+	void
+    ICP(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& model, pcl::PointCloud<pcl::PointXYZ>::Ptr& transformed_model, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& final_trans, float leaf_size,  int max_iterations)
+	{
+		pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
+  		icp.setMaximumIterations(max_iterations);
+  		icp.setInputSource(model);
+  		icp.setInputTarget(scene);
+		icp.setMaxCorrespondenceDistance(leaf_size);
+  		icp.align(*transformed_model);
+		if (icp.hasConverged())
+		{
+		    std::cout << "ICP has converged, score is " << icp.getFitnessScore(leaf_size) <<"" << std::endl;
+			final_trans = icp.getFinalTransformation();
+		}
+	}
+
+	void
+    get_final_pose(const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& global_rot, const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& local_rot, const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& sensor_pose, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& final_pose)
+	{
+		final_pose = sensor_pose*global_rot*local_rot;
+	}
 	
+	namespace M4
+	{
+		//Example taken from https://github.com/PointCloudLibrary/pcl/blob/master/examples/keypoints/example_get_keypoints_indices.cpp
+		void Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices)
+		{
+			pcl::HarrisKeypoint3D <pcl::PointXYZRGB, pcl::PointXYZI> detector;
+			pcl::PointCloud<pcl::PointXYZI>::Ptr keypoints (new pcl::PointCloud<pcl::PointXYZI>);
+			
+			detector.setNonMaxSupression (true);
+			detector.setInputCloud(model);
+			detector.setThreshold (1e-6);
+			pcl::StopWatch watch;
+			detector.compute (*keypoints);
+			pcl::console::print_highlight ("Detected %zd points in %lfs\n", keypoints->size (), watch.getTimeSeconds ());
+			//pcl::PointIndicesConstPtr indices = detector.getKeypointsIndices ();
+			*inlier_idices  = *detector.getKeypointsIndices ();
+			if (inlier_idices->indices.empty ())
+			{
+				pcl::console::print_warn ("Keypoints indices are empty!\n");
+			}
+		}
+
+	}
+
+
+
 }
