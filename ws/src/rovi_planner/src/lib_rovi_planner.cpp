@@ -6,6 +6,8 @@
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <moveit/trajectory_processing/trajectory_tools.h>
 
+#include <moveit_msgs/DisplayTrajectory.h>
+
 #include <kdl/frames.hpp>
 #include <kdl/path_point.hpp>
 #include <kdl/path_line.hpp>

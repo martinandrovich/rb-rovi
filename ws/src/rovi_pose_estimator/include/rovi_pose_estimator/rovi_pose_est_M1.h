@@ -24,17 +24,11 @@ namespace rovi_pose_estimator
         cv::Mat
         get_ROI(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q);
 
-        // class SparseStereo
-        // {
-        //     public:
+        cv::Mat 
+        compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q);
 
-        //         SparseStereo() = delete;
-        //         ~SparseStereo();
-        //         SparseStereo(const std::vector<double> cam_left, const std::vector<double> cam_right);
-
-        //     private:
-
-        // };
+        void
+        compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & ROI);
 
     }
 }

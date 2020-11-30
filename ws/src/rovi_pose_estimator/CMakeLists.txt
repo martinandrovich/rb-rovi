@@ -23,7 +23,7 @@ find_package(
 	OpenCV 4 REQUIRED
 	)
 find_package(
-	PCL 1.10 REQUIRED COMPONENTS common io
+	PCL 1.8 REQUIRED
 	)
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -105,7 +105,7 @@ include_directories(
 
 # install lib_rovi_pose_est_M1
 add_library(lib_rovi_pose_est_M1 src/lib_rovi_pose_est_M1.cpp)
-target_link_libraries(lib_rovi_pose_est_M1 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(lib_rovi_pose_est_M1 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 # 
 install(
@@ -131,5 +131,5 @@ install(
 ## target_include_directories(example PUBLIC include/rovi_pose_estimator)pose_example
 
 add_executable(pose_M1 src/pose_M1.cpp)
-target_link_libraries(pose_M1 ${catkin_LIBRARIES} lib_rovi_pose_est_M1 )
+target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
 
