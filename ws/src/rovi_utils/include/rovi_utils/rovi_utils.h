@@ -3,6 +3,7 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <thread>
 
 #include <Eigen/Eigen>
 
@@ -73,5 +74,56 @@ namespace rovi_utils
 
 	void
 	move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name = "world_offset");
+	
+	// -- utilities ---------------------------------------------------------------
+	
+	template <typename T>
+	std::thread*
+	create_async_listener(const std::string& topic, T& obj, std::mutex& mutex)
+	{
+		// !!! a static map of topic names and thread would make this function more safe
+		
+		// example usage:
+		
+		// static std::mutex mtx_joint_states;
+		// static sensor_msgs::JointState joint_states;
+		// static auto thread = create_async_listener("/joint_states", joint_states, mtx_joint_states);
+		
+		// // return mutexed value
+		// ros::Rate lp(100); // Hz
+		// while (true)
+		// {
+		// 	std::lock_guard<std::mutex> lock(mtx_joint_states);
+		// 	if (not joint_states.name.empty())
+		// 		return joint_states;
+		// 	lp.sleep();
+		// }
+		
+		auto t = new std::thread([&, topic](){
+		
+			ROS_WARN_STREAM("Initializing /listener" << topic << " node (once)...");
+			auto nh = new ros::NodeHandle("~/listener" + topic);
+			
+			const auto sub_jnt_state = nh->subscribe<T>(topic, 1, [&](const auto& msg)
+			{
+				// ROS_WARN("Got ModelStates in temporary ROS callback.");
+				std::lock_guard<std::mutex> lock(mutex);
+				obj = *msg;
+			});
+			
+			ros::Rate lp(100); // Hz
+			while (ros::ok())
+			{
+				ros::spinOnce();
+				lp.sleep();
+			}
 
+		});
+	
+		// detach thread (once)
+		t->detach();
+		
+		// return thread handle
+		return t;
+	}
 }
