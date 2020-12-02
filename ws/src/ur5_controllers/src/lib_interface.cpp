@@ -3,10 +3,10 @@
 void
 ur5_controllers::ur5::init()
 {
-	ROS_WARN_STREAM("Creating private ~wsg_cmd_publisher node handle (once)...");
+	ROS_WARN_STREAM("Creating private ~ur5_cmd_publisher node handle (once)...");
 
-	nh = new ros::NodeHandle("~wsg_cmd_publisher");
-	pub_cmd = nh->advertise<std_msgs::Float64>(COMMAND_TOPIC, 1);
+	nh = new ros::NodeHandle("~ur5_cmd_publisher");
+	pub_cmd = nh->advertise<sensor_msgs::JointState>(COMMAND_TOPIC, 1);
 }
 
 void
