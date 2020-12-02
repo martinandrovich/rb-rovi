@@ -102,8 +102,8 @@ namespace ur5_controllers
 		}
 
 		// saturate rate-of-effort (rotatum) this works life a real-life factor xD
-		if (SATURATE_ROTATUM)
-		    tau_des = saturate_rotatum(tau_des, period.toSec());
+		// if (SATURATE_ROTATUM)
+		//     tau_des = saturate_rotatum(tau_des, period.toSec());
 		
 
 		// set desired command on joint handles
