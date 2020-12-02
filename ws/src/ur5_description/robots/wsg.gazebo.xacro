@@ -8,8 +8,8 @@
     <gazebo reference="wsg_base">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
@@ -18,24 +18,24 @@
     <gazebo reference="wsg_finger_mount_right">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
     <gazebo reference="wsg_finger_right">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Black</material>
     </gazebo>
 
     <gazebo reference="wsg_fingertip_right">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Blue</material>
     </gazebo>
 
@@ -49,24 +49,24 @@
     <gazebo reference="wsg_finger_mount_left">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>  
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Grey</material>
     </gazebo>
 
     <gazebo reference="wsg_finger_left">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Black</material>
     </gazebo>
 
     <gazebo reference="wsg_fingertip_left">
       <selfCollide>true</selfCollide>
       <gravity>false</gravity>
-      <mu1>1</mu1>
-      <mu2>1</mu2>
+      <mu1>2.0</mu1>
+      <mu2>0.8</mu2>
       <material>Gazebo/Blue</material>
     </gazebo>
 
