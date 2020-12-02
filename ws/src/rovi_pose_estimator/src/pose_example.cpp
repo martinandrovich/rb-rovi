@@ -54,7 +54,6 @@ main(int argc, char** argv)
 	//pose_estimation_exampleM2();
 	pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 
-
 	ros::Rate loop_rate(1000);
 	
 

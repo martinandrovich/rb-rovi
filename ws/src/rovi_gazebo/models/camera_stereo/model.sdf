@@ -59,14 +59,14 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.000</stddev>
+          <stddev>0.0087</stddev>
         </noise>
 
       </camera>
 
       <camera name="right">
 
-        <pose>0 0.06 0 0 0 0</pose>
+        <pose>0 -0.08 0 0 0 0</pose>
         <horizontal_fov>1.3962634</horizontal_fov>
 
         <image>
@@ -83,7 +83,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.000</stddev>
+          <stddev>0.0087</stddev>
         </noise>
 
       </camera>
@@ -97,7 +97,7 @@
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <frameName>left_camera_optical_frame</frameName>
         <rightFrameName>right_camera_optical_frame</rightFrameName>
-        <hackBaseline>-0.06</hackBaseline>
+        <hackBaseline>0.08</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
         <distortionK3>0.0</distortionK3>

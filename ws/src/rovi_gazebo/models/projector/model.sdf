@@ -26,7 +26,7 @@
       <plugin name="projector_controller" filename="libgazebo_ros_projector.so">
         <projector>projector_link/texture_projector</projector>
         <alwaysOn>false</alwaysOn>
-        <updateRate>10</updateRate>
+        <updateRate>60</updateRate>
         <textureName>stereo_projection_pattern_high_res_red.png</textureName>
         <filterTextureName>stereo_projection_pattern_filter.png</filterTextureName>        
         <textureTopicName>projector_controller/image</textureTopicName>
