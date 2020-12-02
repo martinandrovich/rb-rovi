@@ -7,6 +7,19 @@
 	"settings": {
 		"python.autoComplete.extraPaths": [
 			"/opt/ros/noetic/lib/python3/dist-packages"
-		]
+		],
+		"files.associations": {
+			"*.ipp": "cpp",
+			"bitset": "cpp",
+			"ostream": "cpp",
+			"*.tcc": "cpp",
+			"fstream": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"iosfwd": "cpp",
+			"shared_mutex": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp"
+		}
 	}
 }
