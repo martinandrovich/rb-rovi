@@ -124,7 +124,7 @@ namespace rovi_utils
 		t->detach();
 		
 		// sleep to fill up the object (first time)
-		ros::Duration(1).sleep();
+		// ros::Duration(1).sleep();
 		
 		// return thread handle
 		return t;

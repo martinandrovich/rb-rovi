@@ -17,6 +17,7 @@ find_package(
 	pcl_ros
 	std_msgs
 	cv_bridge
+	rovi_utils
 	)
 
 find_package(

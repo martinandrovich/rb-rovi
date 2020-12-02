@@ -24,7 +24,8 @@
 	<depend>vision_opencv</depend>
 	<depend>image_transport</depend>
 	<depend>pcl_ros</depend>
-
+	<depend>rovi_utils</depend>
+	
 	<export>
 		<gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
 	</export>
