@@ -18,6 +18,10 @@
 
 #include <filesystem>
 
+
+
+
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_window)
 {
   try
@@ -48,10 +52,21 @@ main(int argc, char** argv)
 	ros::init(argc, argv, "example_node");
 	ros::NodeHandle nh;
 
+	const std::string window_name = "left_image";
+	cv::namedWindow(window_name);
+
+
 	ROS_INFO("Initialized a single-thread ROS example node.");
 	std::cout << "CWD is: " << std::filesystem::current_path() << '\n';
 
 	//pose_estimation_exampleM2();
+
+	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
+	cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
+	cv::imshow(window_name, img);
+	cv::waitKey(0);
+	rovi_pose_estimator::M4::Harris_corners_2d(img);
+
 	pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 
 

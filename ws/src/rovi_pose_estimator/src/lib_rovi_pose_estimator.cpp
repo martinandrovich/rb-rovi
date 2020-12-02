@@ -27,6 +27,9 @@
 #include <pcl/registration/icp.h>
 #include <pcl/keypoints/harris_3d.h>
 
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 
 
@@ -358,8 +361,8 @@ namespace rovi_pose_estimator
 		extract.setIndices(inlier_idices);
 		extract.setNegative(inverse_extraction);
 		extract.filter(*output_cloud);
-		if(inverse_extraction) 	ROS_INFO("PointCloud representing any points BUT the plane: %i", output_cloud->width * output_cloud->height);
-		else ROS_INFO("PointCloud representing the planar component: %i", output_cloud->width * output_cloud->height);
+		if(inverse_extraction) 	ROS_INFO("PointCloud representing any points BUT the indices: %i", output_cloud->width * output_cloud->height);
+		else ROS_INFO("PointCloud representing extracted indices %i", output_cloud->width * output_cloud->height);
 		
 	}
 	// added for RGB pointCloud...
@@ -415,18 +418,84 @@ namespace rovi_pose_estimator
 			pcl::HarrisKeypoint3D <pcl::PointXYZRGB, pcl::PointXYZI> detector;
 			pcl::PointCloud<pcl::PointXYZI>::Ptr keypoints (new pcl::PointCloud<pcl::PointXYZI>);
 			
-			detector.setNonMaxSupression (true);
+			detector.setNonMaxSupression(true);
 			detector.setInputCloud(model);
-			detector.setThreshold (1e-6);
+			detector.setThreshold(1e-6);
 			pcl::StopWatch watch;
-			detector.compute (*keypoints);
-			pcl::console::print_highlight ("Detected %zd points in %lfs\n", keypoints->size (), watch.getTimeSeconds ());
-			//pcl::PointIndicesConstPtr indices = detector.getKeypointsIndices ();
+			detector.compute(*keypoints);
+			pcl::console::print_highlight("Detected %zd points in %lfs\n", keypoints->size (), watch.getTimeSeconds ());
 			*inlier_idices  = *detector.getKeypointsIndices ();
 			if (inlier_idices->indices.empty ())
 			{
 				pcl::console::print_warn ("Keypoints indices are empty!\n");
 			}
+		}
+
+		struct Harris_settings
+		{
+			int block_size =3;
+			int aperture_size = 3;
+			int k = 4;
+			int norm_tresh=200;
+			cv::Mat* src;
+		};
+		
+
+		void 
+		cornerHarris_demo( int, void* args );
+
+		void
+		Harris_corners_2d(const cv::Mat& img)
+		{
+			cv::Mat img_gray;
+			cv::cvtColor(img, img_gray,cv::COLOR_BGR2GRAY);
+			cv::imshow("gray_image", img_gray);
+	
+			const std::string& src = "src window";
+			Harris_settings settings = {3, 3, 4, 200, &img_gray};
+
+			cv::namedWindow(src);
+
+			cv::createTrackbar( "Aperture: ", src, &settings.aperture_size, 30, cornerHarris_demo, &settings);
+			cv::createTrackbar( "block_size: ", src, &settings.block_size, 14, cornerHarris_demo, &settings);
+			cv::createTrackbar( "k: ", src, &settings.k, 100, cornerHarris_demo, &settings);
+			cv::createTrackbar( "norm_tresh: ", src, &settings.norm_tresh, 255, cornerHarris_demo, &settings);
+			cv::imshow(src, img_gray);
+
+			cornerHarris_demo(0, &settings);
+			cv::waitKey();
+
+			
+		}
+
+		void 
+		cornerHarris_demo( int, void* args )
+		{
+			std::cout << "Hello, inside corner demo..:" << std::endl;
+			Harris_settings* settings = reinterpret_cast<Harris_settings*>(args);
+			int blockSize = settings->block_size + 1;
+			int apertureSize = settings->aperture_size *2 + 1;
+			double k = settings->k/100.0;
+
+			std::cout << "Settings are; " << blockSize << " , " << apertureSize << " , " << k << std::endl;
+
+			cv::Mat corners = cv::Mat::zeros(settings->src->size(), CV_32FC1 );
+			cv::cornerHarris(*settings->src, corners, blockSize, apertureSize, k );
+			cv::Mat dst_norm, dst_norm_scaled;
+			cv::normalize(corners, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat() );
+			convertScaleAbs( dst_norm, dst_norm_scaled );
+			for( int i = 0; i < dst_norm.rows ; i++ )
+			{
+				for( int j = 0; j < dst_norm.cols; j++ )
+				{
+					if( (int) dst_norm.at<float>(i,j) > settings->norm_tresh )
+					{
+						circle( dst_norm_scaled, cv::Point(j,i), 5,  cv::Scalar(0), 2, 8, 0 );
+					}
+				}
+			}
+			cv::namedWindow("corners_window");
+			cv::imshow("corners_window", dst_norm_scaled);
 		}
 
 	}
