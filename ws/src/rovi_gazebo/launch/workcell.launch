@@ -10,7 +10,8 @@
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 
 	<arg name="all_objects" default="false" />
-	<arg name="moveit" default="true" />
+	<arg name="use_moveit"  default="true" />
+	<arg name="use_rviz"    default="true" />
 
 	<!-- GAZEBO -->
 
@@ -82,6 +83,8 @@
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
 
 	<!-- MOVE IT with OMPL -->
-	<include if="$(arg moveit)" file="$(find ur5_moveit_config)/launch/default.launch" />
+	<include if="$(arg use_moveit)" file="$(find ur5_moveit_config)/launch/default.launch">
+		<arg name="use_rviz" value="$(arg use_rviz)"/>
+	</include>
 
 </launch>
