@@ -65,9 +65,9 @@ main(int argc, char** argv)
 	cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
 	cv::imshow(window_name, img);
 	cv::waitKey(0);
-	rovi_pose_estimator::M4::Harris_corners_2d(img);
+	rovi_pose_estimator::M4::Harris_corners_2d(img, std::stof(argv[1]), std::stof(argv[2]), std::stoi(argv[3]), std::stof(argv[4]));
 
-	pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
+	//pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 
 
 	ros::Rate loop_rate(1000);

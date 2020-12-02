@@ -6,7 +6,10 @@
 	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
-	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
+	<!--<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>-->
+	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.45 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y 0.0"/>
+	
+
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 	<arg name="projector_pose" doc="The pose of the camera spawn location."   default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
 
@@ -55,12 +58,13 @@
 	<!-- spawn sensor(s) -->
 	<node name="spawn_stereo_camera" pkg="gazebo_ros" type="spawn_model" args="-param camera_stereo -sdf -model camera_stereo $(arg camera_pose)"/>
 	<node name="spawn_kinect" pkg="gazebo_ros" type="spawn_model" args="-param kinect -sdf -model openni_kinect $(arg kinect_pose)"/>
-	<node name="spawn_projector" pkg="gazebo_ros" type="spawn_model" args="-param projector -sdf -model projector $(arg camera_pose)"/>
+	<!-- <node name="spawn_projector" pkg="gazebo_ros" type="spawn_model" args="-param projector -sdf -model projector $(arg camera_pose)"/> -->
 
 	<!-- spawn object(s) -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
-	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/>
-	
+	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/> -->
+	<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.25 -y 1.0"/>
+
 	<!-- don't spawn all objects -->
 	<group if="$(arg all_objects)">
   		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.1 -y 1.0"/>

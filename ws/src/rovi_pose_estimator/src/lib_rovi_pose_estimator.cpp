@@ -29,6 +29,9 @@
 
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
+#include <opencv2/tracking.hpp>
+#include <opencv2/core.hpp>
+
 
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 
@@ -435,32 +438,103 @@ namespace rovi_pose_estimator
 			int k = 4;
 			int norm_tresh=200;
 			cv::Mat* src;
+			cv::Mat* out;
+			std::vector<cv::Point2i>* corner_coordinates;
 		};
 		
 
 		void 
 		cornerHarris_demo( int, void* args );
 
+		cv::Scalar_<float> 
+		get_mean_and_std(const std::vector<cv::Point>& points);
+
+		std::vector<cv::Point>
+		statistical_filter_2d(const std::vector<cv::Point>& points, float sigma_tresh=1.0);
+
+
 		void
-		Harris_corners_2d(const cv::Mat& img)
+		Harris_corners_2d(const cv::Mat& img, float quality_level, float min_dist, bool useharris, float filter_sigma)
 		{
 			cv::Mat img_gray;
 			cv::cvtColor(img, img_gray,cv::COLOR_BGR2GRAY);
-			cv::imshow("gray_image", img_gray);
-	
-			const std::string& src = "src window";
-			Harris_settings settings = {3, 3, 4, 200, &img_gray};
 
+			const std::string& src = "src window";
 			cv::namedWindow(src);
 
-			cv::createTrackbar( "Aperture: ", src, &settings.aperture_size, 30, cornerHarris_demo, &settings);
-			cv::createTrackbar( "block_size: ", src, &settings.block_size, 14, cornerHarris_demo, &settings);
-			cv::createTrackbar( "k: ", src, &settings.k, 100, cornerHarris_demo, &settings);
-			cv::createTrackbar( "norm_tresh: ", src, &settings.norm_tresh, 255, cornerHarris_demo, &settings);
-			cv::imshow(src, img_gray);
+			//auto roi = cv::selectROI(src, img_gray);
+			//std::cout << "Roi selected.."<< roi << std::endl;
+			
+			/*201 x 747 from (283, 39)*/
+			auto roi = cv::Rect(283, 39, 198, 747);
+			cv::Mat gray_roi = img_gray(roi);
+			std::cout << "Type?" << gray_roi.type() << std::endl;
+
+			cv::Mat corners = cv::Mat::zeros(gray_roi.size(), CV_32FC1 );
+			std::vector<cv::Point2i> corner_coordinates;
+			
+		
+
+
+			Harris_settings settings = {1, 1, 1, 180, &gray_roi, &corners, &corner_coordinates};
+			cv::namedWindow("corners_window");
+
+			cv::createTrackbar( "Aperture: ", src, &settings.aperture_size, 10, cornerHarris_demo, &settings);
+			cv::createTrackbar( "block_size: ", src, &settings.block_size, 10, cornerHarris_demo, &settings);
+			cv::createTrackbar( "k: ", src, &settings.k, 15, cornerHarris_demo, &settings);
+			cv::createTrackbar( "norm_tresh: ", src, &settings.norm_tresh, 180, cornerHarris_demo, &settings);
+			cv::imshow(src, gray_roi);
 
 			cornerHarris_demo(0, &settings);
 			cv::waitKey();
+
+			for(auto& coord:corner_coordinates)
+			{
+				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
+			}
+
+			cv::Mat corners_good_features_mat;
+			gray_roi.copyTo(corners_good_features_mat);
+
+
+			std::vector<cv::Point> corners_good_features;
+			cv::goodFeaturesToTrack(gray_roi, corners_good_features, 0, quality_level, min_dist, cv::noArray(), 3 , useharris);
+
+			std::cout << " Done using good features to track... " << std::endl;
+
+			for(auto& coord:corners_good_features)
+			{
+				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
+				circle(corners_good_features_mat, coord, 10,  cv::Scalar(0), 2, 8, 0 );
+
+			}
+
+			cv::imshow("Good features to track", corners_good_features_mat);
+			cv::waitKey();
+
+			auto mean_std = get_mean_and_std(corners_good_features);
+			std::cout << "Mean_std is:" << mean_std << std::endl;
+
+
+			auto filtered = statistical_filter_2d(corners_good_features, filter_sigma);
+
+			cv::Mat corners_good_features_mat_statistical_filtered;
+			gray_roi.copyTo(corners_good_features_mat_statistical_filtered);
+
+			for(auto& coord:filtered)
+			{
+				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
+				circle(corners_good_features_mat_statistical_filtered, coord, 10,  cv::Scalar(0), 2, 8, 0 );
+			}
+
+			cv::imshow("Filtered corners...", corners_good_features_mat_statistical_filtered);
+			cv::waitKey();
+
+
+
+
+
+
 
 			
 		}
@@ -476,11 +550,14 @@ namespace rovi_pose_estimator
 
 			std::cout << "Settings are; " << blockSize << " , " << apertureSize << " , " << k << std::endl;
 
-			cv::Mat corners = cv::Mat::zeros(settings->src->size(), CV_32FC1 );
+			cv::Mat& corners = *settings->out;
 			cv::cornerHarris(*settings->src, corners, blockSize, apertureSize, k );
 			cv::Mat dst_norm, dst_norm_scaled;
 			cv::normalize(corners, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat() );
 			convertScaleAbs( dst_norm, dst_norm_scaled );
+			settings->corner_coordinates->clear();
+
+			int number_of_found_corners = 0;
 			for( int i = 0; i < dst_norm.rows ; i++ )
 			{
 				for( int j = 0; j < dst_norm.cols; j++ )
@@ -488,11 +565,61 @@ namespace rovi_pose_estimator
 					if( (int) dst_norm.at<float>(i,j) > settings->norm_tresh )
 					{
 						circle( dst_norm_scaled, cv::Point(j,i), 5,  cv::Scalar(0), 2, 8, 0 );
+						settings->corner_coordinates->push_back(cv::Point(j,i));
+						number_of_found_corners++;
 					}
 				}
 			}
-			cv::namedWindow("corners_window");
+			std::cout << "Found " << number_of_found_corners << " Corners in the image." << std::endl;
 			cv::imshow("corners_window", dst_norm_scaled);
+		}
+
+		cv::Scalar_<float> 
+		get_mean_and_std(const std::vector<cv::Point>& points)
+		{
+	
+			cv::Point2f zero(0.0f, 0.0f);
+			cv::Point2f sum = std::accumulate(points.begin(), points.end(), zero, std::plus<cv::Point2f>());
+			cv::Point2f mean = {sum.x / points.size(), sum.y / points.size()};
+
+			auto calc_std = [&](auto& points, cv::Point2f& mean)
+			{
+				cv::Point2f std = {0,0};
+				for(const auto& point:points)
+				{
+					std.x += std::pow((point.x - mean.x), 2);
+					std.y += std::pow((point.y - mean.y), 2);
+				}
+				std.x = std.x/ points.size() -1;
+				std.y = std.y/ points.size() -1;
+				std.x = sqrt(std.x);
+				std.y = sqrt(std.y);
+				return std;
+			};
+
+			auto std = calc_std(points, mean);
+			return {mean.x, mean.y, std.x, std.y};
+		}
+
+		std::vector<cv::Point>
+		statistical_filter_2d(const std::vector<cv::Point>& points, float sigma_tresh)
+		{
+			auto mean_std = get_mean_and_std(points);
+			cv::Point2f threshold_lower = {mean_std[0] - sigma_tresh * mean_std[2], mean_std[1] - sigma_tresh* mean_std[3]};
+			cv::Point2f threshold_upper = {mean_std[0] + sigma_tresh * mean_std[2], mean_std[1] + sigma_tresh* mean_std[3]};
+			
+			std::vector<cv::Point> filtered;
+			for(const auto& point:points)
+			{
+				if(point.x > threshold_lower.x && point.x < threshold_upper.x)
+				{
+					if(point.y > threshold_lower.y && point.y < threshold_upper.y)
+					{
+						filtered.push_back(point);
+					}
+				}				
+			}
+			return filtered;
 		}
 
 	}

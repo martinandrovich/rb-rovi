@@ -69,7 +69,7 @@ namespace rovi_pose_estimator
     {
         void Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices);
 
-        void Harris_corners_2d(const cv::Mat& image);
+        void Harris_corners_2d(const cv::Mat& image, float quality_level=0.015, float min_dist=5.0, bool useharris=false, float filter_sigma=1.15);
     }
 
 
