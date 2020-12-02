@@ -23,15 +23,10 @@
 	<depend>OpenCV</depend>
 	<depend>cv_bridge</depend>
 	<depend>image_transport</depend>
-
+	<depend>pcl_ros</depend>
 
 	<export>
-
-
-	<gazebo_ros
-		gazebo_plugin_path="${prefix}/lib"
-	/>
-
+		<gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
 	</export>
 
 </package>

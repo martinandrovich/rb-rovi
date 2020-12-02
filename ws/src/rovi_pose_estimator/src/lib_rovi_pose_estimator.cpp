@@ -32,8 +32,6 @@
 
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 
-
-
 void
 rovi_pose_estimator::test(const std::string& str)
 {
@@ -42,7 +40,6 @@ rovi_pose_estimator::test(const std::string& str)
 
 
 namespace rovi_pose_estimator
-
 {
 	const std::string models_path = "src/rovi_gazebo/models/";
 

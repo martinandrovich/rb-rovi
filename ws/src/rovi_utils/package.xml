@@ -19,12 +19,16 @@
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
 	<depend>xacro</depend>
+	<depend>kdl_parser</depend>
+	<depend>eigen_conversions</depend>
 	<depend>gazebo_ros</depend>
 	<depend>tf</depend>
 	<depend>geometry_msgs</depend>
 	<depend>moveit_msgs</depend>
 	<depend>geometric_shapes</depend>
-
+	<depend>moveit_ros_planning_interface</depend>
+	<depend>ur5_dynamics</depend>
+	
 	<depend>Eigen3</depend>
 
 </package>

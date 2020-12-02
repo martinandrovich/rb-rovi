@@ -34,7 +34,7 @@ namespace ur5_controllers
 		static inline constexpr auto CONTROLLER_NAME     = "JointPositionPDGravityController";
 		static inline constexpr auto SATURATE_ROTATUM    = true;
 		static inline constexpr auto TAU_DOT_MAX         = 1000.;
-		static inline const std::vector<double> Q_D_INIT = { 0, -M_PI_2, 0, 0, 0, 0 };
+		static inline const std::vector<double> Q_D_INIT = { 1.57, -1.57, 1.57, 1.57, 1.57, 0.0 };
 
 		std::vector<std::string> vec_joint_names;
 		size_t num_joints;

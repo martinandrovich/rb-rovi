@@ -30,7 +30,7 @@ namespace ur5_controllers
 		static inline constexpr auto CONTROLLER_NAME = "CartesianPoseController";
 		static inline constexpr auto SATURATE_ROTATUM = true;
 		static inline constexpr auto TAU_DOT_MAX = 1000.;
-		static inline const std::vector<double> Q_D_INIT = { 0.f, -M_PI_2, 0.f, 0.f, 0.f, 0.f };
+		static inline const std::vector<double> Q_D_INIT = { 1.57, -1.57, 1.57, 1.57, 1.57, 0.0 };
 
 		std::vector<std::string> vec_joint_names;
 		size_t num_joints;
@@ -60,7 +60,7 @@ namespace ur5_controllers
 		Eigen::Vector6d q_d;
 		Eigen::Vector6d q_dot_d;
 		double kp = 800.0;
-		double kd = 800.0;
+		double kd = 100.0;
 
 		bool
 		init_KDL();

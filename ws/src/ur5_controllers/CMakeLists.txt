@@ -76,12 +76,19 @@ include_directories(
 
 # libraries
 
-## ...
-add_library(ur5_controllers src/joint_position_pd_gravity_controller.cpp src/cartesian_pose_controller.cpp src/wsg_hybrid_controller.cpp src/joint_position_controller.cpp)
+## ur5_controller
+add_library(ur5_controllers
+	src/joint_position_pd_gravity_controller.cpp
+	src/cartesian_pose_controller.cpp
+	src/wsg_hybrid_controller.cpp
+	src/joint_position_controller.cpp
+	src/lib_interface.cpp
+)
 target_link_libraries(ur5_controllers ${catkin_LIBRARIES})
 
 install(
-	TARGETS ur5_controllers
+	TARGETS
+		ur5_controllers
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -98,9 +105,3 @@ install(
 	FILES ur5_controllers_plugin.xml
 	DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
-
-################################################################################################
-
-# nodes
-
-# ...
