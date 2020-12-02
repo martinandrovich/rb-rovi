@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<sdf version="1.7">
+    <!-- TBD add a few walls to capture where projector is projecting -->
+    <model name="projector">
+
+      <link name="projector_link">
+
+        <!-- <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual> -->
+
+        <projector name="texture_projector">
+            <pose>0 0 0 0 -1.57 0</pose>
+            <texture>stereo_projection_pattern_high_res_red.png</texture>
+            <fov>0.8</fov>
+            <near_clip>0.1</near_clip>
+            <far_clip>1.5</far_clip>
+        </projector>
+
+      </link>
+
+      <plugin name="projector_controller" filename="libgazebo_ros_projector.so">
+        <projector>projector_link/texture_projector</projector>
+        <alwaysOn>false</alwaysOn>
+        <updateRate>10</updateRate>
+        <textureName>stereo_projection_pattern_high_res_red.png</textureName>
+        <filterTextureName>stereo_projection_pattern_filter.png</filterTextureName>        
+        <textureTopicName>projector_controller/image</textureTopicName>
+        <projectorTopicName>projector_controller/projector</projectorTopicName>
+      </plugin>
+      
+      <static>true</static>
+
+    </model>
+</sdf>

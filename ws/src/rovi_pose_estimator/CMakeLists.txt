@@ -16,13 +16,14 @@ find_package(
 	message_generation
 	pcl_ros
 	std_msgs
+	cv_bridge
 	)
 
 find_package(
-	OpenCV REQUIRED
+	OpenCV 4 REQUIRED
 	)
 find_package(
-	PCL 1.2 REQUIRED
+	PCL 1.8 REQUIRED
 	)
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -43,30 +44,6 @@ if(NOT EIGEN3_INCLUDE_DIRS)
 endif()
 
 
-#add service files
-
-add_service_files(
-	DIRECTORY srv
-	FILES
-	AddTwoInts.srv
-)
-
-#add message_files
-add_message_files(
-	DIRECTORY
-	msg
-	FILES
-	Num.msg
-)
-
-#call generate function
-generate_messages(
-	DEPENDENCIES
-	std_msgs
-)
-
-
-
 # declare a catkin package
 catkin_package(
 	INCLUDE_DIRS
@@ -77,9 +54,8 @@ catkin_package(
 		roscpp
 		roslib
 		sensor_msgs
-		cv_bridge
 		image_transport
-		message_runtime
+		vision_opencv
 	DEPENDS
 		EIGEN3
 		OpenCV
@@ -100,14 +76,40 @@ include_directories(
 
 # libraries
 
-## lib_rovi_gazebo (rovi_gazebo/rovi_gazebo.h)
-add_library(lib_rovi_pose_estimator src/lib_rovi_pose_estimator.cpp)
-target_link_libraries(lib_rovi_pose_estimator ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-## 
+# lib_rovi_gazebo (rovi_gazebo/rovi_gazebo.h)
+# add_library(lib_rovi_pose_estimator src/lib_rovi_pose_estimator.cpp)
+# target_link_libraries(lib_rovi_pose_estimator ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+# # 
+# install(
+# 	TARGETS lib_rovi_pose_estimator
+# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
+
+# ## install all project namespaced headers (package/include)
+# install(
+# 	DIRECTORY include/${PROJECT_NAME}/
+# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# )
+
+##################################Danielsstuff################################################### 
+
+# find_program(CCACHE_FOUND ccache)
+# if(CCACHE_FOUND)
+#     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+#     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+# endif(CCACHE_FOUND) 
+# set (CMAKE_CXX_FLAGS "-DPCL_ONLY_CORE_POINT_TYPES=ON -DNO_EXPLICIT_INSTANTIATIONS")
+
+# install lib_rovi_pose_est_M1
+add_library(lib_rovi_pose_est_M1 src/lib_rovi_pose_est_M1.cpp)
+target_link_libraries(lib_rovi_pose_est_M1 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+# 
 install(
-	TARGETS lib_rovi_pose_estimator
+	TARGETS lib_rovi_pose_est_M1
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -124,20 +126,10 @@ install(
 # nodes
 
 ## example executable (rosrun)
-add_executable(pose_example src/pose_example.cpp)
-target_link_libraries(pose_example ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} lib_rovi_pose_estimator )
-add_dependencies(pose_example rovi_pose_estimator_generate_messages_cpp)
-##target_include_directories(example PUBLIC include/rovi_pose_estimator)pose_example
+## add_executable(pose_example src/pose_example.cpp)
+## target_link_libraries(pose_example ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} lib_rovi_pose_estimator )
+## target_include_directories(example PUBLIC include/rovi_pose_estimator)pose_example
 
-add_executable(listener src/listener.cpp)
-target_link_libraries(listener ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-add_dependencies(listener rovi_pose_estimator_generate_messages_cpp)
+add_executable(pose_M1 src/pose_M1.cpp)
+target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
 
-
-add_executable(add_two_ints_server src/add_two_ints_server.cpp)
-target_link_libraries(add_two_ints_server ${catkin_LIBRARIES})
-add_dependencies(add_two_ints_server rovi_pose_estimator_gencpp)
-
-add_executable(add_two_ints_client src/add_two_ints_client.cpp)
-target_link_libraries(add_two_ints_client ${catkin_LIBRARIES})
-add_dependencies(add_two_ints_client rovi_pose_estimator_gencpp)

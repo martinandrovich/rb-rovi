@@ -8,6 +8,7 @@
 
 #include <gazebo_msgs/LinkStates.h>
 #include <gazebo_msgs/ModelStates.h>
+#include <moveit_msgs/DisplayTrajectory.h>
 
 #include <kdl/frames.hpp>
 #include <kdl/path_point.hpp>
