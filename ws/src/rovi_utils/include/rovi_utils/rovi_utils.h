@@ -99,7 +99,7 @@ namespace rovi_utils
 		// 	lp.sleep();
 		// }
 		
-		auto t = new std::thread([&, topic](){
+		auto t = new std::thread([&, topic]() {
 		
 			ROS_WARN_STREAM("Initializing /listener" << topic << " node (once)...");
 			auto nh = new ros::NodeHandle("~/listener" + topic);
@@ -122,6 +122,9 @@ namespace rovi_utils
 	
 		// detach thread (once)
 		t->detach();
+		
+		// sleep to fill up the object (first time)
+		ros::Duration(1).sleep();
 		
 		// return thread handle
 		return t;
