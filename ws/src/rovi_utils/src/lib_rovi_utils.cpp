@@ -262,6 +262,12 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 	// state.setVariablePosition(2, offset[2]);
 }
 
+void
+rovi_utils::move_base(moveit::core::RobotState& state, const geometry_msgs::Pose& offset, const std::string& virtual_joint_name)
+{
+	move_base(state, { offset.position.x, offset.position.y, offset.position.z }, virtual_joint_name);
+}
+
 template<typename T>
 void
 rovi_utils::export_traj(T& traj, const std::string&& filename, const double resolution)

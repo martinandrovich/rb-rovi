@@ -49,7 +49,7 @@ namespace rovi_utils
 	std::vector<moveit_msgs::CollisionObject>
 	// get_cobjs_from_gazebo()
 	// rovi_gazebo::get_collision_objects()
-	get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes = { "ur5", "camera_stereo", "openni_kinect", "ground_plane" });
+	get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes = { "ur5", "camera_stereo", "openni_kinect", "ground_plane", "projector" });
 
 	// -- trajectories ------------------------------------------------------------
 
@@ -75,6 +75,9 @@ namespace rovi_utils
 
 	void
 	move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name = "world_offset");
+	
+	void
+	move_base(moveit::core::RobotState& state, const geometry_msgs::Pose& offset, const std::string& virtual_joint_name = "world_offset");
 
 	// -- utilities ---------------------------------------------------------------
 
