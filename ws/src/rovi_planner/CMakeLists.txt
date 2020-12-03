@@ -19,6 +19,7 @@ find_package(
 	ur5_dynamics
 	ur5_controllers
 	ur5_moveit_config
+	rovi_gazebo
 	rovi_utils
 	# ompl
 )
@@ -58,6 +59,7 @@ catkin_package(
 		ur5_dynamics
 		ur5_controllers
 		ur5_moveit_config
+		rovi_gazebo
 		rovi_utils
 		# ompl
 	DEPENDS

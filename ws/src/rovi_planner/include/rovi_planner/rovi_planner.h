@@ -24,9 +24,6 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <sensor_msgs/JointState.h>
 
-#include <rovi_utils/rovi_utils.h>
-#include <ur5_dynamics/ur5_dynamics.h>
-
 namespace rovi_planner
 {
 	// trajectory planners

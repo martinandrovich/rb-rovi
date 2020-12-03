@@ -20,6 +20,7 @@
 #include <thread>
 
 #include <rovi_utils/rovi_utils.h>
+#include <rovi_gazebo/rovi_gazebo.h>
 #include <ur5_controllers/interface.h>
 
 constexpr auto ARM_GROUP            = "ur5_arm";
@@ -34,9 +35,8 @@ constexpr auto HOME_ARM             = std::array{ 0., -1.57, 1.57, 1.57, 1.57, 0
 constexpr auto HOME_WSG             = std::array{ 0.05, 0.05 };
 constexpr auto BASE_OFFSET          = std::array{ 0.1, 0.5, 0.75 };
 constexpr auto POS_TABLE            = std::array{ 0.4, 0.6, 0.64 };
-constexpr auto POSE_BOTTLE_PICK     = std::array{ 0.50,  0.53, 0.1, 0.0, 0.0, 0.0 };
-constexpr auto POSE_BOTTLE_PLACE    = std::array{ 0.50,  0.53, 0.4, 0.0, 0.0, 0.0 };
-// constexpr auto POSE_BOTTLE_PLACE    = std::array{ 0.52, -0.35, 0.1, 0.0, 0.0, 0.0 };
+constexpr auto POSE_BOTTLE_PICK     = std::array{  0.50,  0.53, 0.10, 0.0, 0.0, 0.0 };
+constexpr auto POSE_BOTTLE_PLACE    = std::array{ 0.575, -0.35, 0.12, 0.0, 0.0, 0.0 };
 
 int
 main(int argc, char** argv)
@@ -47,19 +47,28 @@ main(int argc, char** argv)
 	ros::init(argc, argv, "grasp_test");
 	ros::NodeHandle nh;
 
-	// init moveit_object
+	// init moveit planner
 	ROS_INFO_STREAM("Initializing moveit planner and scene...");
 	rovi_planner::moveit_planner::init(nh);
 	rovi_planner::moveit_planner::update_planning_scene();
 	rovi_planner::moveit_planner::start_planning_scene_publisher();
 	
+	// define poses
+	auto pose_bottle_pick  = make_pose(POSE_BOTTLE_PICK);
+	auto pose_bottle_place = make_pose(POSE_BOTTLE_PLACE);
+	
 	// PICK
 	{
+	
+	// disable projector
+	ROS_INFO_STREAM("Disabling projector...");
+	rovi_gazebo::set_projector(false);
+	ros::Duration(1).sleep();
 
 	// release gripper
 	ROS_INFO_STREAM("Releasing gripper...");
 	ur5_controllers::wsg::release();
-	ros::Duration(0.5).sleep();
+	ros::Duration(1).sleep();
 
 	// update moving planning scene from gazebo
 	ROS_INFO_STREAM("Updating planning scene...");
@@ -67,7 +76,7 @@ main(int argc, char** argv)
 
 	// plan using moveit (to object)
 	ROS_INFO_STREAM("Planning...");
-	auto plan = rovi_planner::moveit_planner::plan(make_pose(POSE_BOTTLE_PICK), "RRTstar");
+	auto plan = rovi_planner::moveit_planner::plan(pose_bottle_pick, "RRTstar");
 
 	// get parabolic trajectory (time optimal)
 	ROS_INFO_STREAM("Creating trajectory (interpolation)...");
@@ -84,7 +93,7 @@ main(int argc, char** argv)
 	// grasp
 	ROS_INFO_STREAM("Grasping object...");
 	ur5_controllers::wsg::grasp();
-	ros::Duration(0.5).sleep();
+	ros::Duration(2).sleep();
 
 	// update moving planning scene from gazebo
 	ROS_INFO_STREAM("Updating planning scene...");
@@ -101,7 +110,7 @@ main(int argc, char** argv)
 	
 	// plan using moveit (to to place)
 	ROS_INFO_STREAM("Planning...");
-	auto plan = rovi_planner::moveit_planner::plan(make_pose(POSE_BOTTLE_PLACE), "RRTstar");
+	auto plan = rovi_planner::moveit_planner::plan(pose_bottle_place, "RRTstar");
 
 	// get parabolic trajectory (time optimal)
 	ROS_INFO_STREAM("Creating trajectory (interpolation)...");
@@ -110,12 +119,40 @@ main(int argc, char** argv)
 	// execute in Gazebo
 	ROS_INFO_STREAM("Executing trajectory in Gazebo...");
 	ur5_controllers::ur5::execute_traj(traj, FREQ);
+	ros::Duration(1).sleep();
+	
+	// update moving planning scene from gazebo
+	ROS_INFO_STREAM("Updating planning scene...");
+	rovi_planner::moveit_planner::update_planning_scene();
+	ros::Duration(1).sleep();
 	
 	// release gripper
-	// ROS_INFO_STREAM("Releasing gripper...");
-	// ur5_controllers::wsg::release();
-	// ros::Duration(0.5).sleep();
+	ROS_INFO_STREAM("Releasing gripper...");
+	ur5_controllers::wsg::release();
+	ros::Duration(1).sleep();
 	
+	// update moving planning scene from gazebo
+	ROS_INFO_STREAM("Updating planning scene...");
+	rovi_planner::moveit_planner::update_planning_scene();
+	ros::Duration(1).sleep();
+	
+	}
+	
+	// HOME
+	{
+
+	// plan using moveit (to object)
+	ROS_INFO_STREAM("Planning...");
+	auto plan = rovi_planner::moveit_planner::plan(pose_bottle_pick, "RRTstar");
+
+	// get parabolic trajectory (time optimal)
+	ROS_INFO_STREAM("Creating trajectory (interpolation)...");
+	auto traj = rovi_planner::moveit_planner::get_traj(plan, 0.0001, 1/FREQ, 0.2, 0.1);
+
+	// execute in Gazebo
+	ROS_INFO_STREAM("Executing trajectory in Gazebo...");
+	ur5_controllers::ur5::execute_traj(traj, FREQ);
+
 	// update moving planning scene from gazebo
 	ROS_INFO_STREAM("Updating planning scene...");
 	rovi_planner::moveit_planner::update_planning_scene();

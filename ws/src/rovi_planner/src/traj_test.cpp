@@ -12,6 +12,7 @@
 #include <Eigen/Eigen>
 
 #include <rovi_utils/rovi_utils.h>
+#include <rovi_gazebo/rovi_gazebo.h>
 #include <ur5_controllers/interface.h>
 
 int
@@ -22,8 +23,6 @@ main(int argc, char** argv)
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
-	
-	ur5_controllers::wsg::grasp();
 
 	// joint interpolation test
 

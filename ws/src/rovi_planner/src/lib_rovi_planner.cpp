@@ -22,6 +22,10 @@
 #include <kdl/rotational_interpolation_sa.hpp>
 #include <kdl/utilities/error.h>
 
+#include <rovi_utils/rovi_utils.h>
+#include <rovi_gazebo/rovi_gazebo.h>
+#include <ur5_dynamics/ur5_dynamics.h>
+
 KDL::Trajectory_Composite
 rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double equiv_radius)
 {
@@ -287,10 +291,9 @@ get_model_states(ros::NodeHandle& nh)
 
 	while (not model_states)
 		ros::spinOnce();
-		
+
 	return model_states;
 }
-
 
 sensor_msgs::JointState*
 get_joint_states(ros::NodeHandle& nh)
@@ -303,19 +306,16 @@ get_joint_states(ros::NodeHandle& nh)
 
 	while (not joint_states)
 		ros::spinOnce();
-		
+
 	return joint_states;
 }
-
 
 bool
 rovi_planner::moveit_planner::init(ros::NodeHandle& nh)
 {
 	// setup async spinners for moveit
-	ros::AsyncSpinner spin(2);
+	ros::AsyncSpinner spin(0);
 	spin.start();
-	
-	nh_ptr = &nh;
 
 	// create the model of the robot
 	robot_model_loader = std::make_shared<robot_model_loader::RobotModelLoader>(ROBOT_DESCRIPTION);
@@ -340,9 +340,7 @@ rovi_planner::moveit_planner::init(ros::NodeHandle& nh)
 		is_init = false;
 	}
 	else
-	{
 		is_init = true;
-	}
 
 	return is_init;
 }
@@ -356,8 +354,9 @@ rovi_planner::moveit_planner::destruct()
 void
 rovi_planner::moveit_planner::update_planning_scene()
 {
-	// lock planning scene mutex for this scope
-	std::lock_guard lock(mtx_planning_scene);
+	// lock planning scene mutex for this scope	
+	// std::lock_guard lock(mtx_planning_scene);
+	mtx_planning_scene.lock();
 
 	// get robot state and joint groups
 	auto& robot_state    = planning_scene->getCurrentStateNonConst();
@@ -365,80 +364,75 @@ rovi_planner::moveit_planner::update_planning_scene()
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
 
 	// set the robot arm state to the current one from Gazebo
-	// rovi_gazebo::get_robot_state();
-	auto q_gazebo = get_joint_states(*nh_ptr);
-	// auto q_gazebo = ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
-	
-	ROS_INFO("Got joint states from Gazebo!");
-
-	auto q_ur5    = std::vector<double>(q_gazebo->position.begin(), q_gazebo->position.end() - 2);
-	auto q_wsg    = std::vector<double>(q_gazebo->position.end() - 2, q_gazebo->position.end());
-
+	const auto q_ur5 = rovi_gazebo::get_current_robot_state().position;
+	const auto q_wsg = rovi_gazebo::get_current_gripper_state().position;
 	robot_state.setJointGroupPositions(ARM_GROUP, q_ur5);
-	robot_state.setJointGroupPositions(WSG_GROUP, q_wsg);
-
+	// robot_state.setJointGroupPositions(WSG_GROUP, q_wsg);
+	robot_state.setJointGroupPositions(WSG_GROUP, std::vector{ 0.05, 0.05 });
+	
 	// set robot base position to the current one from Gazebo
-	// rovi_gazebo::get_robot_base_pose();
-	// auto model_states = ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
-	auto model_states = get_model_states(*nh_ptr);
-	for (size_t i = 0; model_states->name.size() > i ; ++i)
-	{
-		if (model_states->name[i] == "ur5")
-		{
-			rovi_utils::move_base(robot_state,
-			{
-				model_states->pose[i].position.x,
-				model_states->pose[i].position.y,
-				model_states->pose[i].position.z
-			});
-		}
-	}
-
-	// add the collisions to the scene
-	collision_objects = rovi_utils::get_gazebo_obj(planning_scene->getPlanningFrame());
+	const auto base_pose = rovi_gazebo::get_current_base_pose();
+	rovi_utils::move_base(robot_state, base_pose);
+	
+	// add the collisions to the scene and remove any attached objects
+	collision_objects = rovi_gazebo::get_collision_objects(planning_scene->getPlanningFrame());
+	
 	planning_scene->getPlanningSceneMsg(planning_scene_msg);
+	planning_scene_msg.robot_state.attached_collision_objects = {};
 	planning_scene_msg.world.collision_objects = collision_objects;
 	planning_scene->setPlanningSceneMsg(planning_scene_msg);
+	
+	mtx_planning_scene.unlock();
+	ros::Duration(1).sleep();
 }
 
 bool
 rovi_planner::moveit_planner::attach_object_to_ee(const std::string& obj_name)
 {
-	// lock mutex
-	std::lock_guard lock(mtx_planning_scene);
-	
+	// lock planning scene mutex for this scope
+	// std::lock_guard lock(mtx_planning_scene);
+	mtx_planning_scene.lock();
+
 	// check if collision objects exists (find index)
-	auto cobj = std::find_if(collision_objects.begin(), collision_objects.end(), [&](auto& obj) {
+	const auto cobj = std::find_if(collision_objects.begin(), collision_objects.end(), [&](auto& obj) {
 		return obj.id == obj_name;
 	});
-	
+
 	if (cobj == collision_objects.end())
 	{
 		ROS_WARN_STREAM("Collision object '" << obj_name << "' does not exist.");
 		return false;
 	}
-	
+
 	// get current planning scence (msg)
 	planning_scene->getPlanningSceneMsg(planning_scene_msg);
-	
-	// offset object a little bit to abvoid collisions
-	;
-	
+
 	// attach the object to the end-effector
-	moveit_msgs::AttachedCollisionObject obj;
-	obj.link_name = "ee_tcp";
-	obj.object = *cobj;
-	obj.object.operation = moveit_msgs::CollisionObject::ADD;
-	planning_scene_msg.robot_state.attached_collision_objects.push_back(obj);
+	// offset object a little bit to abvoid collisions
+	constexpr auto offset_z = 0.005;
+	moveit_msgs::AttachedCollisionObject acobj;
+	acobj.link_name = "ee_tcp";
+	acobj.object = moveit_msgs::CollisionObject(*cobj);
+	acobj.object.pose.position.z += offset_z;
+	acobj.object.mesh_poses[0].position.z += offset_z;
+	acobj.object.operation = moveit_msgs::CollisionObject::ADD;
 	
-	obj.object.pose.position.z += 0.05;
-	
+	planning_scene_msg.robot_state.attached_collision_objects = { acobj };
+
 	// remove object from scene
 	cobj->operation = moveit_msgs::CollisionObject::REMOVE;
 	planning_scene_msg.world.collision_objects = collision_objects;
 	
+	// update robot pos
+	auto& robot_state    = planning_scene->getCurrentStateNonConst();
+	const auto q_ur5 = rovi_gazebo::get_current_robot_state().position;
+	robot_state.setJointGroupPositions(ARM_GROUP, q_ur5);
+
 	// update planning scene
 	planning_scene->setPlanningSceneMsg(planning_scene_msg);
+	
+	mtx_planning_scene.unlock();
+	ros::Duration(1).sleep();
 
 	return true;
 }
@@ -448,7 +442,7 @@ rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const st
 {
 	// lock planning scene mutex for this scope
 	std::lock_guard lock(mtx_planning_scene);
-	
+
 	// this sets the current planner
 	auto check_planner = [&]()
 	{
@@ -526,16 +520,19 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 
 		thread_planning_scene_pub = new std::thread([&]()
 		{
-			ros::Rate lp(10); // Hz
+			ros::Rate lp(100); // Hz
 			while(ros::ok())
 			{
 				mtx_planning_scene.lock();
-				planning_scene->setPlanningSceneMsg(planning_scene_msg);
+				// planning_scene->setPlanningSceneMsg(planning_scene_msg);
+				planning_scene->getPlanningSceneMsg(planning_scene_msg);
 				pub_planning_scene.publish(planning_scene_msg);
 				mtx_planning_scene.unlock();
 				lp.sleep();
 			}
 		});
+		
+		thread_planning_scene_pub->detach();
 	}
 
 	else
@@ -543,8 +540,7 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 }
 
 void
-rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, const std::array<double, 3>& obj, const std::array<double, 3>& offset, const std::array<double, 3>& axis,
-						   ros::Publisher& pub_planning_scene, int resolution, const std::string& obj_name, const std::array<double, 3>& table)
+rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, const std::array<double, 3>& obj, const std::array<double, 3>& offset, const std::array<double, 3>& axis, ros::Publisher& pub_planning_scene, int resolution, const std::string& obj_name, const std::array<double, 3>& table)
 {
 	// arm, ee and robot defines
 	constexpr auto ARM_GROUP         = "ur5_arm";
