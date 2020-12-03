@@ -361,6 +361,8 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
     auto tic = ros::Time::now();
 
     pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+
     cloud_ptr->width = point_cloud.cols;
     cloud_ptr->height = point_cloud.rows;
     cloud_ptr->is_dense = false;
@@ -385,7 +387,7 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
             std::uint8_t g = (std::uint8_t) rbg_left[m++];
             std::uint8_t r = (std::uint8_t) rbg_left[m++];
 
-            if ( ( ( g > 225 or g < 210 ) and ( r > 225 or r < 210 ) ) and abs(point_cloud_ele[j+2]) < 500 )
+            if ( ( ( g > 225 or g < 210 ) and ( r > 225 or r < 210 ) ) )
             {
                 cloud_ptr -> points[k].x = point_cloud_ele[j++];
                 cloud_ptr -> points[k].y = point_cloud_ele[j++];
@@ -411,6 +413,14 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
         cloud_ptr->points[i].x *= -1.;
     }
 
+    // Cropbox
+    // pcl::CropBox<pcl::PointXYZRGBNormal> boxFilter;
+    // *filtered_ptr = *cloud_ptr;
+    // boxFilter.setMin(Eigen::Vector4f(-0.5, 0, 0.02, 1.0f));
+    // boxFilter.setMax(Eigen::Vector4f(0.5, 1, 0.5, 1.0f));
+    // boxFilter.setInputCloud(cloud_ptr);
+    // boxFilter.filter(*filtered_ptr);
+    // *cloud_ptr = *filtered_ptr;
 
     // boxFilter();
     
