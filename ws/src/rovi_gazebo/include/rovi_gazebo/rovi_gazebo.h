@@ -10,7 +10,19 @@ namespace rovi_gazebo
 {
 
 	static constexpr auto NUM_JOINTS = 6;
-
+	
+	void
+	set_projector(bool state);
+	
+	void
+	get_camera_img(); // todo
+	
+	void // std::unordered_map<std::string, cv::Mat>
+	get_stereo_camera_img(); // todo
+	
+	void
+	get_point_cloud(); // todo
+	
 	gazebo_msgs::LinkStates
 	get_link_states();
 

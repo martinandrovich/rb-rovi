@@ -6,6 +6,32 @@
 #include <iostream>
 #include <thread>
 
+#include <std_msgs/Int32.h>
+
+void
+rovi_gazebo::set_projector(bool state)
+{
+	
+	// create atomic bool and async publisher
+	static std::atomic<bool> state_;
+	static auto t = std::thread([&]()
+	{
+		auto nh = new ros::NodeHandle("~/projector_publisher");
+		auto pub_projector = nh->advertise<std_msgs::Int32>("/projector_controller/projector", 1);		
+		std_msgs::Int32 msg;
+		ros::Rate lp(100); // Hz
+		while (ros::ok())
+		{
+			msg.data = (state_) ? 1 : 0;
+			pub_projector.publish(msg);
+			lp.sleep();
+		}
+	});
+	
+	// set async state
+	state_ = state;
+}
+
 gazebo_msgs::LinkStates
 rovi_gazebo::get_link_states()
 {
@@ -160,10 +186,11 @@ rovi_gazebo::get_collision_objects(const std::string& planning_frame, const std:
 			// find pose of object
 			size_t i = std::distance(vec_obj.begin(), std::find(vec_obj.begin(), vec_obj.end(), obj));
 			const auto& pos = vec_poses[i].position;
+			const auto& ori = vec_poses[i].orientation;
 
 			// construct and add colision object
 			ROS_INFO_STREAM("Adding object: " << obj << " at " << "[" << pos.x << ", " << pos.y << ", " << pos.z << "]");
-			collision_objects.emplace_back(rovi_utils::make_mesh_cobj(obj, planning_frame, { pos.x, pos.y, pos.z }));
+			collision_objects.emplace_back(rovi_utils::make_mesh_cobj(obj, planning_frame, { pos.x, pos.y, pos.z }, { ori.w, ori.x, ori.y, ori.z }));
 		}
 		else
 			;// ROS_WARN_STREAM("Excluding object: " << obj);
