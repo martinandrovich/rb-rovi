@@ -18,6 +18,7 @@ find_package(
 	std_msgs
 	cv_bridge
 	rovi_utils
+	rovi_gazebo
 	)
 
 find_package(

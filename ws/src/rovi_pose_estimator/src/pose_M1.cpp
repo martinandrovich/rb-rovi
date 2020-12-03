@@ -2,6 +2,8 @@
 #include <rovi_pose_estimator/rovi_pose_est_M1.h>
 #include <Eigen/Eigen>
 #include <cv_bridge/cv_bridge.h>
+#include <rovi_gazebo/rovi_gazebo.h>
+#include <eigen_conversions/eigen_msg.h>
 
 // all matrices, that need to be known.
 // Eigen::Matrix<double, 4, 4, Eigen::RowMajor> P_left(cam_info_arr[0].P.data());
@@ -67,7 +69,9 @@ int main(int argc, char** argv)
     cv::imwrite("point_cloud.jpg", point_cloud);
 
     // compute P_left
-    Eigen::Matrix4f w_T_b = Eigen::Vector4f(1,1,1,1).asDiagonal();
+    Eigen::Affine3d affine;
+    tf::poseMsgToEigen(rovi_gazebo::get_model_pose("camera_stereo"), affine);    
+    Eigen::Matrix4f w_T_b = affine.matrix().cast<float>();
 
     // compute the point cloud
     M1::compute_pointcloud(point_cloud, cam_images[0], ROI, w_T_b);

@@ -25,7 +25,8 @@
 	<depend>image_transport</depend>
 	<depend>pcl_ros</depend>
 	<depend>rovi_utils</depend>
-	
+	<depend>rovi_gazebo</depend>
+
 	<export>
 		<gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
 	</export>
