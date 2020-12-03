@@ -198,14 +198,14 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_
 	co.mesh_poses[0].orientation.y = ori[2];
 	co.mesh_poses[0].orientation.z = ori[3];
 	
-	co.pose.position.x = pos[0];
-	co.pose.position.y = pos[1];
-	co.pose.position.z = pos[2];
+	// co.pose.position.x = pos[0];
+	// co.pose.position.y = pos[1];
+	// co.pose.position.z = pos[2];
 
-	co.pose.orientation.w = ori[0];
-	co.pose.orientation.x = ori[1];
-	co.pose.orientation.y = ori[2];
-	co.pose.orientation.z = ori[3];
+	// co.pose.orientation.w = ori[0];
+	// co.pose.orientation.x = ori[1];
+	// co.pose.orientation.y = ori[2];
+	// co.pose.orientation.z = ori[3];
 
 	// co.meshes.push_back(mesh);
 	// co.mesh_poses.push_back(co.mesh_poses[0]);

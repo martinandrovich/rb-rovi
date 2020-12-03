@@ -5,6 +5,7 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #include <Eigen/Eigen>
 

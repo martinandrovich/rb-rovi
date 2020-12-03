@@ -382,7 +382,7 @@ rovi_planner::moveit_planner::attach_object_to_ee(const std::string& obj_name)
 	moveit_msgs::AttachedCollisionObject acobj;
 	acobj.link_name = "ee_tcp";
 	acobj.object = moveit_msgs::CollisionObject(*cobj);
-	acobj.object.pose.position.z += offset_z;
+	// acobj.object.pose.position.z += offset_z;
 	acobj.object.mesh_poses[0].position.z += offset_z;
 	acobj.object.operation = moveit_msgs::CollisionObject::ADD;
 	
