@@ -454,7 +454,7 @@ namespace rovi_pose_estimator
 
 
 		void
-		Harris_corners_2d(const cv::Mat& img, float quality_level, float min_dist, bool useharris, float filter_sigma)
+		Harris_corners_2d(const cv::Mat& img, std::vector<cv::Point2d>& corner_points, float quality_level, float min_dist, bool useharris, float filter_sigma)
 		{
 			cv::Mat img_gray;
 			cv::cvtColor(img, img_gray,cv::COLOR_BGR2GRAY);
@@ -472,27 +472,25 @@ namespace rovi_pose_estimator
 
 			cv::Mat corners = cv::Mat::zeros(gray_roi.size(), CV_32FC1 );
 			std::vector<cv::Point2i> corner_coordinates;
-			
-		
 
 
-			Harris_settings settings = {1, 1, 1, 180, &gray_roi, &corners, &corner_coordinates};
-			cv::namedWindow("corners_window");
-
-			cv::createTrackbar( "Aperture: ", src, &settings.aperture_size, 10, cornerHarris_demo, &settings);
-			cv::createTrackbar( "block_size: ", src, &settings.block_size, 10, cornerHarris_demo, &settings);
-			cv::createTrackbar( "k: ", src, &settings.k, 15, cornerHarris_demo, &settings);
-			cv::createTrackbar( "norm_tresh: ", src, &settings.norm_tresh, 180, cornerHarris_demo, &settings);
-			cv::imshow(src, gray_roi);
-
-			cornerHarris_demo(0, &settings);
-			cv::waitKey();
-
-			for(auto& coord:corner_coordinates)
-			{
-				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
-			}
-
+			//Harris_settings settings = {1, 1, 1, 180, &gray_roi, &corners, &corner_coordinates};
+			//cv::namedWindow("corners_window");
+//
+			//cv::createTrackbar( "Aperture: ", src, &settings.aperture_size, 10, cornerHarris_demo, &settings);
+			//cv::createTrackbar( "block_size: ", src, &settings.block_size, 10, cornerHarris_demo, &settings);
+			//cv::createTrackbar( "k: ", src, &settings.k, 15, cornerHarris_demo, &settings);
+			//cv::createTrackbar( "norm_tresh: ", src, &settings.norm_tresh, 180, cornerHarris_demo, &settings);
+			//cv::imshow(src, gray_roi);
+//
+			////cornerHarris_demo(0, &settings);
+			//cv::waitKey();
+//
+			//for(auto& coord:corner_coordinates)
+			//{
+			//	std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
+			//}
+//
 			cv::Mat corners_good_features_mat;
 			gray_roi.copyTo(corners_good_features_mat);
 
@@ -515,13 +513,17 @@ namespace rovi_pose_estimator
 			auto mean_std = get_mean_and_std(corners_good_features);
 			std::cout << "Mean_std is:" << mean_std << std::endl;
 
-
 			auto filtered = statistical_filter_2d(corners_good_features, filter_sigma);
+
+			for(const auto& point: filtered)
+			{
+				corner_points.emplace_back(point);
+			} 
 
 			cv::Mat corners_good_features_mat_statistical_filtered;
 			gray_roi.copyTo(corners_good_features_mat_statistical_filtered);
 
-			for(auto& coord:filtered)
+			for(auto& coord:corner_points)
 			{
 				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
 				circle(corners_good_features_mat_statistical_filtered, coord, 10,  cv::Scalar(0), 2, 8, 0 );
@@ -529,43 +531,9 @@ namespace rovi_pose_estimator
 
 			cv::imshow("Filtered corners...", corners_good_features_mat_statistical_filtered);
 			cv::waitKey();
-
 		}
 
-		void 
-		cornerHarris_demo( int, void* args )
-		{
-			std::cout << "Hello, inside corner demo..:" << std::endl;
-			Harris_settings* settings = reinterpret_cast<Harris_settings*>(args);
-			int blockSize = settings->block_size + 1;
-			int apertureSize = settings->aperture_size *2 + 1;
-			double k = settings->k/100.0;
-
-			std::cout << "Settings are; " << blockSize << " , " << apertureSize << " , " << k << std::endl;
-
-			cv::Mat& corners = *settings->out;
-			cv::cornerHarris(*settings->src, corners, blockSize, apertureSize, k );
-			cv::Mat dst_norm, dst_norm_scaled;
-			cv::normalize(corners, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat() );
-			convertScaleAbs( dst_norm, dst_norm_scaled );
-			settings->corner_coordinates->clear();
-
-			int number_of_found_corners = 0;
-			for( int i = 0; i < dst_norm.rows ; i++ )
-			{
-				for( int j = 0; j < dst_norm.cols; j++ )
-				{
-					if( (int) dst_norm.at<float>(i,j) > settings->norm_tresh )
-					{
-						circle( dst_norm_scaled, cv::Point(j,i), 5,  cv::Scalar(0), 2, 8, 0 );
-						settings->corner_coordinates->push_back(cv::Point(j,i));
-						number_of_found_corners++;
-					}
-				}
-			}
-			std::cout << "Found " << number_of_found_corners << " Corners in the image." << std::endl;
-			cv::imshow("corners_window", dst_norm_scaled);
-		}
+		
 
 		cv::Scalar_<float> 
 		get_mean_and_std(const std::vector<cv::Point>& points)
@@ -614,7 +582,111 @@ namespace rovi_pose_estimator
 			}
 			return filtered;
 		}
+	
 
+		void permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2d>& image_corners, std::vector<cv::Point3d>& model_matches, std::vector<cv::Point2d>& image_matches)
+		{
+			for(const auto& point2d: image_corners)
+			{
+				for(const auto& point3d: model_corners)
+				{
+					image_matches.push_back(point2d);
+					model_matches.emplace_back(point3d.x, point3d.y, point3d.z);
+					//std::cout << "Found 3d point: " << point3d << " , " << point3d.data <<  std::endl; 
+				}
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		void 
+		cornerHarris_demo( int, void* args )
+		{
+			std::cout << "Hello, inside corner demo..:" << std::endl;
+			Harris_settings* settings = reinterpret_cast<Harris_settings*>(args);
+			int blockSize = settings->block_size + 1;
+			int apertureSize = settings->aperture_size *2 + 1;
+			double k = settings->k/100.0;
+
+			std::cout << "Settings are; " << blockSize << " , " << apertureSize << " , " << k << std::endl;
+
+			cv::Mat& corners = *settings->out;
+			cv::cornerHarris(*settings->src, corners, blockSize, apertureSize, k );
+			cv::Mat dst_norm, dst_norm_scaled;
+			cv::normalize(corners, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat() );
+			convertScaleAbs( dst_norm, dst_norm_scaled );
+			settings->corner_coordinates->clear();
+
+			int number_of_found_corners = 0;
+			for( int i = 0; i < dst_norm.rows ; i++ )
+			{
+				for( int j = 0; j < dst_norm.cols; j++ )
+				{
+					if( (int) dst_norm.at<float>(i,j) > settings->norm_tresh )
+					{
+						circle( dst_norm_scaled, cv::Point(j,i), 5,  cv::Scalar(0), 2, 8, 0 );
+						settings->corner_coordinates->push_back(cv::Point(j,i));
+						number_of_found_corners++;
+					}
+				}
+			}
+			std::cout << "Found " << number_of_found_corners << " Corners in the image." << std::endl;
+			cv::imshow("corners_window", dst_norm_scaled);
+		}
 
 	}
+
+
+
+
+
 }

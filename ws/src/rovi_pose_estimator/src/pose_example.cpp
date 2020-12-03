@@ -52,6 +52,17 @@ main(int argc, char** argv)
 	ros::init(argc, argv, "example_node");
 	ros::NodeHandle nh;
 
+	pcl::PointCloud<pcl::PointXYZ>::Ptr model (new pcl::PointCloud<pcl::PointXYZ>);
+	
+	if(pcl::io::loadPLYFile<pcl::PointXYZ>("src/rovi_gazebo/models/milk/milk.ply", *model) == -1) // load the file
+	{
+		pcl::console::print_error ("Couldn't read file %s!\n");
+	}
+	else
+	{
+		std::cout << "Cloud size : " << model->height*model->width << std::endl;
+	}
+
 	const std::string window_name = "left_image";
 	cv::namedWindow(window_name);
 
@@ -65,7 +76,16 @@ main(int argc, char** argv)
 	cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
 	cv::imshow(window_name, img);
 	cv::waitKey(0);
-	rovi_pose_estimator::M4::Harris_corners_2d(img, std::stof(argv[1]), std::stof(argv[2]), std::stoi(argv[3]), std::stof(argv[4]));
+
+	std::vector<cv::Point2d> corner_points;
+	rovi_pose_estimator::M4::Harris_corners_2d(img, corner_points, std::stof(argv[1]), std::stof(argv[2]), std::stoi(argv[3]), std::stof(argv[4]));
+
+	std::vector<cv::Point2d> corner2d_matches;
+	std::vector<cv::Point3d> corner3d_matches;
+
+	rovi_pose_estimator::M4::permute_point_matches(*model, corner_points, corner3d_matches, corner2d_matches);
+
+	std::cout << "Size of corner2d_matches: " << corner2d_matches.size() << " , Corner3d_macthes: " << corner3d_matches.size() << std::endl;
 
 	//pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 
@@ -113,7 +133,7 @@ void pose_estimation_exampleM2()
 
 	rovi_pose_estimator::M2::get_point_cloud(scene, true);
 	ROS_INFO("Scene loaded..");
-	rovi_pose_estimator::M2::load_model("bottle", obj);
+	rovi_pose_estimator::M2::load_model("milk", obj);
 	ROS_INFO("Model loaded..");
 
 	
@@ -191,6 +211,7 @@ void pose_estimation_exampleM2()
 	ROS_INFO("Done performing global pose est...");
 	
 }
+
 
 
 void pose_estimation_exampleM4(const std::string& ply_path, int point_size)

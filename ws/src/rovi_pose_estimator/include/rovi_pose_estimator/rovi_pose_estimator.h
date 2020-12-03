@@ -67,9 +67,14 @@ namespace rovi_pose_estimator
 
     namespace M4
     {
-        void Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices);
+        void 
+        Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices);
 
-        void Harris_corners_2d(const cv::Mat& image, float quality_level=0.015, float min_dist=5.0, bool useharris=false, float filter_sigma=1.15);
+        void 
+        Harris_corners_2d(const cv::Mat& image, std::vector<cv::Point2d>& corner_points, float quality_level=0.015, float min_dist=5.0, bool useharris=false, float filter_sigma=1.15);
+
+        void 
+        permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2d>& image_corners, std::vector<cv::Point3d>& model_matches, std::vector<cv::Point2d>& image_matches);
     }
 
 
