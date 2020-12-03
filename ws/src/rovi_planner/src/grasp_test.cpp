@@ -140,6 +140,9 @@ main(int argc, char** argv)
 	
 	// HOME
 	{
+	
+	ROS_INFO_STREAM("Preparing to go home...");
+	ros::Duration(2).sleep();
 
 	// plan using moveit (to object)
 	ROS_INFO_STREAM("Planning...");

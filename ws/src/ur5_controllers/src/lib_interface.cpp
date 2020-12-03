@@ -45,6 +45,8 @@ ur5_controllers::wsg::init()
 			lp.sleep();
 		}
 	});
+	
+	thread_pub->detach();
 }
 
 void

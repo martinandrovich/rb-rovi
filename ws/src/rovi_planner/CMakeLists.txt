@@ -101,6 +101,3 @@ target_link_libraries(traj_test ${catkin_LIBRARIES} rovi_planner)
 
 add_executable(grasp_test src/grasp_test.cpp)
 target_link_libraries(grasp_test ${catkin_LIBRARIES} rovi_planner)
-
-add_executable(goto_pose src/goto_pose.cpp)
-target_link_libraries(goto_pose ${catkin_LIBRARIES} rovi_planner)

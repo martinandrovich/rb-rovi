@@ -280,36 +280,6 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	return *traj;
 }
 
-gazebo_msgs::ModelStates*
-get_model_states(ros::NodeHandle& nh)
-{
-	gazebo_msgs::ModelStates* model_states = nullptr;
-	const auto sub_link_states = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 1, [&](const auto& msg) {
-		ROS_WARN("Got ModelStates in temporary ROS callback.");
-		model_states = new gazebo_msgs::ModelStates(*msg);
-	});
-
-	while (not model_states)
-		ros::spinOnce();
-
-	return model_states;
-}
-
-sensor_msgs::JointState*
-get_joint_states(ros::NodeHandle& nh)
-{
-	sensor_msgs::JointState* joint_states = nullptr;
-	const auto sub_link_states = nh.subscribe<sensor_msgs::JointState>("/joint_states", 1, [&](const auto& msg) {
-		ROS_WARN("Got ModelStates in temporary ROS callback.");
-		joint_states = new sensor_msgs::JointState(*msg);
-	});
-
-	while (not joint_states)
-		ros::spinOnce();
-
-	return joint_states;
-}
-
 bool
 rovi_planner::moveit_planner::init(ros::NodeHandle& nh)
 {
@@ -390,7 +360,6 @@ bool
 rovi_planner::moveit_planner::attach_object_to_ee(const std::string& obj_name)
 {
 	// lock planning scene mutex for this scope
-	// std::lock_guard lock(mtx_planning_scene);
 	mtx_planning_scene.lock();
 
 	// check if collision objects exists (find index)
@@ -423,8 +392,8 @@ rovi_planner::moveit_planner::attach_object_to_ee(const std::string& obj_name)
 	cobj->operation = moveit_msgs::CollisionObject::REMOVE;
 	planning_scene_msg.world.collision_objects = collision_objects;
 	
-	// update robot pos
-	auto& robot_state    = planning_scene->getCurrentStateNonConst();
+	// update robot position
+	auto& robot_state = planning_scene->getCurrentStateNonConst();
 	const auto q_ur5 = rovi_gazebo::get_current_robot_state().position;
 	robot_state.setJointGroupPositions(ARM_GROUP, q_ur5);
 
