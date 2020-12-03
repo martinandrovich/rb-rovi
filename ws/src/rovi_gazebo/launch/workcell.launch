@@ -27,6 +27,7 @@
 	<param name="mug" textfile="$(find rovi_gazebo)/models/mug/model.sdf"/>
 	<param name="milk" textfile="$(find rovi_gazebo)/models/milk/model.sdf"/>
 	<param name="coffecan" textfile="$(find rovi_gazebo)/models/coffecan/model.sdf"/>
+	<param name="cube" textfile="$(find rovi_gazebo)/models/cube/model.sdf"/>
 	
 	<param name="camera_stereo" textfile="$(find rovi_gazebo)/models/camera_stereo/model.sdf"/>
 	<param name="kinect" textfile="$(find rovi_gazebo)/models/kinect/model.sdf"/>
@@ -62,7 +63,8 @@
 
 	<!-- spawn object(s) -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
-	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/>
+	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/> -->
+	<node name="spawn_cube" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube -z 1.0 -x 0.6 -y 1.0"/>
 	
 	<!-- don't spawn all objects -->
 	<group if="$(arg all_objects)">

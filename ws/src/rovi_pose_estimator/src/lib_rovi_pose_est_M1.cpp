@@ -67,12 +67,6 @@ M1::get_image_data(const std::string & ns_ros)
 
     static bool first = true;
 
-    if(first)
-    {
-        first = false;
-        ros::Duration(0.5).sleep();
-    }
-
     std::array<cv::Mat, 2> arr;
     cv::Mat temp_l, temp_r;
 
@@ -403,36 +397,39 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
     }
 
     // compute the transformation matrix
+    static Eigen::Matrix4f cam_trans = ( Eigen::Matrix4f() << 0,  0, -1, 0, 
+                                                             -1,  0,  0, 0, 
+                                                              0,  1,  0, 0, 
+                                                              0,  0,  0, 1 ).finished();
+    Eigen::Matrix4f trans = T * cam_trans;
+    pcl::transformPointCloud(*cloud_ptr, *cloud_ptr, trans);
 
-    pcl::transformPointCloud(*cloud_ptr, *cloud_ptr, T);
-
-    // transform to the base frame.
-
-    for (int i = 0; i < cloud_ptr->points.size(); i++)
-    {
-        cloud_ptr->points[i].x *= -1.;
-    }
-
-    // Cropbox
-    // pcl::CropBox<pcl::PointXYZRGBNormal> boxFilter;
-    // *filtered_ptr = *cloud_ptr;
-    // boxFilter.setMin(Eigen::Vector4f(-0.5, 0, 0.02, 1.0f));
-    // boxFilter.setMax(Eigen::Vector4f(0.5, 1, 0.5, 1.0f));
-    // boxFilter.setInputCloud(cloud_ptr);
-    // boxFilter.filter(*filtered_ptr);
-    // *cloud_ptr = *filtered_ptr;
+    // // Cropbox
+    pcl::CropBox<pcl::PointXYZRGBNormal> boxFilter;
+    boxFilter.setMin(Eigen::Vector4f(0.0, 0.85, 0.70, 1.0f));
+    boxFilter.setMax(Eigen::Vector4f(0.8, 1.25, 1.25, 1.0f));
+    boxFilter.setInputCloud(cloud_ptr);
+    boxFilter.filter(*filtered_ptr);
+    *cloud_ptr = *filtered_ptr;
 
     // boxFilter();
     
     // statisticalFilter();
 
-    // voxelFilter();
+    constexpr auto leaf_size = 0.008;
+    pcl::VoxelGrid<pcl::PointXYZRGBNormal> voxel_filter;
+    voxel_filter.setInputCloud(cloud_ptr);
+    voxel_filter.setLeafSize(leaf_size, leaf_size, leaf_size);
+    voxel_filter.filter(*filtered_ptr);
+    *cloud_ptr = *filtered_ptr;
 
     // estimateNormalsScene();
 
     // computeFeaturesScene();
 
-    pcl::io::savePCDFileASCII("test_pcd.pcd", *cloud_ptr);
+
+    pcl::io::savePCDFileASCII("voxel.pcd", *cloud_ptr);
+    // pcl::io::savePCDFileASCII("test_pcd.pcd", *cloud_ptr);
 
     cloud_ptr->clear();
 
@@ -440,5 +437,7 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
     auto delta = toc-tic;
     ROS_INFO_STREAM("Time spent in preprocessing dense stereo scene: " << delta.toSec() << "ms");
 }
+
+
 
 }

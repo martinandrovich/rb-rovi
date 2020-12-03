@@ -33,4 +33,9 @@ namespace rovi_pose_estimator
         compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, const cv::Mat & ROI, const Eigen::Matrix4f & trans);
 
     }
+
+    namespace M2
+    {
+        
+    }
 }

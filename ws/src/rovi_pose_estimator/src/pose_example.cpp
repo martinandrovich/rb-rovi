@@ -34,11 +34,6 @@ void pose_estimation_exampleM2();
 void pose_estimation_exampleM4(const std::string& ply_path, int pointsize);
 
 
-
-
-
-
-
 int
 main(int argc, char** argv)
 {
