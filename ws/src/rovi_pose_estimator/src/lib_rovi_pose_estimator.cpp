@@ -530,13 +530,6 @@ namespace rovi_pose_estimator
 			cv::imshow("Filtered corners...", corners_good_features_mat_statistical_filtered);
 			cv::waitKey();
 
-
-
-
-
-
-
-			
 		}
 
 		void 
@@ -622,8 +615,6 @@ namespace rovi_pose_estimator
 			return filtered;
 		}
 
+
 	}
-
-
-
 }
