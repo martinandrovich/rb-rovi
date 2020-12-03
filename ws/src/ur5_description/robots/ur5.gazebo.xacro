@@ -7,7 +7,7 @@
 
     <gazebo reference="ur5_link0">
       <static>true</static>
-      <selfCollide>false</selfCollide>
+      <selfCollide>true</selfCollide>
       <mu1>0.2</mu1>
       <mu2>0.2</mu2>
       <!-- <material>Gazebo/Grey</material> -->
