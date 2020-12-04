@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
-<sdf version='1.7'>
-  <model name='cube'>
+<sdf version='1.6'>
+  <model name='cube3'>
     <link name='link_0'>
       <inertial>
         <mass>1.424</mass>
@@ -23,7 +23,7 @@
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://cube/cube.dae</uri>
+            <uri>model://cube3/cube3.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
@@ -36,7 +36,7 @@
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://cube/cube.dae</uri>
+            <uri>model://cube3/cube3.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>

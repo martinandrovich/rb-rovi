@@ -59,7 +59,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.0087</stddev>
+          <stddev>0.0507</stddev>
         </noise>
 
       </camera>
@@ -83,7 +83,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.0087</stddev>
+          <stddev>0.0507</stddev>
         </noise>
 
       </camera>

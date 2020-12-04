@@ -48,7 +48,7 @@
 #include <pcl/common/time.h>
 #include <pcl/common/transforms.h>
 
-#include <rovi_pose_estimator/rovi_pose_est_M1.h>
+#include <rovi_pose_estimator/rovi_pose_est.h>
 #include <rovi_utils/rovi_utils.h>
 
 namespace rovi_pose_estimator
@@ -437,7 +437,5 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
     auto delta = toc-tic;
     ROS_INFO_STREAM("Time spent in preprocessing dense stereo scene: " << delta.toSec() << "ms");
 }
-
-
 
 }
