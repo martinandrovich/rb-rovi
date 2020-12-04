@@ -23,6 +23,7 @@
 
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
+	<depend>pluginlib</depend>
 	<depend>xacro</depend>
 	<depend>gazebo_ros</depend>
 	<depend>rviz</depend>
@@ -39,10 +40,7 @@
 	<depend>moveit_ros_visualization</depend>
 	<depend>moveit_setup_assistant</depend>
 	<depend>moveit_ros_planning_interface</depend>
-	<depend>pluginlib</depend>
 
 	<depend>ur5_description</depend>
-	<depend>ur5_dynamics</depend>
-	<depend>rovi_utils</depend>
 
 </package>

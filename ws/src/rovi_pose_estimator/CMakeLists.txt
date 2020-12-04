@@ -10,23 +10,17 @@ find_package(
 	COMPONENTS
 	roscpp
 	roslib
-	sensor_msgs
-	cv_bridge
-	image_transport
-	message_generation
-	pcl_ros
 	std_msgs
+	sensor_msgs
+	image_transport
 	cv_bridge
+	pcl_ros
 	rovi_utils
 	rovi_gazebo
-	)
+)
 
-find_package(
-	OpenCV 4 REQUIRED
-	)
-find_package(
-	PCL 1.8 REQUIRED
-	)
+find_package(OpenCV 4)
+find_package(PCL 1.8)
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
 # all the way back to saucy.  First we look for the Eigen3 cmake module
@@ -55,15 +49,18 @@ catkin_package(
 	CATKIN_DEPENDS
 		roscpp
 		roslib
+		std_msgs
 		sensor_msgs
 		image_transport
-		vision_opencv
+		cv_bridge
+		pcl_ros
+		rovi_utils
+		rovi_gazebo
 	DEPENDS
 		EIGEN3
 		OpenCV
 		PCL
 )
-
 
 # include dirs
 include_directories(
@@ -153,5 +150,4 @@ install(
 #target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
 
 add_executable(pose_M3 src/pose_M3.cpp)
-target_link_libraries(pose_M3 lib_rovi_pose_est_M3 )
-
+target_link_libraries(pose_M3 ${catkin_LIBRARIES} lib_rovi_pose_est_M3)

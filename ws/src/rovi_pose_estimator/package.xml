@@ -18,12 +18,14 @@
 
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
+	<depend>std_msgs</depend>
 	<depend>sensor_msgs</depend>
+	<depend>image_transport</depend>
+	<depend>cv_bridge</depend>
+	<depend>pcl_ros</depend>
+	
 	<depend>rovi_utils</depend>
 	<depend>rovi_gazebo</depend>
-	<depend>pcl_ros</depend>
-	<depend>vision_opencv</depend>
-	<depend>image_transport</depend>
 	
 	<depend>Eigen3</depend>
 	<depend>OpenCV</depend>

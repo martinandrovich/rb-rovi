@@ -3,7 +3,6 @@
 	<!-- ARGUMENTS -->
 
 	<!-- robot pose [x, y, z] -->
-	<!-- <arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/> -->
 	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.74"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->

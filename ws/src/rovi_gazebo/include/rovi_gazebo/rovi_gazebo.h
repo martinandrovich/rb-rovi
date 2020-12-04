@@ -17,6 +17,18 @@ namespace rovi_gazebo
 
 	static constexpr auto NUM_JOINTS = 6;
 	
+	static constexpr struct 
+	{
+		double LENGTH             = 0.80; // [m] (x)
+		double WIDTH              = 1.20; // [m] (y)
+		double HEIGHT             = 0.75; // [m] (z)
+		double MASS               = 10.0; // [kg]
+		std::array<double, 3> POS =  { 0.4, 0.6, 0.64 }; // [m]
+	} TABLE;
+	
+	void
+	set_simulation(bool state);
+	
 	void
 	set_projector(bool state);
 	
@@ -24,7 +36,7 @@ namespace rovi_gazebo
 	get_camera_img(); // todo
 	
 	std::unordered_map<std::string, cv::Mat>
-	get_stereo_camera_imgs(); // todo
+	get_stereo_camera_imgs();
 	
 	void
 	get_point_cloud(); // todo
