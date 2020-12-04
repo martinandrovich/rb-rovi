@@ -485,7 +485,7 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 	{
 		ROS_WARN_STREAM("Updating planning scene and initializing planning scene publisher thread (once)...");
 
-		update_planning_scene();
+		// update_planning_scene();
 
 		thread_planning_scene_pub = new std::thread([&]()
 		{
@@ -508,32 +508,25 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 		ROS_ERROR_STREAM("Planning scene publisher thread is already active.");
 }
 
-void
-rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, const std::array<double, 3>& obj, const std::array<double, 3>& offset, const std::array<double, 3>& axis, ros::Publisher& pub_planning_scene, int resolution, const std::string& obj_name, const std::array<double, 3>& table)
+rovi_planner::moveit_planner::ReachabilityData
+rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos, const std::string& obj_name, const std::array<double, 3>& obj_pos, const std::array<double, 3>& offset, const std::array<double, 3>& axis, size_t resolution, bool visualize)
 {
-	// arm, ee and robot defines
-	constexpr auto ARM_GROUP         = "ur5_arm";
-	constexpr auto WSG_GROUP         = "wsg";
-	constexpr auto ROBOT_DESCRIPTION = "robot_description";
 
-	// load robot model and kinematic model, and use it to setup the planning scene
-	robot_model_loader::RobotModelLoaderPtr robot_model_loader(new robot_model_loader::RobotModelLoader(ROBOT_DESCRIPTION));
-	robot_model::RobotModelPtr robot_model(robot_model_loader->getModel());
-
-	// set up the planning scene for collision detection
-	planning_scene::PlanningScene planning_scene(robot_model);
-
+	// check
+	if (visualize)
+		ROS_WARN_ONCE("To visualize the planning scene, remember to call start_planning_scene_publisher() beforehand!");
+	
 	// get robot state, this is a raw reference and pointers for arm_group and wsg_group
-	auto& robot_state    = planning_scene.getCurrentStateNonConst();
+	mtx_planning_scene.lock();
+	auto& robot_state    = planning_scene->getCurrentStateNonConst();
 	const auto arm_group = robot_state.getJointModelGroup(ARM_GROUP);
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
-
+	
 	// set gripper default
-	std::vector gripper_state{0.05, 0.05};
-	robot_state.setJointGroupPositions(wsg_group, gripper_state);
-
+	robot_state.setJointGroupPositions(wsg_group, DEFAULT_WSG_STATE);
+	
 	// generate transformations to grasp from, so this should be the input
-	auto generate_trans = [](const std::array<double, 3>& pos, const double theta, const std::array<double, 3>& axis)
+	auto make_tf = [](const std::array<double, 3>& pos, const double theta, const std::array<double, 3>& axis)
 	{
 		// constant transformation
 		Eigen::Affine3d trans = Eigen::Translation3d(pos[0], pos[1], pos[2]) *
@@ -541,69 +534,77 @@ rovi_planner::reachability(const std::vector<std::array<double, 3>>& base_pts, c
 
 		return trans.matrix();
 	};
-
-	Eigen::Matrix4d w_T_obj      = generate_trans( obj,          0, {0, 0, 1} );
-	Eigen::Matrix4d obj_T_offset = generate_trans( offset,       0, {0, 0, 1} );
-	Eigen::Matrix4d l6_T_ee      = generate_trans( {0, 0.15, 0}, 0, {0, 0, 1} );
-
-	// move the base around
-	for (const auto& base_pt : base_pts)
+	
+	// collision data
+	ReachabilityData data
+		= { base_pos, resolution, 2.0 * M_PI / (double)resolution, 0U, 0U, 0U, 0.0 };
+	
+	// generate transformations
+	Eigen::Matrix4d w_T_obj      = make_tf(obj_pos,        0, { 0, 0, 1 });
+	Eigen::Matrix4d obj_T_offset = make_tf(offset,         0, { 0, 0, 1 });
+	Eigen::Matrix4d l6_T_ee      = make_tf({ 0, 0.15, 0 }, 0, { 0, 0, 1 });
+	Eigen::Matrix4d w_T_base     = make_tf(base_pos,       0, { 0, 0, 1 });
+	
+	// move the base of the robot
+	rovi_utils::move_base(robot_state, base_pos);
+	
+	// insert table and other constant objects into the planning scene
+	std::vector<moveit_msgs::CollisionObject> collision_objects
 	{
-		// make a scene message to update scene
-		moveit_msgs::PlanningScene planning_scene_msg;
+		rovi_utils::make_mesh_cobj("table",  planning_scene->getPlanningFrame(), rovi_gazebo::TABLE.POS),
+		rovi_utils::make_mesh_cobj(obj_name, planning_scene->getPlanningFrame(), obj_pos),
+	};
+	
+	// update planning scene
+	planning_scene->getPlanningSceneMsg(planning_scene_msg);
+	planning_scene_msg.world.collision_objects = collision_objects;
+	planning_scene->setPlanningSceneMsg(planning_scene_msg);
+	
+	mtx_planning_scene.unlock();
+	
+	// iterate all possible orientations (given the resolution) and possible solutions
+	for (size_t i = 0; i < resolution + 1 and ros::ok(); ++i)
+	{
+		// update orientation
+		const double theta = 2.0 * M_PI / (double)resolution * double(i);
 
-		// move the base of the robot
-		rovi_utils::move_base(robot_state, base_pt);
+		// compute transformations
+		Eigen::Matrix4d T_rotate = make_tf({ 0, 0, 0 }, theta, axis);
+		Eigen::Matrix4d b_T_offset = w_T_base.inverse().matrix() * w_T_obj * obj_T_offset * T_rotate * l6_T_ee.inverse().matrix();
 
-		// insert table and other constant objects into the planning scene
-		std::vector<moveit_msgs::CollisionObject> collision_objects
+		// calculate the inverse_kinematics to the pose
+		const auto q_solutions = ur5_dynamics::inv_kin(b_T_offset);
+		
+		// iterate all possible solutions
+		for (size_t j = 0; j < q_solutions.rows(); ++j)
 		{
-			rovi_utils::make_mesh_cobj("table",  planning_scene.getPlanningFrame(), table),
-			rovi_utils::make_mesh_cobj(obj_name, planning_scene.getPlanningFrame(), obj)
-		};
-
-		// how to change color
-		// std_msgs::ColorRGBA color;
-		// color.a = 1.0;
-		// color.b = 0.0;
-		// color.g = 0.0;
-		// color.r = 1.0;
-
-		// generate the matrices used to calculate the desired pose
-		Eigen::Matrix4d w_T_base = generate_trans(base_pt, 0, { 0, 0, 1 });
-		{
-			// this is only to visualie in RViz
-			ros::Rate lp(5);
-
-			for (int i = 0; i < resolution+1; i++)
+			// update the robot state
+			mtx_planning_scene.lock();
+			robot_state.setJointGroupPositions(arm_group, q_solutions.row(j).transpose());
+			
+			// do collision test
+			collision_detection::CollisionRequest col_req;
+			collision_detection::CollisionResult col_res;
+			planning_scene->checkCollision(col_req, col_res);
+			
+			data.iterations++;
+			data.collisions += col_res.collision ? 1 : 0;
+			
+			mtx_planning_scene.unlock();
+			
+			if (visualize)
 			{
-				// update orientation
-				double ori = 2.0 * M_PI / (double)resolution * double(i);
-
-				Eigen::Matrix4d T_rotate = generate_trans({0, 0, 0}, ori, axis);
-
-				// the inverse does always exist in this case
-				Eigen::Matrix4d b_T_offset = w_T_base.inverse().matrix() * w_T_obj * obj_T_offset * T_rotate * l6_T_ee.inverse().matrix();
-
-				// calculate the inverse_kinematics to the pose
-				auto q_solutions = ur5_dynamics::inv_kin(b_T_offset);
-
-				for (int j = 0; j < q_solutions.rows(); j++)
-				{
-					// update the robot state
-					robot_state.setJointGroupPositions(arm_group, q_solutions.row(j).transpose());
-
-					// get the planning msg
-					planning_scene.getPlanningSceneMsg(planning_scene_msg);
-					planning_scene_msg.world.collision_objects = collision_objects;
-					planning_scene.setPlanningSceneDiffMsg(planning_scene_msg);
-					// planning_scene.setObjectColor("table", color);
-
-					// publish
-					pub_planning_scene.publish(planning_scene_msg);
-					lp.sleep();
-				}
+				static ros::Rate lp(5); // Hz
+				ROS_INFO_STREAM("Collision test:  " << i << "/" << (resolution + 1) << ", angle: " << theta);
+				ROS_INFO_STREAM("Current state is " << (col_res.collision ? "in" : "not in") << " collision");
+				lp.sleep();
 			}
 		}
 	}
+
+	// compute return reachability data
+	data.ratio = data.collisions / (double)data.iterations;
+	data.plausible_states = data.iterations - data.collisions;
+	
+	return data;
 }

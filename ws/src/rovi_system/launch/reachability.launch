@@ -1,0 +1,17 @@
+<launch>
+
+	<!-- workcell -->
+	
+	<include file="$(find rovi_gazebo)/launch/workcell.launch">
+		<arg name="paused" value="false"/>
+		<arg name="use_moveit" value="true"/>
+		<arg name="use_rviz" value="true"/>
+		<arg name="gui" value="false"/>
+	</include>
+	
+	<!-- reachability test node -->
+	
+	<!-- <node name="reachability" pkg="rovi_system" type="reachability"/> -->
+	<node name="reachability" pkg="rovi_system" type="reachability" output="screen" launch-prefix="gnome-terminal --command" />
+	
+</launch>

@@ -30,51 +30,36 @@ namespace rovi_planner
 
 	KDL::Trajectory_Composite
 	traj_linear(
-	    const std::vector<geometry_msgs::Pose>& waypoints,
-	    double vel_max      = 1.00, // [m/s]
-	    double acc_max      = 1.00, // [m/s^2]
-	    double equiv_radius = 0.05  // [m]
+		const std::vector<geometry_msgs::Pose>& waypoints,
+		double vel_max      = 1.00, // [m/s]
+		double acc_max      = 1.00, // [m/s^2]
+		double equiv_radius = 0.05  // [m]
 	);
 
 	std::array<KDL::Trajectory_Composite*, 6>
 	traj_linear(
-	    const std::vector<sensor_msgs::JointState>& joint_states,
-	    double vel_max      = 1.00, // [m/s]
-	    double acc_max      = 1.00, // [m/s^2]
-	    double equiv_radius = 0.05  // [m]
+		const std::vector<sensor_msgs::JointState>& joint_states,
+		double vel_max      = 1.00, // [m/s]
+		double acc_max      = 1.00, // [m/s^2]
+		double equiv_radius = 0.05  // [m]
 	);
 
 	KDL::Trajectory_Composite
 	traj_parabolic(
-	    const std::vector<geometry_msgs::Pose>& waypoints,
-	    double vel_max       = 1.00, // [m/s]
-	    double acc_max       = 1.00, // [m/s^2]
-	    double corner_radius = 0.05, // [m]
-	    double equiv_radius  = 0.05  // [m]
+		const std::vector<geometry_msgs::Pose>& waypoints,
+		double vel_max       = 1.00, // [m/s]
+		double acc_max       = 1.00, // [m/s^2]
+		double corner_radius = 0.05, // [m]
+		double equiv_radius  = 0.05  // [m]
 	);
 
-	// reachability planner
 	std::array<KDL::Trajectory_Composite*, 6>
 	traj_parabolic(
-	    const std::vector<sensor_msgs::JointState>& joint_states,
-	    double vel_max       = 1.00, // [m/s]
-	    double acc_max       = 1.00, // [m/s^2]
-	    double corner_radius = 0.05, // [m]
-	    double equiv_radius  = 0.05  // [m]
-    );
-
-	// reachability ananlysis
-
-	void
-	reachability(
-	    const std::vector<std::array<double, 3>>& base_pts,
-	    const std::array<double, 3>& obj,
-	    const std::array<double, 3>& offset,
-	    const std::array<double, 3>& axis,
-	    ros::Publisher& pub_planning_scene,
-	    int resolution = 16,
-	    const std::string& obj_name = "bottle",
-	    const std::array<double, 3>& table = { 0.4, 0.6, 0.64 }
+		const std::vector<sensor_msgs::JointState>& joint_states,
+		double vel_max       = 1.00, // [m/s]
+		double acc_max       = 1.00, // [m/s^2]
+		double corner_radius = 0.05, // [m]
+		double equiv_radius  = 0.05  // [m]
 	);
 
 	class
@@ -114,6 +99,30 @@ namespace rovi_planner
 				double max_vel_scale = 1.0,    // rad/s
 				double max_acc_scale = 1.0     // rad/s^2
 			);
+			
+			struct
+			ReachabilityData
+			{
+				std::array<double, 3> base_pos;
+				size_t resolution;
+				double angle_increment;
+				size_t iterations;
+				size_t collisions;
+				size_t plausible_states;
+				double ratio;
+				// std::unordered_map<Eigen::VectorXd, bool> states;
+			};
+			
+			static ReachabilityData
+			reachability(
+				const std::array<double, 3>& base_pos,
+				const std::string& obj_name,
+				const std::array<double, 3>& obj_pos,
+				const std::array<double, 3>& offset,
+				const std::array<double, 3>& axis,
+				size_t resolution = 16,
+				bool visualize = false
+			);
 
 		private:
 
@@ -138,6 +147,7 @@ namespace rovi_planner
 			static inline ros::Publisher pub_traj;
 
 			// configurations for moveit
+			static inline constexpr auto DEFAULT_WSG_STATE    = { 0.05, 0.05 };
 			static inline constexpr auto ARM_GROUP            = "ur5_arm";
 			static inline constexpr auto WSG_GROUP            = "wsg";
 			static inline constexpr auto ROBOT_DESCRIPTION    = "robot_description";
