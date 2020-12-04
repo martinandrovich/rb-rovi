@@ -43,7 +43,7 @@
         <visualize>true</visualize>
         <pose>0 0 0 0 0 0</pose>
 
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <horizontal_fov>1</horizontal_fov>
 
         <image>
           <width>800</width>
@@ -67,7 +67,7 @@
       <camera name="right">
 
         <pose>0 -0.08 0 0 0 0</pose>
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <horizontal_fov>1</horizontal_fov>
 
         <image>
           <width>800</width>

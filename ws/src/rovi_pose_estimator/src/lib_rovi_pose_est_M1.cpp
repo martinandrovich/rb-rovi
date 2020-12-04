@@ -193,7 +193,7 @@ M1::get_ROI(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat &
     // cv::imwrite("ROI_left.jpg", temp_left);
     // cv::imwrite("ROI_right.jpg", temp_right);
 
-    // disp
+    // Dispaarity
     std::vector<double> disparity(roi_left.size());
     cv::Mat p(cv::Size(roi_left.size(), roi_left.size()), CV_64F);
     for (size_t i = 0; i < roi_left.size(); i++)

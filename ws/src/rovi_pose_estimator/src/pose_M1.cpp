@@ -39,8 +39,8 @@ int main(int argc, char** argv)
     ROS_INFO_STREAM("K_left \n" << K_left);
 
     // statically define the Q matrix, change this later.
-    constexpr auto BASELINE = 0.08;
-    cv::Mat Q = (cv::Mat_<double>(4,4) <<   1., 0.,  0.,            -K_left(0,2),
+    constexpr auto BASELINE = 0.50;
+    cv::Mat Q = (cv::Mat_<double>(4, 4)<<   1., 0.,  0.,            -K_left(0,2),
                                             0., 1.,  0.,            -K_left(1,2),
                                             0., 0.,  0.,             K_left(1,1),
                                             0., 0., -1/BASELINE,               0.
