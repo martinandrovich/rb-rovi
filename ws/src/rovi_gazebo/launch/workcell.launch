@@ -62,15 +62,17 @@
 	<node name="spawn_projector" pkg="gazebo_ros" type="spawn_model" args="-param projector -sdf -model projector $(arg camera_pose)"/>
 
 	<!-- spawn object(s) -->
-	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
-	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/> -->
-	<node name="spawn_cube" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube -z 1.0 -x 0.6 -y 1.0"/>
+	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -x 0.4 -y 0.6 -z 0.64"/>
+	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -x 0.6 -y 1.0 -z 1.0"/> -->
+	<node name="spawn_cube1" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube1 -x 0.2 -y 1.0 -z 1.0"/>
+	<node name="spawn_cube2" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube2 -x 0.4 -y 1.0 -z 1.0"/>
+	<node name="spawn_cube3" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube3 -x 0.6 -y 1.0 -z 1.0"/>
 	
 	<!-- don't spawn all objects -->
 	<group if="$(arg all_objects)">
-  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -z 1.0 -x 0.1 -y 1.0"/>
-		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -z 1.0 -x 0.25 -y 1.0"/>
-		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -z 1.0 -x 0.7 -y 1.0"/>
+  		<node name="spawn_mug" pkg="gazebo_ros" type="spawn_model" args="-param mug -sdf -model mug -x 0.1 -y 1.0 -z 1.0"/>
+		<node name="spawn_milk" pkg="gazebo_ros" type="spawn_model" args="-param milk -sdf -model milk -x 0.25 -y 1.0 -z 1.0"/>
+		<node name="spawn_coffecan" pkg="gazebo_ros" type="spawn_model" args="-param coffecan -sdf -model coffecan -x 0.7 -y 1.0 -z 1.0"/>
 	</group>
 	
 	<!-- ROS CONTROL -->
