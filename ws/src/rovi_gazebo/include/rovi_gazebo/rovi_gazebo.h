@@ -18,13 +18,16 @@ namespace rovi_gazebo
 	static constexpr auto NUM_JOINTS = 6;
 	
 	void
+	set_simulation(bool state);
+	
+	void
 	set_projector(bool state);
 	
 	cv::Mat
 	get_camera_img(); // todo
 	
 	std::unordered_map<std::string, cv::Mat>
-	get_stereo_camera_imgs(); // todo
+	get_stereo_camera_imgs();
 	
 	void
 	get_point_cloud(); // todo

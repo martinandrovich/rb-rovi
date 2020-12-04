@@ -8,8 +8,20 @@
 #include <rovi_utils/rovi_utils.h>
 #include <cv_bridge/cv_bridge.h>
 
+#include <std_srvs/Empty.h>
 #include <std_msgs/Int32.h>
 #include <sensor_msgs/Image.h>
+
+
+void
+rovi_gazebo::set_simulation(bool state)
+{
+	auto nh = new ros::NodeHandle("~/gazebo_simulation_controller");
+
+	ros::ServiceClient pauseGazebo = nh->serviceClient<std_srvs::Empty>((state) ? "/gazebo/unpause_physics" : "/gazebo/pause_physics");
+	std_srvs::Empty emptySrv;
+	pauseGazebo.call(emptySrv);
+}
 
 void
 rovi_gazebo::set_projector(bool state)
