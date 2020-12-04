@@ -57,7 +57,7 @@ main(int argc, char** argv)
 	// write results to file
 	std::ofstream fs("reachability.csv", std::ofstream::out);
 	for (const auto& result : results)
-		fs << result.base_pos[0] << ", " << result.base_pos[1] << ", " << result.collisions << "\n";
+		fs << result.base_pos[0] << ", " << result.base_pos[1] << ", " << result.plausible_states << "\n";
 	
 	fs.close();
 	ROS_INFO("Reachbility analysis written to file 'reachability.csv'.");

@@ -594,7 +594,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 			
 			if (visualize)
 			{
-				static ros::Rate lp(5); // Hz
+				static ros::Rate lp(10); // Hz
 				ROS_INFO_STREAM("Collision test:  " << i << "/" << (resolution + 1) << ", angle: " << theta);
 				ROS_INFO_STREAM("Current state is " << (col_res.collision ? "in" : "not in") << " collision");
 				lp.sleep();
