@@ -1,13 +1,15 @@
 #include "rovi_gazebo/rovi_gazebo.h"
 
-#include <rovi_utils/rovi_utils.h>
-
-#include <ros/ros.h>
 #include <iostream>
 #include <thread>
 #include <mutex>
 
+#include <ros/ros.h>
+#include <rovi_utils/rovi_utils.h>
+#include <cv_bridge/cv_bridge.h>
+
 #include <std_msgs/Int32.h>
+#include <sensor_msgs/Image.h>
 
 void
 rovi_gazebo::set_projector(bool state)
@@ -31,6 +33,31 @@ rovi_gazebo::set_projector(bool state)
 	
 	// set async state
 	state_ = state;
+}
+
+std::unordered_map<std::string, cv::Mat>
+rovi_gazebo::get_stereo_camera_imgs()
+{
+	// construct listener threads (once)
+	static std::mutex mutex_img_l, mutex_img_r;
+	static sensor_msgs::Image img_l, img_r;
+	static auto thread_l = rovi_utils::create_async_listener("/rbrovi/camera_stereo/left/image_raw",  img_l, mutex_img_l);
+	static auto thread_r = rovi_utils::create_async_listener("/rbrovi/camera_stereo/right/image_raw", img_r, mutex_img_r);
+	
+	// map of images
+	static std::unordered_map<std::string, cv::Mat> imgs
+	{
+		{ "left",  cv::Mat() },
+		{ "right", cv::Mat() },
+	};
+	
+	std::lock_guard<std::mutex> lock_l(mutex_img_l);
+	std::lock_guard<std::mutex> lock_r(mutex_img_r);
+	
+	imgs["left"]  = cv_bridge::toCvCopy(boost::make_shared<const sensor_msgs::Image>(img_l), "bgr8")->image;
+	imgs["right"] = cv_bridge::toCvCopy(boost::make_shared<const sensor_msgs::Image>(img_r), "bgr8")->image;
+
+	return imgs;
 }
 
 gazebo_msgs::LinkStates

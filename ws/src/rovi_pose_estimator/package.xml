@@ -18,14 +18,15 @@
 
 	<depend>roscpp</depend>
 	<depend>roslib</depend>
-	<depend>Eigen3</depend>
 	<depend>sensor_msgs</depend>
-	<depend>OpenCV</depend>
-	<depend>vision_opencv</depend>
-	<depend>image_transport</depend>
-	<depend>pcl_ros</depend>
 	<depend>rovi_utils</depend>
 	<depend>rovi_gazebo</depend>
+	<depend>pcl_ros</depend>
+	<depend>vision_opencv</depend>
+	<depend>image_transport</depend>
+	
+	<depend>Eigen3</depend>
+	<depend>OpenCV</depend>
 
 	<export>
 		<gazebo_ros gazebo_plugin_path="${prefix}/lib"/>

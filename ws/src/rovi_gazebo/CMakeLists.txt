@@ -15,8 +15,13 @@ find_package(
 	sensor_msgs
 	geometry_msgs
 	moveit_msgs
+	cv_bridge
 	rovi_utils
 )
+
+# find other libraries
+find_package(OpenCV 4)
+# find_package(PCL 1.8)
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
 # all the way back to saucy.  First we look for the Eigen3 cmake module
@@ -49,9 +54,12 @@ catkin_package(
 		sensor_msgs
 		geometry_msgs
 		moveit_msgs
+		cv_bridge
 		rovi_utils
 	DEPENDS
 		EIGEN3
+		OpenCV
+		# PCL
 )
 
 # include dirs
@@ -59,6 +67,8 @@ include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
+	${OpenCV_INCLUDE_DIRS}
+	# ${PCL_INCLUDE_DIRS}
 )
 
 ################################################################################################
@@ -67,7 +77,7 @@ include_directories(
 
 ## lib_rovi_gazebo (rovi_gazebo/rovi_gazebo.h)
 add_library(lib_rovi_gazebo src/lib_rovi_gazebo.cpp)
-target_link_libraries(lib_rovi_gazebo ${catkin_LIBRARIES})
+target_link_libraries(lib_rovi_gazebo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 install(
 	TARGETS lib_rovi_gazebo

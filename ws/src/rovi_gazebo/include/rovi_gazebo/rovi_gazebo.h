@@ -1,8 +1,10 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include <unordered_map>
 
-// #include <opencv4/opencv2/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <sensor_msgs/JointState.h>
 #include <gazebo_msgs/LinkStates.h>
@@ -18,11 +20,11 @@ namespace rovi_gazebo
 	void
 	set_projector(bool state);
 	
-	void
+	cv::Mat
 	get_camera_img(); // todo
 	
-	void // std::unordered_map<std::string, cv::Mat>
-	get_stereo_camera_img(); // todo
+	std::unordered_map<std::string, cv::Mat>
+	get_stereo_camera_imgs(); // todo
 	
 	void
 	get_point_cloud(); // todo
