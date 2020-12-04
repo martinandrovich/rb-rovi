@@ -34,8 +34,19 @@ namespace rovi_pose_estimator
 
     }
 
-    namespace M2
+    namespace M3
     {
-        
+        std::array<cv::Mat, 2> 
+        get_image_data(const std::string & ns_ros = "/rbrovi/camera_stereo");         
+
+        std::array<sensor_msgs::CameraInfo, 2>
+        get_image_info(const std::string & ns_ros = "/rbrovi/camera_stereo");
+
+        cv::Mat create_mask(const cv::Mat & img, std::vector<cv::Point> & pts);
+
+        cv::Mat tsh_mask(const cv::Mat & img_color, 
+                         const std::array<double, 3> & lower_rgb = {230.f, 230.f, 230.f}, 
+                         const std::array<double, 3> & upper_rgb = {255.f, 255.f, 255.f}
+                         );
     }
 }

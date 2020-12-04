@@ -9,7 +9,7 @@
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
-	<arg name="projector_pose" doc="The pose of the camera spawn location."   default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
+	<arg name="projector_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
 
 	<arg name="all_objects" default="false" />
 	<arg name="use_moveit"  default="true" />
@@ -27,7 +27,9 @@
 	<param name="mug" textfile="$(find rovi_gazebo)/models/mug/model.sdf"/>
 	<param name="milk" textfile="$(find rovi_gazebo)/models/milk/model.sdf"/>
 	<param name="coffecan" textfile="$(find rovi_gazebo)/models/coffecan/model.sdf"/>
-	<param name="cube" textfile="$(find rovi_gazebo)/models/cube/model.sdf"/>
+	<param name="cube1" textfile="$(find rovi_gazebo)/models/cube1/model.sdf"/>
+	<param name="cube2" textfile="$(find rovi_gazebo)/models/cube2/model.sdf"/>
+	<param name="cube3" textfile="$(find rovi_gazebo)/models/cube3/model.sdf"/>
 	
 	<param name="camera_stereo" textfile="$(find rovi_gazebo)/models/camera_stereo/model.sdf"/>
 	<param name="kinect" textfile="$(find rovi_gazebo)/models/kinect/model.sdf"/>
@@ -59,12 +61,14 @@
 	<!-- spawn sensor(s) -->
 	<node name="spawn_stereo_camera" pkg="gazebo_ros" type="spawn_model" args="-param camera_stereo -sdf -model camera_stereo $(arg camera_pose)"/>
 	<node name="spawn_kinect" pkg="gazebo_ros" type="spawn_model" args="-param kinect -sdf -model openni_kinect $(arg kinect_pose)"/>
-	<node name="spawn_projector" pkg="gazebo_ros" type="spawn_model" args="-param projector -sdf -model projector $(arg camera_pose)"/>
+	<!-- <node name="spawn_projector" pkg="gazebo_ros" type="spawn_model" args="-param projector -sdf -model projector $(arg camera_pose)"/> -->
 
 	<!-- spawn object(s) -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-param table -sdf -model table -z 0.64 -x 0.4 -y 0.6"/>
 	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-param bottle -sdf -model bottle -z 1.0 -x 0.6 -y 1.0"/> -->
-	<node name="spawn_cube" pkg="gazebo_ros" type="spawn_model" args="-param cube -sdf -model cube -z 1.0 -x 0.6 -y 1.0"/>
+	<node name="spawn_cube1" pkg="gazebo_ros" type="spawn_model" args="-param cube1 -sdf -model cube1 -z 1.0 -x 0.5 -y 1.0 -R 0.0 -P 0.0 -Y 0.4"/>
+	<node name="spawn_cube2" pkg="gazebo_ros" type="spawn_model" args="-param cube2 -sdf -model cube2 -z 1.0 -x 0.3 -y 1.05 -R 0.0 -P 0.0 -Y -0.8"/>
+	<node name="spawn_cube3" pkg="gazebo_ros" type="spawn_model" args="-param cube3 -sdf -model cube3 -z 1.0 -x 0.1 -y 1.10 -R 0.0 -P 0.0 -Y -1.3"/>
 	
 	<!-- don't spawn all objects -->
 	<group if="$(arg all_objects)">
