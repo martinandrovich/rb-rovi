@@ -27,9 +27,7 @@
 	<param name="mug" textfile="$(find rovi_gazebo)/models/mug/model.sdf"/>
 	<param name="milk" textfile="$(find rovi_gazebo)/models/milk/model.sdf"/>
 	<param name="coffecan" textfile="$(find rovi_gazebo)/models/coffecan/model.sdf"/>
-	<param name="cube1" textfile="$(find rovi_gazebo)/models/cube1/model.sdf"/>
-	<param name="cube2" textfile="$(find rovi_gazebo)/models/cube2/model.sdf"/>
-	<param name="cube3" textfile="$(find rovi_gazebo)/models/cube3/model.sdf"/>
+	<param name="cube" textfile="$(find rovi_gazebo)/models/cube/model.sdf"/>
 	
 	<param name="camera_stereo" textfile="$(find rovi_gazebo)/models/camera_stereo/model.sdf"/>
 	<param name="kinect" textfile="$(find rovi_gazebo)/models/kinect/model.sdf"/>
