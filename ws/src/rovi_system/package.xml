@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+	<name>rovi_system</name>
+	<version>1.0.0</version>
+	<description>Complete ROVI system for testing and integration.</description>
+
+	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
+	<author email="marta16@student.sdu.dk">Martin Androvich</author>
+
+	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
+
+	<license>BSD</license>
+	
+	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>roslib</depend>
+	<depend>rovi_utils</depend>
+	<depend>rovi_gazebo</depend>
+	<depend>rovi_planner</depend>
+	<depend>rovi_pose_estimator</depend>
+
+</package>
