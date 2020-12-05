@@ -1,7 +1,7 @@
 reachability
 
-planning_lin
-planning_par
+planning_common
+planning_kdl (lin + par)
 planning_moveit
 
 pose_estimation_m1

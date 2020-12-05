@@ -65,3 +65,6 @@ include_directories(
 
 add_executable(reachability src/reachability.cpp)
 target_link_libraries(reachability ${catkin_LIBRARIES})
+
+add_executable(planning_kdl src/planning_kdl.cpp)
+target_link_libraries(planning_kdl ${catkin_LIBRARIES})
