@@ -71,10 +71,17 @@ namespace rovi_pose_estimator
         Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices);
 
         void 
-        Harris_corners_2d(const cv::Mat& image, std::vector<cv::Point2d>& corner_points, float quality_level=0.015, float min_dist=5.0, bool useharris=false, float filter_sigma=1.15);
+        Harris_corners_2d(const cv::Mat& image, std::vector<cv::Point2f>& corner_points, float quality_level=0.015, float min_dist=5.0, bool useharris=false, float filter_sigma=1.15);
 
         void 
-        permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2d>& image_corners, std::vector<cv::Point3d>& model_matches, std::vector<cv::Point2d>& image_matches);
+        permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2f>& image_corners, std::vector<cv::Point3f>& model_matches, std::vector<cv::Point2f>& image_matches);
+    
+        std::vector<cv::Point3f> 
+		PCL_pointcloud_to_OPENCV_Point3d(const pcl::PointCloud<pcl::PointXYZ>& pointcloud);
+        
+        void 
+		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius=0.015f, const cv::Mat* img=nullptr);
+        
     }
 
 

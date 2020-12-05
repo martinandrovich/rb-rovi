@@ -77,15 +77,23 @@ main(int argc, char** argv)
 	cv::imshow(window_name, img);
 	cv::waitKey(0);
 
-	std::vector<cv::Point2d> corner_points;
+	std::vector<cv::Point2f> corner_points;
 	rovi_pose_estimator::M4::Harris_corners_2d(img, corner_points, std::stof(argv[1]), std::stof(argv[2]), std::stoi(argv[3]), std::stof(argv[4]));
 
-	std::vector<cv::Point2d> corner2d_matches;
-	std::vector<cv::Point3d> corner3d_matches;
-
+	std::vector<cv::Point2f> corner2d_matches;
+	std::vector<cv::Point3f> corner3d_matches;
+	for(auto& point: model->points)
+	{
+		std::cout << "Point is:" << point.getArray3fMap() << std::endl;
+	}
+	std::cout << "Size of model: " << model->width*model->height << std::endl;
 	rovi_pose_estimator::M4::permute_point_matches(*model, corner_points, corner3d_matches, corner2d_matches);
 
 	std::cout << "Size of corner2d_matches: " << corner2d_matches.size() << " , Corner3d_macthes: " << corner3d_matches.size() << std::endl;
+
+	auto model_corner_points = rovi_pose_estimator::M4::PCL_pointcloud_to_OPENCV_Point3d(*model);
+	cv::Mat pose_est;
+	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 50, 10.0f, &img);
 
 	//pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 

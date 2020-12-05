@@ -31,6 +31,9 @@
 #include "opencv2/imgproc.hpp"
 #include <opencv2/tracking.hpp>
 #include <opencv2/core.hpp>
+#include <opencv2/flann.hpp>
+
+#include <random>
 
 
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
@@ -454,7 +457,7 @@ namespace rovi_pose_estimator
 
 
 		void
-		Harris_corners_2d(const cv::Mat& img, std::vector<cv::Point2d>& corner_points, float quality_level, float min_dist, bool useharris, float filter_sigma)
+		Harris_corners_2d(const cv::Mat& img, std::vector<cv::Point2f>& corner_points, float quality_level, float min_dist, bool useharris, float filter_sigma)
 		{
 			cv::Mat img_gray;
 			cv::cvtColor(img, img_gray,cv::COLOR_BGR2GRAY);
@@ -584,7 +587,8 @@ namespace rovi_pose_estimator
 		}
 	
 
-		void permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2d>& image_corners, std::vector<cv::Point3d>& model_matches, std::vector<cv::Point2d>& image_matches)
+		void 
+		permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2f>& image_corners, std::vector<cv::Point3f>& model_matches, std::vector<cv::Point2f>& image_matches)
 		{
 			for(const auto& point2d: image_corners)
 			{
@@ -595,6 +599,157 @@ namespace rovi_pose_estimator
 					//std::cout << "Found 3d point: " << point3d << " , " << point3d.data <<  std::endl; 
 				}
 			}
+		}
+
+		std::vector<cv::Point3f> 
+		PCL_pointcloud_to_OPENCV_Point3d(const pcl::PointCloud<pcl::PointXYZ>& pointcloud)
+		{
+			std::vector<cv::Point3f> output;
+			for(const auto& point3f: pointcloud)
+			{
+				output.emplace_back(point3f.x, point3f.y, point3f.z);
+			}
+			return output;
+		}
+
+		cv::Mat
+		get_camera_matrix()
+		{
+
+		}
+
+		cv::Mat
+		get_camera_distortions()
+		{
+
+		}
+
+
+		void 
+		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, const cv::Mat* img)
+		{
+			std::vector<cv::Point3f> points3d(3);
+			std::vector<cv::Point2f> points2d(3);
+
+			std::cout << "Model corners are: " << model_corners << std::endl;
+			std::cout << "Image corners are: " << image_corners << std::endl;
+
+			cv::Mat camera_matrix;
+			cv::Mat dist_coeffs;
+
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<int> distribution(0, model_matches.size()-1);	
+
+			if(img != nullptr)
+			{
+				float focal_length = img->cols; // Approximate focal length.
+				cv::Point2d center = cv::Point2d(img->cols/2,img->rows/2);
+
+				camera_matrix = (cv::Mat_<float>(3,3, CV_32FC1) << focal_length, 0, center.x, 0 , focal_length, center.y, 0, 0, 1);
+				dist_coeffs = cv::Mat::zeros(4,1, CV_32FC1); // Assuming no lens distortion
+			}
+			else
+			{
+				camera_matrix = get_camera_matrix();
+				dist_coeffs = get_camera_distortions();
+			}
+			std::cout << "Camera Matrix " << std::endl << camera_matrix << std::endl ;
+
+			cv::Mat rot(3, 3, cv::DataType<float>::type);
+			cv::Mat best_rot(3, 3, cv::DataType<float>::type);
+			
+			cv::Mat_<float> image_corners_mat(0, 2, CV_32FC1); //required format for the flann search....
+
+			for(auto & point:image_corners)			// Fill the "dummy" matrix for flann.....
+			{
+				cv::Mat_<float> row = (cv::Mat_<float>(1,2, CV_32FC1) << point.x, point.y);
+				image_corners_mat.push_back(row);
+			}
+
+			cv::flann::Index kd_tree(image_corners_mat, cv::flann::KDTreeIndexParams(1));
+			const int max_neighbours_search = image_corners.size();
+			cv::Mat indices, dists;
+			//std::vector<float> dist;
+
+			//auto make_query = [&](const & reprojected_points)
+			//{return cv::};
+
+			
+			//cv::Mat_<float> reprojected_image_corners_mat(1,2);
+			//cv::Mat_<float> model_corners_mat = cv::Mat(model_corners);
+			int inliers = 0;
+			int best_inliers = 0;
+
+			cv::Mat rvec(3, 1, CV_32FC1);
+			cv::Mat tvec(3, 1, CV_32FC1);
+
+			cv::Mat best_rvec(3, 1, CV_32FC1);
+			cv::Mat best_tvec(3, 1, CV_32FC1);
+
+
+			std::vector<cv::Point2f> reprojected_image_corners;
+
+
+			for(int iteration=0; iteration< max_iterations; iteration++)
+			{
+				inliers = 0;
+				for(int sample=0; sample <3; sample++)
+				{
+					int rnd = distribution(gen);
+					points3d[sample] = model_matches[rnd];
+					points2d[sample] = image_matches[rnd];
+				}
+			
+				//std::cout << "Model points are: " << points3d << " Image points are: " << points2d << std::endl;
+
+				rvec = cv::Mat::zeros(rvec.size(), rvec.type());
+				tvec = cv::Mat::zeros(tvec.size(), tvec.type());
+
+				cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_P3P);
+				cv::projectPoints(model_corners, rvec, tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
+
+				//cv::Rodrigues(rvec, rot);
+				for(auto& point: reprojected_image_corners)
+				{
+					std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
+					cv::Mat query = (cv::Mat_<float>(1,2) << point.x, point.y);
+					inliers += kd_tree.radiusSearch(query, indices, dists, inlier_radius, max_neighbours_search, cv::flann::SearchParams(32)); // 
+					std::cout << "Found " << inliers << " , in single search... " << std::endl;
+				}
+				
+				
+				if(inliers > best_inliers)
+				{
+					best_rvec = rvec;
+					best_tvec = tvec;
+					best_inliers = inliers;
+				}
+				if(iteration% 1000)
+				{
+					std::cout <<"Iteration: " << iteration << "  Best match so far: " << best_inliers << std::endl;
+				}
+				else
+				{					
+					//std::cout << "Found: " << inliers << " Inliers!!! -> best match so far: " << best_inliers << std::endl;					
+				}	
+
+			
+			}
+			std::cout << "Done performing p3p ransac... applying transformation to model points... " << std::endl;
+
+			cv::Mat img_cpy;
+			img->copyTo(img_cpy);
+			cv::projectPoints(model_corners, best_rvec, best_tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
+
+			for(const auto& point: reprojected_image_corners)
+			{
+				circle(img_cpy, point, 10,  cv::Scalar(0), 2, 8, 0 );
+			}
+			cv::imshow("Reprojected points", img_cpy);		
+			cv::waitKey();
+			
+
 		}
 
 
