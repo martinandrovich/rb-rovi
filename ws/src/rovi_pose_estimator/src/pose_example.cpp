@@ -35,7 +35,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg, const std::string& im_
   }
 }
 void pose_estimation_exampleM2();
-void pose_estimation_exampleM4(const std::string& ply_path, int pointsize);
+void pose_estimation_exampleM4(const std::string& ply_path, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& key_points, int pointsize);
 
 
 
@@ -53,8 +53,9 @@ main(int argc, char** argv)
 	ros::NodeHandle nh;
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr model (new pcl::PointCloud<pcl::PointXYZ>);
+	const std::string model_path = "src/rovi_gazebo/models/milk/milk_color.ply";
 	
-	if(pcl::io::loadPLYFile<pcl::PointXYZ>("src/rovi_gazebo/models/milk/milk.ply", *model) == -1) // load the file
+	if(pcl::io::loadPLYFile<pcl::PointXYZ>(model_path, *model) == -1) // load the file
 	{
 		pcl::console::print_error ("Couldn't read file %s!\n");
 	}
@@ -66,6 +67,8 @@ main(int argc, char** argv)
 	const std::string window_name = "left_image";
 	cv::namedWindow(window_name);
 
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr key_points (new pcl::PointCloud<pcl::PointXYZRGB>);
+	pose_estimation_exampleM4(model_path, key_points, 0.5);
 
 	ROS_INFO("Initialized a single-thread ROS example node.");
 	std::cout << "CWD is: " << std::filesystem::current_path() << '\n';
@@ -82,20 +85,20 @@ main(int argc, char** argv)
 
 	std::vector<cv::Point2f> corner2d_matches;
 	std::vector<cv::Point3f> corner3d_matches;
-	for(auto& point: model->points)
+	for(auto& point: key_points->points)
 	{
 		std::cout << "Point is:" << point.getArray3fMap() << std::endl;
 	}
-	std::cout << "Size of model: " << model->width*model->height << std::endl;
-	rovi_pose_estimator::M4::permute_point_matches(*model, corner_points, corner3d_matches, corner2d_matches);
+	std::cout << "Size of model: " << key_points->width*key_points->height << std::endl;
+	rovi_pose_estimator::M4::permute_point_matches(*key_points, corner_points, corner3d_matches, corner2d_matches);
 
 	std::cout << "Size of corner2d_matches: " << corner2d_matches.size() << " , Corner3d_macthes: " << corner3d_matches.size() << std::endl;
 
-	auto model_corner_points = rovi_pose_estimator::M4::PCL_pointcloud_to_OPENCV_Point3d(*model);
+	auto model_corner_points = rovi_pose_estimator::M4::PCL_pointcloud_to_OPENCV_Point3d(*key_points);
 	cv::Mat pose_est;
-	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 5000, 2.0f, &img);
+	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 50000, 1.001f, &img);
 
-	//pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
+	
 
 
 	ros::Rate loop_rate(1000);
@@ -222,7 +225,7 @@ void pose_estimation_exampleM2()
 
 
 
-void pose_estimation_exampleM4(const std::string& ply_path, int point_size)
+void pose_estimation_exampleM4(const std::string& ply_path, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& key_points, int point_size)
 {
 	typedef pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZRGB> ColorHandlerT;
 
@@ -269,7 +272,7 @@ void pose_estimation_exampleM4(const std::string& ply_path, int point_size)
 	rovi_pose_estimator::M4::Harris_keypoints_example(model, feature_idices);
 	std::cout << "Done performing Harris_keypoints_example... " << std::endl;
 
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr key_points (new pcl::PointCloud<pcl::PointXYZRGB>);
+	//pcl::PointCloud<pcl::PointXYZRGB>::Ptr key_points (new pcl::PointCloud<pcl::PointXYZRGB>);
 	//pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(model);
 	//pcl::visualization::PointCloudColorHandlerRGB<pcl::PointXYZRGB> rgb(point_cloud_ptr);
 

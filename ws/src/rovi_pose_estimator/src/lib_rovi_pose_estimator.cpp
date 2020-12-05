@@ -422,8 +422,9 @@ namespace rovi_pose_estimator
 			pcl::PointCloud<pcl::PointXYZI>::Ptr keypoints (new pcl::PointCloud<pcl::PointXYZI>);
 			
 			detector.setNonMaxSupression(true);
+			//detector.setRadiusSearch()
 			detector.setInputCloud(model);
-			detector.setThreshold(1e-6);
+			detector.setThreshold(8e-3);			//Found by impirical -> This determins how many matches is found -> we only want STRONG features i.e. 3d corners, not 2d corners ( Edges in 3d...)
 			pcl::StopWatch watch;
 			detector.compute(*keypoints);
 			pcl::console::print_highlight("Detected %zd points in %lfs\n", keypoints->size (), watch.getTimeSeconds ());
@@ -450,10 +451,10 @@ namespace rovi_pose_estimator
 		cornerHarris_demo( int, void* args );
 
 		cv::Scalar_<float> 
-		get_mean_and_std(const std::vector<cv::Point>& points);
+		get_mean_and_std(const std::vector<cv::Point2f>& points);
 
-		std::vector<cv::Point>
-		statistical_filter_2d(const std::vector<cv::Point>& points, float sigma_tresh=1.0);
+		std::vector<cv::Point2f>
+		statistical_filter_2d(const std::vector<cv::Point2f>& points, float sigma_tresh=1.0);
 
 
 		void
@@ -498,7 +499,7 @@ namespace rovi_pose_estimator
 			gray_roi.copyTo(corners_good_features_mat);
 
 
-			std::vector<cv::Point> corners_good_features;
+			std::vector<cv::Point2f> corners_good_features;
 			cv::goodFeaturesToTrack(gray_roi, corners_good_features, 0, quality_level, min_dist, cv::noArray(), 3 , useharris);
 
 			std::cout << " Done using good features to track... " << std::endl;
@@ -520,7 +521,7 @@ namespace rovi_pose_estimator
 
 			for(const auto& point: filtered)
 			{
-				corner_points.emplace_back(point);
+				corner_points.emplace_back(point + cv::Point2f(roi.x, roi.y));
 			} 
 
 			cv::Mat corners_good_features_mat_statistical_filtered;
@@ -528,8 +529,9 @@ namespace rovi_pose_estimator
 
 			for(auto& coord:corner_points)
 			{
-				std::cout << "Corner found at: " << coord << " In image_coordinates" << std::endl;
-				circle(corners_good_features_mat_statistical_filtered, coord, 10,  cv::Scalar(0), 2, 8, 0 );
+				auto corrected_point = coord - cv::Point2f(roi.x, roi.y);
+				std::cout << "Corner found at: " << corrected_point << " In image_coordinates" << std::endl;
+				circle(corners_good_features_mat_statistical_filtered, corrected_point, 10,  cv::Scalar(0), 2, 8, 0 );
 			}
 
 			cv::imshow("Filtered corners...", corners_good_features_mat_statistical_filtered);
@@ -539,7 +541,7 @@ namespace rovi_pose_estimator
 		
 
 		cv::Scalar_<float> 
-		get_mean_and_std(const std::vector<cv::Point>& points)
+		get_mean_and_std(const std::vector<cv::Point2f>& points)
 		{
 	
 			cv::Point2f zero(0.0f, 0.0f);
@@ -565,14 +567,14 @@ namespace rovi_pose_estimator
 			return {mean.x, mean.y, std.x, std.y};
 		}
 
-		std::vector<cv::Point>
-		statistical_filter_2d(const std::vector<cv::Point>& points, float sigma_tresh)
+		std::vector<cv::Point2f>
+		statistical_filter_2d(const std::vector<cv::Point2f>& points, float sigma_tresh)
 		{
 			auto mean_std = get_mean_and_std(points);
 			cv::Point2f threshold_lower = {mean_std[0] - sigma_tresh * mean_std[2], mean_std[1] - sigma_tresh* mean_std[3]};
 			cv::Point2f threshold_upper = {mean_std[0] + sigma_tresh * mean_std[2], mean_std[1] + sigma_tresh* mean_std[3]};
 			
-			std::vector<cv::Point> filtered;
+			std::vector<cv::Point2f> filtered;
 			for(const auto& point:points)
 			{
 				if(point.x > threshold_lower.x && point.x < threshold_upper.x)
@@ -588,7 +590,7 @@ namespace rovi_pose_estimator
 	
 
 		void 
-		permute_point_matches(const pcl::PointCloud<pcl::PointXYZ>& model_corners, const std::vector<cv::Point2f>& image_corners, std::vector<cv::Point3f>& model_matches, std::vector<cv::Point2f>& image_matches)
+		permute_point_matches(const pcl::PointCloud<pcl::PointXYZRGB>& model_corners, const std::vector<cv::Point2f>& image_corners, std::vector<cv::Point3f>& model_matches, std::vector<cv::Point2f>& image_matches)
 		{
 			for(const auto& point2d: image_corners)
 			{
@@ -602,7 +604,7 @@ namespace rovi_pose_estimator
 		}
 
 		std::vector<cv::Point3f> 
-		PCL_pointcloud_to_OPENCV_Point3d(const pcl::PointCloud<pcl::PointXYZ>& pointcloud)
+		PCL_pointcloud_to_OPENCV_Point3d(const pcl::PointCloud<pcl::PointXYZRGB>& pointcloud)
 		{
 			std::vector<cv::Point3f> output;
 			for(const auto& point3f: pointcloud)
@@ -624,11 +626,19 @@ namespace rovi_pose_estimator
 
 		}
 
+		std::vector<std::vector<cv::Point2f>> bruteforce(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners)
+		{
+			for(const auto& point3d:model_corners)
+			{
+
+			}
+		}
+
 
 		void 
 		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, const cv::Mat* img)
 		{
-			constexpr int points_to_use_for_estimation = 3;
+			constexpr int points_to_use_for_estimation = 4;
 			std::vector<cv::Point3f> points3d(points_to_use_for_estimation);
 			std::vector<cv::Point2f> points2d(points_to_use_for_estimation);
 
@@ -664,21 +674,15 @@ namespace rovi_pose_estimator
 
 			for(auto & point:image_corners)			// Fill the "dummy" matrix for flann..... 
 			{
-				cv::Mat_<float> row = (cv::Mat_<float>(1,2, CV_32FC1) << point.x, point.y); // + cv::Point2f(283, 39); for offset correction made by ROI
+				cv::Mat_<float> row = (cv::Mat_<float>(1,2, CV_32FC1) << point.x, point.y); 
 				image_corners_mat.push_back(row);
 			}
 
 			cv::flann::Index kd_tree(image_corners_mat, cv::flann::KDTreeIndexParams(4));
-			const int max_neighbours_search = image_corners.size();
+			const int max_neighbours_search = 1 ;//image_corners.size();
 			cv::Mat indices, dists;
-			//std::vector<float> dist;
+	
 
-			//auto make_query = [&](const & reprojected_points)
-			//{return cv::};
-
-			
-			//cv::Mat_<float> reprojected_image_corners_mat(1,2);
-			//cv::Mat_<float> model_corners_mat = cv::Mat(model_corners);
 			int inliers = 0;
 			int best_inliers = 0;
 
@@ -691,6 +695,11 @@ namespace rovi_pose_estimator
 
 			std::vector<cv::Point2f> reprojected_image_corners;
 
+			int transformations_found = 0;
+			auto euclidean_dist_camera_milk = (cv::Point3f(0.45, 1.0, 1.5) - cv::Point3f(0.25, 1.0, 0.75));
+			double uncertainty = 2.5;
+			double expected_max_translation = std::sqrt(euclidean_dist_camera_milk.dot(euclidean_dist_camera_milk)) * uncertainty;
+			double expected_min_translation = expected_max_translation/(2.0* std::pow(uncertainty, 2));
 
 			for(int iteration=0; iteration< max_iterations; iteration++)
 			{
@@ -707,7 +716,8 @@ namespace rovi_pose_estimator
 				rvec = cv::Mat::zeros(rvec.size(), rvec.type());
 				tvec = cv::Mat::zeros(tvec.size(), tvec.type());
 
-				cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_P3P);
+				cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_AP3P);
+				//cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_ITERATIVE);
 				cv::projectPoints(model_corners, rvec, tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
 
 				//cv::Rodrigues(rvec, rot);
@@ -718,15 +728,27 @@ namespace rovi_pose_estimator
 					inliers += kd_tree.radiusSearch(query, indices, dists, inlier_radius, max_neighbours_search, cv::flann::SearchParams(32)); // 
 					//std::cout << "Found " << inliers << " , in single search... " << std::endl;
 				}
-				
-				
-				if(inliers > best_inliers)
+				auto current_translation_euclidean_dist =  std::sqrt(tvec.dot(tvec));
+
+				if(current_translation_euclidean_dist > expected_min_translation && current_translation_euclidean_dist < expected_max_translation)
 				{
-					best_rvec = rvec.clone();
-					best_tvec = tvec.clone();
-					best_inliers = inliers;
+					//std::cout << "Looks like we found a plausible match... -> tvec dist.. : " << current_translation_euclidean_dist << " And found " << inliers << " Inliers.." << std::endl;
+					if(inliers > best_inliers)
+					{
+						best_rvec = rvec.clone();
+						best_tvec = tvec.clone();
+						best_inliers = inliers;
+					}
 				}
-				if(iteration% 1000 == 0)
+				
+				
+				if(inliers >= image_corners.size())
+				{
+					transformations_found++;
+				}
+
+				
+				if(iteration% 10000 == 0)
 				{
 					std::cout <<"Iteration: " << iteration << "  Best match so far: " << best_inliers << std::endl;
 				}
@@ -737,7 +759,7 @@ namespace rovi_pose_estimator
 
 			
 			}
-			std::cout << "Done performing p3p ransac... applying transformation to model points... " << std::endl;
+			std::cout << "Done performing p3p ransac... applying transformation to model points... " << " Found " << transformations_found << " transformations in total -> showing best..." << std::endl;
 
 			cv::Mat img_cpy;
 			img->copyTo(img_cpy);
@@ -749,14 +771,14 @@ namespace rovi_pose_estimator
 			std::cout << "Image_corner points for comparison " << image_corners << std::endl;
 			for(const auto& point: reprojected_image_corners)
 			{
-				auto roi_corrected = point + cv::Point2f(283, 39);
-				circle(img_cpy, roi_corrected, 10,  cv::Scalar(0,0,255), 3, 8, 0 );
+				//auto roi_corrected = point + cv::Point2f(283, 39);
+				circle(img_cpy, point, 10,  cv::Scalar(0,0,255), 3, 8, 0 );
 				std::cout << "transformed point " << point << std::endl;
 			}
 			for(const auto& point: image_corners)
 			{
-				auto roi_corrected = point + cv::Point2f(283, 39);
-				circle(img_cpy, roi_corrected, 10,  cv::Scalar(0,255,0), 1, 8, 0 );
+				//auto roi_corrected = point + cv::Point2f(283, 39);
+				circle(img_cpy, point, 10,  cv::Scalar(0,255,0), 1, 8, 0 );
 			}
 			cv::imshow("Reprojected points", img_cpy);		
 			cv::waitKey();
