@@ -78,7 +78,7 @@ namespace ur5_controllers
 		elapsed_time += period;
 
 		// get desired joint efforts
-		const auto & command = *commands_buffer.readFromRT();
+		const auto& command = *commands_buffer.readFromRT();
 
 		// read joint states
 		const auto q = get_position();
@@ -139,14 +139,14 @@ namespace ur5_controllers
 			Eigen::DiagonalMatrix<double, 6, 6> kd_m;
 			kd_m.diagonal() << kd, kd, kd, kd, kd, kd;
 
-			const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot );
+			const auto y = m * pinv_jac * (kp_m.toDenseMatrix() * dx + kd_m.toDenseMatrix() * dx_dot);
 
 			tau_des = y + g + c;
 		}
 
 		// saturate rate-of-effort (rotatum) this works life a real-life factor xD
-		if (SATURATE_ROTATUM)
-			tau_des = saturate_rotatum(tau_des, period.toSec());
+		// if (SATURATE_ROTATUM)
+		// 	tau_des = saturate_rotatum(tau_des, period.toSec());
 		
 
 		// set desired command on joint handles
