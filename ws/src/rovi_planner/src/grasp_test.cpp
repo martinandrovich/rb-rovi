@@ -46,6 +46,11 @@ main(int argc, char** argv)
 	// init node
 	ros::init(argc, argv, "grasp_test");
 	ros::NodeHandle nh;
+	
+	// image
+	auto imgs = rovi_gazebo::get_stereo_camera_imgs();
+	cv::imshow("left", imgs["left"]);
+	cv::waitKey(0);
 
 	// init moveit planner
 	ROS_INFO_STREAM("Initializing moveit planner and scene...");

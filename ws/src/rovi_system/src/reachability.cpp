@@ -51,7 +51,6 @@ main(int argc, char** argv)
 	{
 		auto data = rovi_planner::moveit_planner::reachability(base_pos, OBJ_NAME, OBJ_POS, OBJ_OFFSET, OBJ_ROT_AXIS, RESOLUTION, VISUALIZE);
 		results.push_back(data);
-		// std::cin.ignore();
 	}
 	
 	// write results to file
@@ -65,16 +64,4 @@ main(int argc, char** argv)
 	// end program
 	std::cin.ignore();
 	return 0;
-
-	// print results
-	// std::cout << "results:\n\n";
-	// for (const auto& result : results)
-	// {
-	// 	std::cout
-	// 		<< "base position:\n\n" << rovi_utils::make_pose(result.base_pos, { 0, 0, 0 }).position << "\n"
-	// 		<< "num iterations: "   << result.iterations << "\n"
-	// 		<< "num collisions: "   << result.collisions << "\n"
-	// 		<< "ratio:          "   << result.ratio << "\n"
-	// 		<< std::endl;
-	// }
 }

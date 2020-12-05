@@ -41,19 +41,19 @@ main(int argc, char** argv)
 
 	Eigen::Quaternion ori(1.0, 0.0, 0.0, 0.0);
 
-	auto pose_ee_current = rovi_utils::get_current_tcp_pose();
-	auto pose_ee_desired = rovi_utils::make_pose({ 0.1, 0.15, 0.90 }, ori);
+	auto pose_tcp_current = rovi_gazebo::get_current_tcp_pose();
+	auto pose_tcp_desired = rovi_utils::make_pose({ 0.1, 0.15, 0.90 }, ori);
 
 	std::vector<geometry_msgs::Pose> waypoints = 
 	{
-		pose_ee_current,
-		pose_ee_desired
+		pose_tcp_current,
+		pose_tcp_desired
 	};
 
 	auto traj_lin = rovi_planner::traj_linear(waypoints, 0.1, 0.1, 0.05);
 	auto traj_par = rovi_planner::traj_parabolic(waypoints, 0.1, 0.1, 0.05, 0.5);
 	
-	// auto rrt_plan = rovi_planner::traj_moveit(pose_ee_desired, "RRTstar");
+	// auto rrt_plan = rovi_planner::traj_moveit(pose_tcp_desired, "RRTstar");
 	// auto jnt_states = rovi_utils::joint_states_from_traj(*rrt_plan.trajectory_);
 	// auto traj_rrt = rovi_planner::traj_parabolic(jnt_states, 1.0, 1.0, 0.001, 0.001);
 
