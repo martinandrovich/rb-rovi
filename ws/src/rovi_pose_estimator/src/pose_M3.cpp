@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	ros::AsyncSpinner spin(2);
 	spin.start();  
 
-    geometry_msgs::Pose pose = M3::pipeline(1);
+    geometry_msgs::Pose pose = M3::estimate_pose(1);
     
     return 0;
 }

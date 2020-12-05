@@ -29,6 +29,7 @@ namespace rovi_pose_estimator
 
     namespace M1
     {
+        constexpr auto leaf_size = 0.008f;
 
         std::array<cv::Mat, 2> 
         get_image_data(const std::string & ns_ros = "/rbrovi/camera_stereo");
@@ -39,15 +40,23 @@ namespace rovi_pose_estimator
         void 
         set_structed_light(ros::NodeHandle & nh, const bool & state);
 
-        cv::Mat
-        get_ROI(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q);
-
         cv::Mat 
-        compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q);
+        compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right);
 
         void
-        compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, const cv::Mat & ROI, const Eigen::Matrix4f & trans);
+        compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_img);
 
+        bool
+        read_compute_features_object(const std::string & obj);
+
+        void 
+        match_features();
+
+        Eigen::Matrix4f 
+        ransac_features(const int & max_it = 10000);
+
+        geometry_msgs::Pose
+        estimate_pose(const int & it, const bool & draw = false);
     }
 
     namespace M3
@@ -58,20 +67,25 @@ namespace rovi_pose_estimator
         std::array<sensor_msgs::CameraInfo, 2>
         get_image_info(const std::string & ns_ros = "/rbrovi/camera_stereo");
 
-        cv::Mat create_mask(const cv::Mat & img, const std::vector<cv::Point> & pts);
+        cv::Mat 
+        create_mask(const cv::Mat & img, const std::vector<cv::Point> & pts);
 
-        cv::Mat tsh_mask(const cv::Mat & img_color, 
+        cv::Mat 
+        tsh_mask(const cv::Mat & img_color, 
                          const std::array<double, 3> & lower_rgb = {230.f, 230.f, 230.f}, 
                          const std::array<double, 3> & upper_rgb = {255.f, 255.f, 255.f}
                          );
 
-        cv::Mat find_contour(const cv::Mat & mask);
+        cv::Mat 
+        find_contour(const cv::Mat & mask);
 
-        double L2_stereo(const cv::Point2d & left, const cv::Point2d & right, const double y_tsh = 10);
+        double 
+        L2_stereo(const cv::Point2d & left, const cv::Point2d & right, const double y_tsh = 10);
 
-        cv::Mat stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, const cv::Mat & Q, const bool & k_means = false);
+        cv::Mat 
+        stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, const cv::Mat & Q, const bool & k_means = false);
 
         geometry_msgs::Pose 
-        pipeline(const bool & draw = 1, const std::string & img_name = "img_stitched.jpg", const double & qual = 0.01, const int & max_number_of_corners = 4, const double & min_dist_features = 50.f);
+        estimate_pose(const bool & draw = 1, const std::string & img_name = "img_stitched.jpg", const double & qual = 0.01, const int & max_number_of_corners = 4, const double & min_dist_features = 50.0f);
     }
 }

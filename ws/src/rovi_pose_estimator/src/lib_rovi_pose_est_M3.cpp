@@ -118,10 +118,10 @@ M3::L2_stereo(const cv::Point2d & left, const cv::Point2d & right, const double 
 cv::Mat
 M3::stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, const cv::Mat & Q, const bool & kmeans)
 {
-    cv::Mat T = ( cv::Mat_<double>(4,4) <<  0.f, 0.f,  1.f, 0.f,
-                                            -1.f, 0.f,  0.f, 0.f,
-                                            0.f, -1.f, 0.f, 0.f,
-                                            0.f,  0.f, 0.f, 1.f );
+    cv::Mat T = ( cv::Mat_<double>(4,4) <<  0.f, 0.f, 1.f, 0.f,
+                                           -1.f, 0.f, 0.f, 0.f,
+                                            0.f,-1.f, 0.f, 0.f,
+                                            0.f, 0.f, 0.f, 1.f );
 
     // Create disparity points (x, y, d(x,y), 1)
     cv::Mat m( cv::Size( 4, pts.size() ), CV_64FC1);
@@ -166,7 +166,7 @@ M3::stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, co
 }
 
 geometry_msgs::Pose 
-M3::pipeline(const bool & draw, const std::string & img_name, const double & qual, const int & max_number_of_corners, const double & min_dist_features)
+M3::estimate_pose(const bool & draw, const std::string & img_name, const double & qual, const int & max_number_of_corners, const double & min_dist_features)
 {
     geometry_msgs::Pose pose;
 
@@ -189,12 +189,12 @@ M3::pipeline(const bool & draw, const std::string & img_name, const double & qua
     cv::bitwise_and(ROI_mask_right, tsh_mask_right, right_mask);
 
     // Convert color to Grayscale
-    cv::cvtColor(cam_images_gray[0], cam_images_gray[0], cv::COLOR_BGR2GRAY);
-    cv::cvtColor(cam_images_gray[1], cam_images_gray[1], cv::COLOR_BGR2GRAY);
+    cv::cvtColor(cam_images_gray[LEFT], cam_images_gray[LEFT], cv::COLOR_BGR2GRAY);
+    cv::cvtColor(cam_images_gray[RIGHT], cam_images_gray[RIGHT], cv::COLOR_BGR2GRAY);
 
     // Remove noise before canny, always.
-    cv::GaussianBlur(cam_images_gray[0], cam_images_gray[0], GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
-    cv::GaussianBlur(cam_images_gray[1], cam_images_gray[1], GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
+    cv::GaussianBlur(cam_images_gray[LEFT], cam_images_gray[LEFT], GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
+    cv::GaussianBlur(cam_images_gray[RIGHT], cam_images_gray[RIGHT], GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
 
     // Morph the images with open, do a extra dilate to ensure.
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(3,3), cv::Point(1, 1));
@@ -224,8 +224,8 @@ M3::pipeline(const bool & draw, const std::string & img_name, const double & qua
     // Find the good corner features
     std::vector<cv::Point2d> corner_pts_left;
     std::vector<cv::Point2d> corner_pts_right;
-    auto corner_left = good_feature_tracker(cam_images_gray[0], corner_pts_left, contour_left, draw, min_dist_features, max_number_of_corners);
-    auto corner_right = good_feature_tracker(cam_images_gray[1], corner_pts_right, contour_right, draw, min_dist_features, max_number_of_corners);
+    auto corner_left = good_feature_tracker(cam_images_gray[LEFT], corner_pts_left, contour_left, draw, min_dist_features, max_number_of_corners);
+    auto corner_right = good_feature_tracker(cam_images_gray[RIGHT], corner_pts_right, contour_right, draw, min_dist_features, max_number_of_corners);
 
     // Brute force matching
     std::vector<std::array<cv::Point2d, 2>> pts;
@@ -249,14 +249,14 @@ M3::pipeline(const bool & draw, const std::string & img_name, const double & qua
     }
 
     // Stich the images
-    const double dx = cam_images_color[1].cols-1;
+    const double dx = cam_images_color[LEFT].cols-1;
 
-    cv::Mat img_stitched = cv::Mat::zeros ( cv::Size(cam_images_gray[0].cols * 2, cam_images_gray[0].rows), CV_8UC3 );
+    cv::Mat img_stitched = cv::Mat::zeros ( cv::Size(cam_images_gray[LEFT].cols * 2, cam_images_gray[LEFT].rows), CV_8UC3 );
 
     if (draw)
     {
-        cam_images_color[0].copyTo(img_stitched(cv::Rect(0, 0, cam_images_color[0].cols, cam_images_color[0].rows)));
-        cam_images_color[1].copyTo(img_stitched(cv::Rect(dx, 0, cam_images_color[1].cols, cam_images_color[1].rows)));
+        cam_images_color[0].copyTo(img_stitched(cv::Rect(0, 0, cam_images_color[LEFT].cols, cam_images_color[LEFT].rows)));
+        cam_images_color[1].copyTo(img_stitched(cv::Rect(dx, 0, cam_images_color[RIGHT].cols, cam_images_color[RIGHT].rows)));
 
         cv::putText(img_stitched, "Left Image", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
         cv::putText(img_stitched, "Right Image", cv::Point(50 + dx, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
@@ -269,7 +269,7 @@ M3::pipeline(const bool & draw, const std::string & img_name, const double & qua
     }
 
     // Define the Q matrix
-    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K_left(cam_info_arr[0].K.data());
+    Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K_left(cam_info_arr[LEFT].K.data());
 
     cv::Mat Q = ( cv::Mat_<double>(4,4) <<  1., 0.,  0.,         -K_left(0,2),
                                             0., 1.,  0.,         -K_left(1,2),
@@ -328,6 +328,8 @@ M3::pipeline(const bool & draw, const std::string & img_name, const double & qua
         // Get the longest line, two gripping poses will be available, compute them both.
         cv::imwrite(img_name, img_stitched);
     }
+
+    ROS_INFO_STREAM("l1 " << l1 << " - l2: " << l2);
 
     return pose;
 }

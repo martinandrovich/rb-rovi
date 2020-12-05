@@ -6,10 +6,10 @@
 	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.74"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
-	<!-- <arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/> -->
-	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/>
+	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
+	<!-- <arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/> -->
 	<arg name="kinect_pose" doc="The pose of the kinect sensor spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
-	<arg name="projector_pose" doc="The pose of the projector spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
+	<arg name="projector_pose" doc="The pose of the projector spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>
 
 	<arg name="no_objects" default="true" />
 	<arg name="use_moveit" default="true" />
@@ -52,7 +52,7 @@
 	<!-- spawn object(s) -->
 	<!-- by default spawn no objects, such that these can be spawned manually if needed; table always spawned -->
 	<node name="spawn_table" pkg="gazebo_ros" type="spawn_model" args="-database table -sdf -model table -x 0.4 -y 0.6 -z 0.64"/>
-	<!-- <node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle -x 0.6 -y 1.0 -z 1.0"/> -->
+	<node name="spawn_bottle" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle -x 0.6 -y 1.0 -z 1.0"/>
 	<!-- <node name="spawn_cube1" pkg="gazebo_ros" type="spawn_model" args="-database cube -sdf -model cube1 -x 0.2 -y 1.0 -z 1.0 -Y 0.5"/> -->
 	<!-- <node name="spawn_cube2" pkg="gazebo_ros" type="spawn_model" args="-database cube -sdf -model cube2 -x 0.3 -y 0.95 -z 1.2 -Y -0.3"/> -->
 	<!-- <node name="spawn_cube3" pkg="gazebo_ros" type="spawn_model" args="-database cube -sdf -model cube3 -x 0.4 -y 1.05 -z 1.0 -Y 0.2"/> -->

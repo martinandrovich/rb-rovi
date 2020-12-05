@@ -3,10 +3,14 @@
 #include <tuple>
 
 #include <ros/ros.h>
+#include <ros/package.h>
+
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Int32.h>
-#include <cv_bridge/cv_bridge.h>
+
+#include <Eigen/Eigen>
+#include <eigen_conversions/eigen_msg.h>
 
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv4/opencv2/core.hpp>
@@ -16,6 +20,8 @@
 #include <opencv4/opencv2/calib3d.hpp>
 #include <opencv4/opencv2/stereo.hpp>
 #include <opencv4/opencv2/ximgproc/disparity_filter.hpp>
+#include <opencv4/opencv2/core/eigen.hpp>
+#include <cv_bridge/cv_bridge.h>
 
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/spin_image.h>
@@ -36,10 +42,11 @@
 
 #include <pcl/registration/correspondence_rejection_sample_consensus.h>
 #include <pcl/registration/transformation_estimation_svd.h>
+#include <pcl/registration/icp.h>
 
-#include <pcl/surface/mls.h>
-#include <pcl/surface/impl/mls.hpp>
-#include <pcl/surface/bilateral_upsampling.h>
+// #include <pcl/surface/mls.h>
+// #include <pcl/surface/impl/mls.hpp>
+// #include <pcl/surface/bilateral_upsampling.h>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
@@ -49,10 +56,24 @@
 #include <pcl/common/transforms.h>
 
 #include <rovi_pose_estimator/rovi_pose_est.h>
+#include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_utils/rovi_utils.h>
 
 namespace rovi_pose_estimator
 {
+
+// Scene
+static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_scene_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_scene_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+static pcl::PointCloud<pcl::Histogram<153>>::Ptr features_scene_ptr(new pcl::PointCloud<pcl::Histogram<153>>());
+
+// Object
+static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_object_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_object_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+static pcl::PointCloud<pcl::Histogram<153>>::Ptr features_object_ptr(new pcl::PointCloud<pcl::Histogram<153>>());
+
+// Correspondences
+static pcl::Correspondences corr;
 
 std::array<cv::Mat, 2> 
 M1::get_image_data(const std::string & ns_ros)
@@ -117,134 +138,27 @@ M1::get_image_info(const std::string & ns_ros)
 }
 
 cv::Mat
-M1::get_ROI(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q)
-/*
-*   this method finds the RoI 4 points needed from the table.
-*/
-{
-    // time it for benchmarking
-    auto tic = ros::Time::now();
-
-    // the current method is not robust to noise
-    cv::Mat temp_left, temp_right;
-
-    // threshhold the images, done in matlab
-    cv::inRange(img_left,  cv::Scalar(120, 170, 170), cv::Scalar(180, 255, 255), temp_left);
-    cv::inRange(img_right, cv::Scalar(120, 170, 170), cv::Scalar(180, 255, 255), temp_right);
-
-    // stage one convert image to grayscale
-    cv::Canny(temp_left,  temp_left, 50, 200, 3);
-    cv::Canny(temp_right, temp_right, 50, 200, 3);
-
-    // contours, hulls, hier
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<std::vector<cv::Point>> hull;
-    std::vector<cv::Point> roi_left, roi_right;
-    std::vector<cv::Vec4i> hier;
-
-    for (auto & [ img, roi ] : std::array{std::tuple(&temp_left, &roi_left), std::tuple(&temp_right, &roi_right)} )
-    {
-        cv::findContours(*img, contours, hier, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
-        hull.resize(contours.size());
-
-        for (size_t i = 0; i < contours.size(); i++)
-        {
-            cv::convexHull(contours[i], hull[i]);
-            cv::drawContours(*img, hull, 0, cv::Scalar(255));
-        }
-
-        int xMin = std::numeric_limits<int>::max();
-        int xMax = std::numeric_limits<int>::min();
-        int yMin = std::numeric_limits<int>::max();
-        int yMax = std::numeric_limits<int>::min();
-
-        for (const auto &hull_ele : hull)
-        {
-            for(const auto &pt : hull_ele)
-            {
-                xMin = xMin > pt.x ? pt.x : xMin;
-                xMax = xMax < pt.x ? pt.x : xMax;
-                yMin = yMin > pt.y ? pt.y : yMin;
-                yMax = yMax < pt.y ? pt.y : yMax;
-            }
-        }
-
-        roi->push_back(cv::Point(xMin, yMin));
-        roi->push_back(cv::Point(xMin, yMax));
-        roi->push_back(cv::Point(xMax, yMax));
-        roi->push_back(cv::Point(xMax, yMin));
-
-        contours.clear();
-        hull.clear();
-        hier.clear();
-    }
-
-    // save the roi_element
-    for (const auto & roi_ele : roi_left)
-    {
-        cv::drawMarker(temp_left, roi_ele, cv::Scalar(255), 0, 40, 10);
-    }
-
-    for (const auto & roi_ele : roi_right)
-    {
-        cv::drawMarker(temp_right, roi_ele, cv::Scalar(255), 0, 40, 10);
-    }
-
-    // cv::imwrite("ROI_left.jpg", temp_left);
-    // cv::imwrite("ROI_right.jpg", temp_right);
-
-    // Dispaarity
-    std::vector<double> disparity(roi_left.size());
-    cv::Mat p(cv::Size(roi_left.size(), roi_left.size()), CV_64F);
-    for (size_t i = 0; i < roi_left.size(); i++)
-    {
-        disparity[i] = roi_left[i].x - roi_right[i].x;
-        p.at<double>(0, i) = (double)roi_left[i].x;
-        p.at<double>(1, i) = (double)roi_left[i].y;
-        p.at<double>(2, i) = (double)disparity[i];
-        p.at<double>(3, i) = 1.0f;
-    }
-
-    cv::Mat roi = Q * p;
-
-    for (size_t i = 0; i < roi_left.size(); i++)
-    {
-        roi.at<double>(0, i) = roi.at<double>(0, i) / roi.at<double>(3, i);
-        roi.at<double>(1, i) = roi.at<double>(1, i) / roi.at<double>(3, i);
-        roi.at<double>(2, i) = roi.at<double>(2, i) / roi.at<double>(3, i);
-        roi.at<double>(3, i) = 1.f;
-    }
-
-    // end benchmark
-    auto toc = ros::Time::now();
-    auto dur = toc - tic;
-    ROS_INFO_STREAM("Preprocessing took: " << dur.toSec());
-
-    return roi;
-}
-
-cv::Mat
-M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, const cv::Mat & Q)
+M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right)
 {   
-
+    // FileStorage
     cv::FileStorage fs("stereosgbm_config.yaml", cv::FileStorage::READ);
 
     static auto min_disp          = 0;
     static auto num_disp          = 16*8;
-    static auto block_size        = 3; // has to be odd
+    static auto block_size        = 5; // has to be odd
     static auto cn                = 3;
-    static auto p1_smoothness     = 8*cn*block_size*block_size;
-    static auto p2_smoothness     = 32*cn*block_size*block_size; // he larger the values are, the smoother the disparity is
+    static auto p1_smoothness     = 216;
+    static auto p2_smoothness     = 864; // he larger the values are, the smoother the disparity is
     static auto disp_12_max       = 1;
     static auto unique_ratio      = 5;
     static auto speckle_win_size  = 0;
     static auto specke_range      = 1;
     static auto filter_gap        = 2;
     static auto written           = 0;
-    static auto lambda            = 40;
-    static auto sigma             = 10;
+    static auto lambda            = 1;
+    static auto sigma             = 1;
 
-    // check if the file exists
+    // Check if the file exists
     fs["written"] >> written;
     ROS_INFO_STREAM_ONCE("Checking if the file exists stereosgbm_config.yaml exists, the state is: " << written);
     ROS_INFO_STREAM_ONCE("If not, write to the file");
@@ -284,8 +198,9 @@ M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, co
         fs1 << "filter_gap"       << filter_gap;
         fs1 << "sigma"            << sigma;
         fs1 << "lambda"           << lambda;
-    }
+    }  
 
+    // Write the configurations
     ROS_INFO_STREAM( min_disp           << ", " << 
                      num_disp           << ", " <<  
                      block_size         << ", " <<
@@ -299,7 +214,7 @@ M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, co
                      filter_gap
                     );
     
-    // setup the matchers
+    // Setup the matchers
     cv::Ptr<cv::StereoSGBM> left_matcher = cv::StereoSGBM::create(
                                                                 min_disp, 
                                                                 num_disp, 
@@ -314,60 +229,64 @@ M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right, co
                                                                 cv::StereoSGBM::MODE_SGBM_3WAY
                                                               );
 
-    // use the recomended solvers
+    // Use the recomended solvers from OpenCV
     cv::Ptr<cv::ximgproc::DisparityWLSFilter> wls = cv::ximgproc::createDisparityWLSFilter(left_matcher);
     cv::Ptr<cv::StereoMatcher> right_matcher = cv::ximgproc::createRightMatcher(left_matcher);
 
-    // for plotting, use all 5, not optimal
+    // For plotting the sets, define 5 cv::Mat
     cv::Mat disp_left, disp_right, disp_filtered, img_left_temp, img_right_temp, point_cloud;
 
+    // Color convert
     cv::cvtColor(img_left,  img_left_temp, cv::COLOR_BGR2GRAY);
     cv::cvtColor(img_right, img_right_temp, cv::COLOR_BGR2GRAY);
 
-    // cv::imwrite("disp_left.jpg", img_left_temp);
-    // cv::imwrite("disp_right.jpg", img_right_temp);
+    // Remove noise before canny, always.
+    cv::GaussianBlur(img_left_temp, img_left_temp, GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
+    cv::GaussianBlur(img_right_temp, img_right_temp, GAUSS_BLUR_KERNEL, GAUSS_BLUR_STD);
 
+    // Compute left and right disparity
     left_matcher->compute(img_left_temp, img_right_temp, disp_left);
     right_matcher->compute(img_right_temp, img_left_temp, disp_right);
 
-    // cv::imshow("eleft_disp",disp_left);
-    // cv::waitKey(0);
-    // cv::imwrite("not_filtered.jpg", disp_left);
-
+    // Computed weighted least squares optimization
     wls->setLambda(lambda);
     wls->setSigmaColor(sigma);
     wls->filter(disp_left, img_left, disp_filtered, disp_right);
 
-    // cv::imwrite("wls_filtered.jpg", disp_filtered);
-
+    // Compute Disparity Map
     cv::ximgproc::getDisparityVis(disp_filtered, disp_filtered, 1.0);
+    cv::imwrite("disparity_map.jpg", disp_filtered);
 
-    // cv::imwrite("disp_map.jpg", disp_filtered);
+    // Define the Camera matrix
+    static auto cam_info_arr = M1::get_image_info();
+    static Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K_left(cam_info_arr[LEFT].K.data());
 
+    // Compute the Q-matrix
+    static cv::Mat Q = (cv::Mat_<double>(4, 4)<< 1.f, 0.f,  0.f, -K_left(0,2),
+                                                 0.f, 1.f,  0.f, -K_left(1,2),
+                                                 0.f, 0.f,  0.f,  K_left(1,1),
+                                                 0.f, 0.f, -1.f/BASELINE, 0.f );
+
+    // Reproject the image to 3D
     cv::reprojectImageTo3D(disp_filtered, point_cloud, Q, true);
 
     return point_cloud;
 };
 
 void
-M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, const cv::Mat & ROI, const Eigen::Matrix4f & T )
+M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_img)
 {
+    // timing
     auto tic = ros::Time::now();
 
-    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
-    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+    // cloud_ptr set width etc
+    cloud_scene_ptr->width = point_cloud.cols;
+    cloud_scene_ptr->height = point_cloud.rows;
+    cloud_scene_ptr->is_dense = false;
+    cloud_scene_ptr->resize(cloud_scene_ptr->width * cloud_scene_ptr->height);
 
-    cloud_ptr->width = point_cloud.cols;
-    cloud_ptr->height = point_cloud.rows;
-    cloud_ptr->is_dense = false;
-    cloud_ptr->resize(cloud_ptr->width * cloud_ptr->height);
-
-    ROS_INFO_STREAM("The size of the point_cloud parsed: " << point_cloud.size());
-
-    int k = 0;
-    int m = 0;
-
-    for (int i = 0; i < point_cloud.rows; ++i)
+    // these are reuqired for the for loop
+    for (int i = 0, m = 0, k = 0; i < point_cloud.rows; ++i)
     {
 
         const float* point_cloud_ele = point_cloud.ptr<float>(i);
@@ -381,61 +300,356 @@ M1::compute_pointcloud(const cv::Mat & point_cloud, const cv::Mat & left_img, co
             std::uint8_t g = (std::uint8_t) rbg_left[m++];
             std::uint8_t r = (std::uint8_t) rbg_left[m++];
 
-            if ( ( ( g > 225 or g < 210 ) and ( r > 225 or r < 210 ) ) )
-            {
-                cloud_ptr -> points[k].x = point_cloud_ele[j++];
-                cloud_ptr -> points[k].y = point_cloud_ele[j++];
-                cloud_ptr -> points[k].z = point_cloud_ele[j++];
+            cloud_scene_ptr -> points[k].x = point_cloud_ele[j++];
+            cloud_scene_ptr -> points[k].y = point_cloud_ele[j++];
+            cloud_scene_ptr -> points[k].z = point_cloud_ele[j++];
 
-                std::uint32_t rgb = ( (uint32_t) r << 24 | (uint32_t) g << 16 | (uint32_t) b << 8);
+            std::uint32_t rgb = ( (uint32_t) r << 24 | (uint32_t) g << 16 | (uint32_t) b << 8);
                 
-                cloud_ptr -> points[k++].rgb = *reinterpret_cast<float*>(&rgb);
-            }
-            else
-                j += 3;
+            cloud_scene_ptr -> points[k++].rgb = *reinterpret_cast<float*>(&rgb);
         }
     }
 
-    // compute the transformation matrix
-    static Eigen::Matrix4f cam_trans = ( Eigen::Matrix4f() << 0,  0, -1, 0, 
-                                                             -1,  0,  0, 0, 
-                                                              0,  1,  0, 0, 
-                                                              0,  0,  0, 1 ).finished();
-    Eigen::Matrix4f trans = T * cam_trans;
-    pcl::transformPointCloud(*cloud_ptr, *cloud_ptr, trans);
+    // Compute the transformation matrix from world to gazebo camera
+    static Eigen::Affine3d w_T_gaze;    
+    tf::poseMsgToEigen(rovi_gazebo::get_model_pose("camera_stereo"), w_T_gaze);
 
-    // // Cropbox
-    pcl::CropBox<pcl::PointXYZRGBNormal> boxFilter;
-    boxFilter.setMin(Eigen::Vector4f(0.0, 0.85, 0.70, 1.0f));
-    boxFilter.setMax(Eigen::Vector4f(0.8, 1.25, 1.25, 1.0f));
-    boxFilter.setInputCloud(cloud_ptr);
-    boxFilter.filter(*filtered_ptr);
-    *cloud_ptr = *filtered_ptr;
+    // Get constant OPENGL transformation
+    static Eigen::Matrix4f gaze_T_c  = ( Eigen::Matrix4f() << 0.f, 0.f, 1.f, 0.f, 
+                                                             -1.f, 0.f, 0.f, 0.f, 
+                                                              0.f,-1.f, 0.f, 0.f, 
+                                                              0.f, 0.f, 0.f, 1.f ).finished();
+    // Define the overall transformation
+    static Eigen::Matrix4f trans = (w_T_gaze.cast<float>()).matrix() * gaze_T_c;
 
-    // boxFilter();
-    
-    // statisticalFilter();
+    // Transform the point cloud 
+    pcl::transformPointCloud(*cloud_scene_ptr, *cloud_scene_ptr, trans);
 
-    constexpr auto leaf_size = 0.008;
-    pcl::VoxelGrid<pcl::PointXYZRGBNormal> voxel_filter;
-    voxel_filter.setInputCloud(cloud_ptr);
-    voxel_filter.setLeafSize(leaf_size, leaf_size, leaf_size);
-    voxel_filter.filter(*filtered_ptr);
-    *cloud_ptr = *filtered_ptr;
+    // Cropbox
+    static pcl::CropBox<pcl::PointXYZRGBNormal> box_filter;
+    {
+        box_filter.setMin(Eigen::Vector4f(0.0, 0.85, 0.70, 1.0f));
+        box_filter.setMax(Eigen::Vector4f(0.8, 1.25, 1.25, 1.0f));
+        box_filter.setInputCloud(cloud_scene_ptr);
+        box_filter.filter(*filtered_scene_ptr);
+        *cloud_scene_ptr = *filtered_scene_ptr;
+    }
 
-    // estimateNormalsScene();
+    // Plane fitting
+    constexpr auto dist_tsh = 0.02f;
+    static pcl::ModelCoefficients::Ptr coeff(new pcl::ModelCoefficients);    
+    static pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    static pcl::SACSegmentation<pcl::PointXYZRGBNormal> segm;
+    {
+        segm.setOptimizeCoefficients(true);
+        segm.setModelType(pcl::SACMODEL_PLANE);
+        segm.setMethodType(pcl::SAC_RANSAC);
+        segm.setDistanceThreshold(dist_tsh);
+        segm.setInputCloud(cloud_scene_ptr);
+        segm.segment(*inliers, *coeff);
 
-    // computeFeaturesScene();
+        ROS_INFO_STREAM("Number of inliers for plane_segmentation: " << inliers->indices.size());
 
+        if (inliers->indices.size() != 0 )
+        {
+            double zmin = 0;
+            for (const auto &idx : inliers->indices)
+                zmin += cloud_scene_ptr->points[idx].z;
+            zmin /= inliers->indices.size();
 
-    pcl::io::savePCDFileASCII("voxel.pcd", *cloud_ptr);
-    // pcl::io::savePCDFileASCII("test_pcd.pcd", *cloud_ptr);
+            // Create filtering object  
+            pcl::PassThrough<pcl::PointXYZRGBNormal> pass;
+            pass.setInputCloud(cloud_scene_ptr);
+            pass.setFilterFieldName("z");
+            pass.setFilterLimits(zmin + 0.01, zmin + 1);
+            pass.setFilterLimitsNegative(false);
+            pass.filter(*filtered_scene_ptr);
+            *cloud_scene_ptr = *filtered_scene_ptr;
+        }
+    }
 
-    cloud_ptr->clear();
+    // Voxel Filter
+    static pcl::VoxelGrid<pcl::PointXYZRGBNormal> voxel_filter;
+    {
+        voxel_filter.setInputCloud(cloud_scene_ptr);
+        voxel_filter.setLeafSize(leaf_size, leaf_size, leaf_size);
+        voxel_filter.filter(*filtered_scene_ptr);
+        *cloud_scene_ptr = *filtered_scene_ptr;
+    }
+
+    // Statistical outlier removal
+    static pcl::StatisticalOutlierRemoval<pcl::PointXYZRGBNormal> sor;
+    {
+        sor.setInputCloud(cloud_scene_ptr);
+        sor.setMeanK(10);
+        sor.setStddevMulThresh(1);
+        sor.filter(*filtered_scene_ptr);
+        *cloud_scene_ptr = *filtered_scene_ptr;
+    }
+
+    // Estimate normals from PoV
+    static pcl::NormalEstimation<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> normal_est;
+    {
+        pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBNormal>());
+        normal_est.setInputCloud(cloud_scene_ptr);
+        normal_est.setViewPoint(0.4f, 1.4f, 1.5f);
+        normal_est.setSearchMethod(tree);
+        normal_est.setKSearch(25);
+        normal_est.compute(*cloud_scene_ptr);
+    }
+
+    static pcl::SpinImageEstimation<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal, pcl::Histogram<153>> spin;
+    {
+        spin.setInputCloud(cloud_scene_ptr);
+        spin.setInputNormals(cloud_scene_ptr);
+        spin.setRadiusSearch(0.3);
+        spin.compute(*features_scene_ptr);
+    }
+
+    ROS_INFO_STREAM("The scene_voxel" << cloud_scene_ptr->size());
+
+    // Save the pointcloud 
+    pcl::io::savePCDFileASCII("scene_voxel.pcd", *cloud_scene_ptr);
+
+    // Clear it, to avoid segmentation fault
 
     auto toc = ros::Time::now();
     auto delta = toc-tic;
     ROS_INFO_STREAM("Time spent in preprocessing dense stereo scene: " << delta.toSec() << "ms");
 }
+
+bool
+M1::read_compute_features_object(const std::string & obj)
+{
+    // tic
+    auto tic = ros::Time::now();
+
+    int error = pcl::io::loadPCDFile<pcl::PointXYZRGBNormal>(obj, *cloud_object_ptr);
+
+    ROS_INFO_STREAM("Cloud object ptr size := " << cloud_object_ptr->size());
+
+    if(error != 0)
+    {
+        ROS_INFO_STREAM("The filename is wrong, it was not possible to load the object.");
+        return false;
+    }
+
+    // Give some arbitrary colours to the object
+    for (size_t i = 0; i < cloud_object_ptr->size(); i++)
+    {
+        std::uint8_t b = (std::uint8_t) 200;
+        std::uint8_t g = (std::uint8_t) 150;
+        std::uint8_t r = (std::uint8_t) 128;
+        std::uint32_t rgb = ( (uint32_t) r << 24 | (uint32_t) g << 16 | (uint32_t) b << 8);
+        cloud_object_ptr -> points[i].rgb = *reinterpret_cast<float*>(&rgb);
+    }
+
+    // Estimate normals from PoV
+    static pcl::NormalEstimation<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> normal_est;
+    {
+        pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBNormal>());
+        normal_est.setInputCloud(cloud_object_ptr);
+        normal_est.setViewPoint(0.4f, 1.4f, 1.5f);
+        normal_est.setSearchMethod(tree);
+        normal_est.setKSearch(25);
+        normal_est.compute(*cloud_object_ptr);
+    }
+
+    static pcl::SpinImageEstimation<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal, pcl::Histogram<153>> spin;
+    {
+        spin.setInputCloud(cloud_object_ptr);
+        spin.setInputNormals(cloud_object_ptr);
+        spin.setRadiusSearch(0.3);
+        spin.compute(*features_object_ptr);
+    }
+
+    // toc
+    auto toc = ros::Time::now();
+    ROS_INFO_STREAM("Time spent in compute_features_object: " << (toc-tic).toSec());
+
+    // Save the pointcloud 
+    pcl::io::savePCDFileASCII("voxel_object.pcd", *cloud_object_ptr);
+
+    return true;
+}
+
+void 
+M1::match_features()
+{
+    // Tic
+    auto tic = ros::Time::now();
+
+    // Define the L2_norm operator
+    static auto L2_norm = [](const pcl::Histogram<153> & f1, const pcl::Histogram<153> & f2)
+    {
+        float sum = 0.f;
+        for(auto i = 0; i < f1.descriptorSize(); i++)
+            sum += std::pow((f1.histogram[i]-f2.histogram[i]), 2);
+        return sum;
+    };
+
+    // Define nearest neightbour
+    static auto nearest_neighbour = [](const pcl::PointCloud<pcl::Histogram<153>>::Ptr & query, const int idx_query, const pcl::PointCloud<pcl::Histogram<153>>::Ptr & scene, int & idx_scene)
+    {
+        float min_dist = std::numeric_limits<float>::max();
+
+        for(auto i = 0; i < scene->size(); i++)
+        {
+            float dist = L2_norm(query->points[idx_query], scene->points[i]);
+            if (min_dist > dist)
+            {
+                min_dist = dist;
+                idx_scene = i;
+            }
+        }
+
+        return min_dist;
+    };
+
+    // Correspondences are reset.
+    corr.clear();
+    corr.resize(features_object_ptr->size());
+
+    // Start matching
+    int idx_scene = 0;
+    for(auto idx_query = 0; idx_query < features_object_ptr->size(); idx_query++)
+    {
+        corr[idx_query].index_query    = idx_query;
+        corr[idx_query].distance       = nearest_neighbour(features_object_ptr, idx_query, features_scene_ptr, idx_scene);
+        corr[idx_query].index_match    = idx_scene;
+    }
+
+    // Toc
+    auto toc = ros::Time::now();
+    ROS_INFO_STREAM("Time spent in compute_features_object: " << (toc-tic).toSec());
+}
+
+Eigen::Matrix4f 
+M1::ransac_features(const int & max_it)
+{
+    // Note
+    ROS_INFO_STREAM("Amount of iterations: " << max_it);
+
+    // Metrics
+    int max_inliers = 0;
+    Eigen::Matrix4f best_T, T;
+
+    // Variables
+    std::vector<int> query(3), scene(3);
+    pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr aligned_object_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+
+    // Random generator
+    pcl::common::UniformGenerator<int> rnd_gen(0, corr.size() - 1);
+    rnd_gen.setSeed(time(0));
+
+    // Define search tree
+    pcl::KdTreeFLANN<pcl::PointXYZRGBNormal> kd_tree_scene;
+    kd_tree_scene.setInputCloud(cloud_scene_ptr);
+
+    for(auto i = 0; i < max_it; i++)
+    {   
+        // How far are we?
+        if(i % 500 == 0)
+        {
+            ROS_INFO_STREAM("Iteration: " << i);
+        }
+
+        // Pick 3 points
+        for (auto j = 0; j < 3; j++)
+        {
+            int random = rnd_gen.run();
+            query[j] = corr[random].index_query;
+            scene[j] = corr[random].index_match;
+        }
+        // Determine the transformation between cloud and cloud_object, we use the object and the scene
+        pcl::registration::TransformationEstimationSVD<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> svd;
+        svd.estimateRigidTransformation(*cloud_object_ptr, query, *cloud_scene_ptr, scene, T);
+
+        // Perform the transformation on the two clouds, here we usedaligned
+        pcl::transformPointCloud(*cloud_object_ptr, *aligned_object_ptr, T);
+
+        // Perform NN
+        int K = 1;
+        std::vector<int> point_idx_nn_search(K);
+        std::vector<float> point_nn_L2(K);
+        
+        // Inlier
+        int inliers = 0;
+
+        for (auto j = 0; j < aligned_object_ptr->size(); j++)
+        {
+            if ( kd_tree_scene.nearestKSearch(aligned_object_ptr->points[j], K, point_idx_nn_search, point_nn_L2) > 0 )
+            {   
+                if (point_nn_L2[0] < 0.0001f)
+                {
+                    inliers++;
+                }
+            }
+        }
+
+        if (inliers > max_inliers)
+        {
+            ROS_INFO_STREAM("Inliers: " << inliers);
+            max_inliers = inliers;
+            best_T = T;
+        }
+    }
+
+    pcl::transformPointCloud(*cloud_object_ptr, *cloud_object_ptr, best_T);
+
+    pcl::IterativeClosestPoint<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal > icp;
+    icp.setInputCloud(cloud_object_ptr);
+    icp.setInputTarget(cloud_scene_ptr);
+    icp.setMaxCorrespondenceDistance(0.001);
+    icp.align(*cloud_object_ptr);
+
+    pcl::visualization::PCLVisualizer viewer("vis");
+    viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_scene_ptr, "scene");
+    viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_object_ptr, "obj");
+    viewer.spin();
+
+    return best_T * icp.getFinalTransformation();
+
+}
+
+geometry_msgs::Pose
+M1::estimate_pose(const int & it, const bool & draw)
+{
+    // Sleep to make sure, that everything is up running.
+    rovi_gazebo::set_projector(true);
+
+    // SLEEP!
+    ros::Duration(1).sleep();
+
+    // Get stereo images
+    auto cam_images = M1::get_image_data();
+
+    // Compute the disparity map
+    cv::Mat point_cloud = M1::compute_disparitymap(cam_images[LEFT], cam_images[RIGHT]);
+    
+    if(draw)
+    {
+        cv::imwrite("bottle_left.jpg", cam_images[0]);
+        cv::imwrite("bottle_right.jpg",cam_images[1]);
+        cv::imwrite("point_cloud.jpg", point_cloud);
+    }
+
+    // Compute the point cloud
+    M1::compute_pointcloud_scene(point_cloud, cam_images[0]);
+
+    // std::string read_file = "test.pcd";
+    auto file_bottle_pcd = ros::package::getPath("rovi_gazebo") + std::string("/models/bottle/bottle.pcd");
+
+    M1::read_compute_features_object(file_bottle_pcd);
+
+    M1::match_features();
+
+    auto T = Eigen::Affine3d(M1::ransac_features(it).cast<double>());
+    geometry_msgs::Pose pose;
+    
+    tf::poseEigenToMsg(T, pose);
+    return pose;
+}
+
 
 }
