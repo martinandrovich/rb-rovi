@@ -27,31 +27,6 @@ namespace rovi_utils
 	geometry_msgs::Pose
 	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
 
-	// -- gazebo ------------------------------------------------------------------
-
-	// should be moved to rovi_gazebo?
-	// add in_base_frame = true bool
-
-	geometry_msgs::Pose
-	get_current_link6_pose();
-
-	geometry_msgs::Pose
-	get_current_ee_pose();
-
-	geometry_msgs::Pose
-	get_current_tcp_pose();
-
-	geometry_msgs::Pose
-	get_link6_given_ee(const geometry_msgs::Pose& pose_ee);
-
-	geometry_msgs::Pose
-	get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp);
-
-	std::vector<moveit_msgs::CollisionObject>
-	// get_cobjs_from_gazebo()
-	// rovi_gazebo::get_collision_objects()
-	get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes = { "ur5", "camera_stereo", "openni_kinect", "ground_plane", "projector" });
-
 	// -- trajectories ------------------------------------------------------------
 
 	template<typename T>

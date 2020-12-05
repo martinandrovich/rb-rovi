@@ -338,7 +338,7 @@ rovi_planner::moveit_planner::update_planning_scene()
 	const auto q_wsg = rovi_gazebo::get_current_gripper_state().position;
 	robot_state.setJointGroupPositions(ARM_GROUP, q_ur5);
 	// robot_state.setJointGroupPositions(WSG_GROUP, q_wsg);
-	robot_state.setJointGroupPositions(WSG_GROUP, std::vector{ 0.05, 0.05 });
+	robot_state.setJointGroupPositions(WSG_GROUP, DEFAULT_WSG_STATE);
 	
 	// set robot base position to the current one from Gazebo
 	const auto base_pose = rovi_gazebo::get_current_base_pose();
@@ -523,7 +523,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
 	
 	// set gripper default
-	// robot_state.setJointGroupPositions(wsg_group, DEFAULT_WSG_STATE);
+	robot_state.setJointGroupPositions(wsg_group, DEFAULT_WSG_STATE);
 	
 	// generate transformations to grasp from, so this should be the input
 	auto make_tf = [](const std::array<double, 3>& pos, const double theta, const std::array<double, 3>& axis)

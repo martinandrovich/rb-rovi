@@ -68,97 +68,6 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double,
 	return pose;
 }
 
-geometry_msgs::Pose
-rovi_utils::get_current_link6_pose()
-{
-	// get link states from gazebo
-	ROS_INFO_STREAM("Waiting for gazebo_msgs::LinkStates...");
-	const auto& link_states = ros::topic::waitForMessage<gazebo_msgs::LinkStates>("/gazebo/link_states");
-
-	// get current pose of base and link6 in world frame
-	const auto& link_names = link_states->name;
-	size_t idx_base  = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link0"));
-	size_t idx_link6 = std::distance(link_names.begin(), std::find(link_names.begin(), link_names.end(), "ur5::ur5_link6"));
-
-	const auto offset = link_states->pose[idx_base];
-	auto pose_current = link_states->pose[idx_link6];
-
-	// controller uses pose given in robot base frame; offset from world
-	pose_current.position.x -= offset.position.x;
-	pose_current.position.y -= offset.position.y;
-	pose_current.position.z -= offset.position.z;
-
-	return pose_current;
-}
-
-geometry_msgs::Pose
-rovi_utils::get_current_ee_pose()
-{
-	auto pose_l6 = get_current_link6_pose();
-	Eigen::Isometry3d B_T_l6, B_T_ee;
-
-	tf::poseMsgToEigen(pose_l6, B_T_l6);
-
-	B_T_ee = B_T_l6 * ur5_dynamics::l6_T_ee * ur5_dynamics::ee_T_tcp;
-
-	// return as pose
-	geometry_msgs::Pose pose_ee;
-	tf::poseEigenToMsg(B_T_ee, pose_ee);
-
-	return pose_ee;
-}
-
-geometry_msgs::Pose
-rovi_utils::get_current_tcp_pose()
-{
-	auto pose_l6 = get_current_link6_pose();
-	Eigen::Isometry3d B_T_l6, B_T_tcp;
-
-	tf::poseMsgToEigen(pose_l6, B_T_l6);
-
-	B_T_tcp = B_T_l6 * ur5_dynamics::l6_T_ee * ur5_dynamics::ee_T_tcp;
-
-	// return as pose
-	geometry_msgs::Pose pose_tcp;
-	tf::poseEigenToMsg(B_T_tcp, pose_tcp);
-
-	return pose_tcp;
-}
-
-geometry_msgs::Pose
-rovi_utils::get_link6_given_ee(const geometry_msgs::Pose& pose_ee)
-{
-	// define all transformations
-	Eigen::Isometry3d B_T_ee, B_T_l6;
-	tf::poseMsgToEigen(pose_ee, B_T_ee);
-
-	// computre for link 6
-	B_T_l6 = B_T_ee * ur5_dynamics::l6_T_ee.inverse();
-
-	// return as pose
-	geometry_msgs::Pose pose_l6;
-	tf::poseEigenToMsg(B_T_l6, pose_l6);
-
-	return pose_l6;
-}
-
-geometry_msgs::Pose
-rovi_utils::get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp)
-{
-	// define all transformations
-	Eigen::Isometry3d B_T_ee_tcp, B_T_l6, l6_T_ee;
-	tf::poseMsgToEigen(pose_tcp, B_T_ee_tcp);
-
-	// compute for link 6
-	B_T_l6 = B_T_ee_tcp * ur5_dynamics::ee_T_tcp.inverse() * ur5_dynamics::l6_T_ee.inverse();
-
-	// return as pose
-	geometry_msgs::Pose pose_l6;
-	tf::poseEigenToMsg(B_T_l6, pose_l6);
-
-	return pose_l6;
-}
-
 moveit_msgs::CollisionObject
 rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
@@ -169,12 +78,15 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_
 
 	// create mesh
 	// https://answers.ros.org/question/246467/moveit-attach-object-error/
+	
+	auto model_name = name;
+	model_name.erase(std::remove_if(model_name.begin(), model_name.end(), &isdigit), model_name.end());
 
 	shape_msgs::Mesh mesh;
 	shapes::Mesh* mesh_ptr;
 	shapes::ShapeMsg shape_msg;
 
-	mesh_ptr = shapes::createMeshFromResource(PATH_PACKAGE+ "/" + name + "/" + name + ".dae");
+	mesh_ptr = shapes::createMeshFromResource(PATH_PACKAGE+ "/" + model_name + "/" + model_name + ".dae");
 	shapes::constructMsgFromShape(mesh_ptr, shape_msg);
 	mesh = boost::get<shape_msgs::Mesh>(shape_msg);
 
@@ -214,38 +126,6 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_
 	return co;
 }
 
-std::vector<moveit_msgs::CollisionObject>
-rovi_utils::get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes)
-{
-	// get vector of all objects in gazebo as ModelState msgs
-	ROS_INFO_STREAM("Waiting for gazebo_msgs::ModelStates...");
-	const auto& model_states = ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states");
-	const auto& vec_poses = model_states->pose;
-	const auto& vec_obj = model_states->name;
-
-	ROS_INFO_STREAM("Recieved gazebo_msgs::ModelStates with " << vec_obj.size() << " objects; excluding " << excludes.size() << " objects");
-
-	std::vector<moveit_msgs::CollisionObject> collision_objects;
-	for (const auto& obj : vec_obj)
-	{
-		// create colllision models that are not to be excluded
-		if (std::find(excludes.begin(), excludes.end(), obj) == excludes.end())
-		{
-			// find pose of object
-			size_t i = std::distance(vec_obj.begin(), std::find(vec_obj.begin(), vec_obj.end(), obj));
-			const auto& pos = vec_poses[i].position;
-
-			// construct and add colision object
-			ROS_INFO_STREAM("Adding object: " << obj << " at " << "[" << pos.x << ", " << pos.y << ", " << pos.z << "]");
-			collision_objects.emplace_back(make_mesh_cobj(obj, planning_frame, { pos.x, pos.y, pos.z }));
-		}
-		else
-			ROS_WARN_STREAM("Excluding object: " << obj);
-	}
-
-	return collision_objects;
-}
-
 void
 rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 3>& offset, const std::string& virtual_joint_name)
 {
@@ -261,14 +141,10 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 	ROS_DEBUG_STREAM("Moving base (joint: " << virtual_joint_name <<") to: { " << offset[0] << ", " << offset[2] << ", " << offset[2] << "}");
 
 	state.setVariablePositions({
-		{ virtual_joint_name + "/trans_x", offset[0] },
-		{ virtual_joint_name + "/trans_y", offset[1] },
-		{ virtual_joint_name + "/trans_z", offset[2] }
+		{ virtual_joint_name + "/trans_x", offset[0] }, // state.setVariablePosition(0, offset[0]);
+		{ virtual_joint_name + "/trans_y", offset[1] }, // state.setVariablePosition(1, offset[1]);
+		{ virtual_joint_name + "/trans_z", offset[2] } // state.setVariablePosition(2, offset[2]);
 	});
-
-	// state.setVariablePosition(0, offset[0]);
-	// state.setVariablePosition(1, offset[1]);
-	// state.setVariablePosition(2, offset[2]);
 }
 
 void
