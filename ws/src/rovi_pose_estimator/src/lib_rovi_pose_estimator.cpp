@@ -628,8 +628,9 @@ namespace rovi_pose_estimator
 		void 
 		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, const cv::Mat* img)
 		{
-			std::vector<cv::Point3f> points3d(3);
-			std::vector<cv::Point2f> points2d(3);
+			constexpr int points_to_use_for_estimation = 3;
+			std::vector<cv::Point3f> points3d(points_to_use_for_estimation);
+			std::vector<cv::Point2f> points2d(points_to_use_for_estimation);
 
 			std::cout << "Model corners are: " << model_corners << std::endl;
 			std::cout << "Image corners are: " << image_corners << std::endl;
@@ -661,13 +662,13 @@ namespace rovi_pose_estimator
 			
 			cv::Mat_<float> image_corners_mat(0, 2, CV_32FC1); //required format for the flann search....
 
-			for(auto & point:image_corners)			// Fill the "dummy" matrix for flann.....
+			for(auto & point:image_corners)			// Fill the "dummy" matrix for flann..... 
 			{
-				cv::Mat_<float> row = (cv::Mat_<float>(1,2, CV_32FC1) << point.x, point.y);
+				cv::Mat_<float> row = (cv::Mat_<float>(1,2, CV_32FC1) << point.x, point.y); // + cv::Point2f(283, 39); for offset correction made by ROI
 				image_corners_mat.push_back(row);
 			}
 
-			cv::flann::Index kd_tree(image_corners_mat, cv::flann::KDTreeIndexParams(1));
+			cv::flann::Index kd_tree(image_corners_mat, cv::flann::KDTreeIndexParams(4));
 			const int max_neighbours_search = image_corners.size();
 			cv::Mat indices, dists;
 			//std::vector<float> dist;
@@ -694,7 +695,7 @@ namespace rovi_pose_estimator
 			for(int iteration=0; iteration< max_iterations; iteration++)
 			{
 				inliers = 0;
-				for(int sample=0; sample <3; sample++)
+				for(int sample=0; sample < points_to_use_for_estimation; sample++)
 				{
 					int rnd = distribution(gen);
 					points3d[sample] = model_matches[rnd];
@@ -712,20 +713,20 @@ namespace rovi_pose_estimator
 				//cv::Rodrigues(rvec, rot);
 				for(auto& point: reprojected_image_corners)
 				{
-					std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
+					//std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
 					cv::Mat query = (cv::Mat_<float>(1,2) << point.x, point.y);
 					inliers += kd_tree.radiusSearch(query, indices, dists, inlier_radius, max_neighbours_search, cv::flann::SearchParams(32)); // 
-					std::cout << "Found " << inliers << " , in single search... " << std::endl;
+					//std::cout << "Found " << inliers << " , in single search... " << std::endl;
 				}
 				
 				
 				if(inliers > best_inliers)
 				{
-					best_rvec = rvec;
-					best_tvec = tvec;
+					best_rvec = rvec.clone();
+					best_tvec = tvec.clone();
 					best_inliers = inliers;
 				}
-				if(iteration% 1000)
+				if(iteration% 1000 == 0)
 				{
 					std::cout <<"Iteration: " << iteration << "  Best match so far: " << best_inliers << std::endl;
 				}
@@ -742,9 +743,20 @@ namespace rovi_pose_estimator
 			img->copyTo(img_cpy);
 			cv::projectPoints(model_corners, best_rvec, best_tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
 
+			std::cout << "rvec for best fit... " << rvec << std::endl;
+			std::cout << "tvec for best fit... " << tvec << std::endl;
+
+			std::cout << "Image_corner points for comparison " << image_corners << std::endl;
 			for(const auto& point: reprojected_image_corners)
 			{
-				circle(img_cpy, point, 10,  cv::Scalar(0), 2, 8, 0 );
+				auto roi_corrected = point + cv::Point2f(283, 39);
+				circle(img_cpy, roi_corrected, 10,  cv::Scalar(0,0,255), 3, 8, 0 );
+				std::cout << "transformed point " << point << std::endl;
+			}
+			for(const auto& point: image_corners)
+			{
+				auto roi_corrected = point + cv::Point2f(283, 39);
+				circle(img_cpy, roi_corrected, 10,  cv::Scalar(0,255,0), 1, 8, 0 );
 			}
 			cv::imshow("Reprojected points", img_cpy);		
 			cv::waitKey();

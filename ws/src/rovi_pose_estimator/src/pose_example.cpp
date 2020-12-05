@@ -93,7 +93,7 @@ main(int argc, char** argv)
 
 	auto model_corner_points = rovi_pose_estimator::M4::PCL_pointcloud_to_OPENCV_Point3d(*model);
 	cv::Mat pose_est;
-	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 50, 10.0f, &img);
+	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 5000, 2.0f, &img);
 
 	//pose_estimation_exampleM4(argv[1], std::stoi(argv[2]));
 
