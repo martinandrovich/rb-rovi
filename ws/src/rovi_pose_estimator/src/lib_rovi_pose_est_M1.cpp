@@ -392,7 +392,7 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
     {
         pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBNormal>());
         normal_est.setInputCloud(cloud_scene_ptr);
-        normal_est.setViewPoint(0.4f, 1.4f, 1.5f);
+        normal_est.setViewPoint(trans(0,3), trans(1,3), trans(2,3));
         normal_est.setSearchMethod(tree);
         normal_est.setKSearch(25);
         normal_est.compute(*cloud_scene_ptr);
@@ -434,6 +434,18 @@ M1::read_compute_features_object(const std::string & obj)
         return false;
     }
 
+    // Compute the transformation matrix from world to gazebo camera
+    static Eigen::Affine3d w_T_gaze;    
+    tf::poseMsgToEigen(rovi_gazebo::get_model_pose("camera_stereo"), w_T_gaze);
+
+    // Get constant OPENGL transformation
+    static Eigen::Matrix4f gaze_T_c  = ( Eigen::Matrix4f() << 0.f, 0.f, 1.f, 0.f, 
+                                                             -1.f, 0.f, 0.f, 0.f, 
+                                                              0.f,-1.f, 0.f, 0.f, 
+                                                              0.f, 0.f, 0.f, 1.f ).finished();
+    // Define the overall transformation
+    static Eigen::Matrix4f trans = (w_T_gaze.cast<float>()).matrix() * gaze_T_c;
+
     // Give some arbitrary colours to the object
     for (size_t i = 0; i < cloud_object_ptr->size(); i++)
     {
@@ -449,7 +461,7 @@ M1::read_compute_features_object(const std::string & obj)
     {
         pcl::search::KdTree<pcl::PointXYZRGBNormal>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBNormal>());
         normal_est.setInputCloud(cloud_object_ptr);
-        normal_est.setViewPoint(0.4f, 1.4f, 1.5f);
+        normal_est.setViewPoint(trans(0,3), trans(1,3), trans(2,3));
         normal_est.setSearchMethod(tree);
         normal_est.setKSearch(25);
         normal_est.compute(*cloud_object_ptr);
@@ -646,8 +658,8 @@ M1::estimate_pose(const int & it, const bool & draw)
 
     auto T = Eigen::Affine3d(M1::ransac_features(it).cast<double>());
     geometry_msgs::Pose pose;
-    
     tf::poseEigenToMsg(T, pose);
+
     return pose;
 }
 
