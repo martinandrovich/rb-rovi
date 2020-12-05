@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include <rovi_pose_estimator/rovi_pose_est_M1.h>
+#include <rovi_pose_estimator/rovi_pose_est.h>
 #include <Eigen/Eigen>
 #include <cv_bridge/cv_bridge.h>
 #include <rovi_gazebo/rovi_gazebo.h>
