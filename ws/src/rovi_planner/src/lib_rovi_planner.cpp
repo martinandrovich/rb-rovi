@@ -523,7 +523,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 	const auto wsg_group = robot_state.getJointModelGroup(WSG_GROUP);
 	
 	// set gripper default
-	robot_state.setJointGroupPositions(wsg_group, DEFAULT_WSG_STATE);
+	// robot_state.setJointGroupPositions(wsg_group, DEFAULT_WSG_STATE);
 	
 	// generate transformations to grasp from, so this should be the input
 	auto make_tf = [](const std::array<double, 3>& pos, const double theta, const std::array<double, 3>& axis)

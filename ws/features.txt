@@ -1,0 +1,20 @@
+// find the two points;
+vec1
+vec2
+
+// compute the lines of the two points 
+m1 = M.at<cv::Point2d>(0,0)
+m2 = M.at<cv::Point2d>(vec1)
+m3 = M.at<cv::Point2d>(vec2)
+
+// and, generate the lines
+l1 = m2 - m1
+l2 = m2 - m1
+
+// Angle between them should approximately be 90 degrees, ie dot product should be 0
+
+( l1 dot l2 ) / ( |l1| * |l2| ) = one guess
+
+// the one closest to 90 degree is probably the best origin, try all permutations if not close, reiterae if not close to 90.
+
+

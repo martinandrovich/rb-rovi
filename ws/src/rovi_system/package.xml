@@ -20,6 +20,6 @@
 	<depend>rovi_utils</depend>
 	<depend>rovi_gazebo</depend>
 	<depend>rovi_planner</depend>
-	<depend>rovi_pose_estimator</depend>
+	<!-- <depend>rovi_pose_estimator</depend> -->
 
 </package>

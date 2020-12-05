@@ -4,7 +4,7 @@
 #include <rovi_utils/rovi_utils.h>
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_planner/rovi_planner.h>
-#include <rovi_pose_estimator/rovi_pose_estimator.h>
+// #include <rovi_pose_estimator/rovi_pose_estimator.h>
 
 int
 main(int argc, char** argv)
