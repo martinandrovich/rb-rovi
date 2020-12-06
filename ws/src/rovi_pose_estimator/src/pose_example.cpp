@@ -98,35 +98,10 @@ main(int argc, char** argv)
 	cv::Mat pose_est;
 	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 10000, 5.001f, &img);
 	
+	ros::Rate loop_rate(1000);	
 
 	
-
-
-	ros::Rate loop_rate(1000);
 	
-
-
-
-	//while (ros::ok())
-	//{
-	//	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
-	//	// const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw", ros::Duration(1/30.0));
-//
-	//	if (msg)
-	//	{
-	//		ROS_INFO("Got new image!");
-	//		const auto img = cv_bridge::toCvShare(msg, "bgr8")->image;
-	//		cv::imshow("stereo_right", img);
-	//		cv::waitKey(1);
-	//	}
-	//	loop_rate.sleep();
-//
-	//}
-	
-	//nh.subscribe("/rbrovi/camera_stereo/left/image_raw");
-	
-	// give full control over to ROS to handle callbacks etc.
-	//ros::spin();
 }
 
 
