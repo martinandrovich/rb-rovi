@@ -58,6 +58,7 @@ catkin_package(
 		sensor_msgs
 		image_transport
 		vision_opencv
+		rovi_gazebo
 	DEPENDS
 		EIGEN3
 		OpenCV

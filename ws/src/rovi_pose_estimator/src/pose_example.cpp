@@ -15,6 +15,7 @@
 #include <pcl/io/obj_io.h>
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <rovi_gazebo/rovi_gazebo.h>
 
 #include <filesystem>
 
@@ -98,7 +99,8 @@ main(int argc, char** argv)
 	cv::Mat pose_est;
 	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 10000, 5.001f, &img);
 	
-	ros::Rate loop_rate(1000);	
+	auto model_pose = rovi_gazebo::get_model_pose("milk");
+	std::cout << "Model pose is: " << model_pose <<  << std::endl;
 
 	
 	
