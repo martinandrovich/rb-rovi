@@ -39,11 +39,6 @@ void pose_estimation_exampleM2();
 void pose_estimation_exampleM4(const std::string& ply_path, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& key_points, int pointsize);
 
 
-
-
-
-
-
 int
 main(int argc, char** argv)
 {

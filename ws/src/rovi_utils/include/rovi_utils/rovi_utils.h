@@ -6,7 +6,9 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <tuple>
 
+#include <ros/package.h>
 #include <Eigen/Eigen>
 
 #include <moveit/planning_scene/planning_scene.h>
@@ -27,36 +29,11 @@ namespace rovi_utils
 	geometry_msgs::Pose
 	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
 
-	// -- gazebo ------------------------------------------------------------------
-
-	// should be moved to rovi_gazebo?
-	// add in_base_frame = true bool
-
-	geometry_msgs::Pose
-	get_current_link6_pose();
-
-	geometry_msgs::Pose
-	get_current_ee_pose();
-
-	geometry_msgs::Pose
-	get_current_tcp_pose();
-
-	geometry_msgs::Pose
-	get_link6_given_ee(const geometry_msgs::Pose& pose_ee);
-
-	geometry_msgs::Pose
-	get_link6_given_tcp(const geometry_msgs::Pose& pose_tcp);
-
-	std::vector<moveit_msgs::CollisionObject>
-	// get_cobjs_from_gazebo()
-	// rovi_gazebo::get_collision_objects()
-	get_gazebo_obj(const std::string& planning_frame, const std::vector<std::string>& excludes = { "ur5", "camera_stereo", "openni_kinect", "ground_plane", "projector" });
-
 	// -- trajectories ------------------------------------------------------------
 
 	template<typename T>
 	void
-	export_traj(T& traj, const std::string&& filename, const double resolution = 0.01 /* [s] */);
+	export_traj(T& traj, const std::string& filename, const double resolution = 0.01 /* [s] */);
 
 	std::vector<geometry_msgs::Pose>
 	// waypoints_from_moveit_traj()
@@ -82,6 +59,21 @@ namespace rovi_utils
 
 	// -- utilities ---------------------------------------------------------------
 
+	std::string
+	get_data_path(const std::string& package)
+	{
+		return ros::package::getPath(package) + "/data";
+	}
+	
+	// template <typename R, typename F = void*>
+	// std::tuple<double, R> timing(F f)
+	// {
+	// 	auto t_begin = std::chrono::high_resolution_clock::now();
+	// 	R data = f();
+	// 	auto t = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - t_begin)).count();
+	// 	return { t, data };
+	// }
+	
 	template <typename T>
 	std::thread*
 	create_async_listener(const std::string& topic, T& obj, std::mutex& mutex)

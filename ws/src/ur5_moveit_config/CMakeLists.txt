@@ -27,8 +27,6 @@ find_package(
 	moveit_setup_assistant
 	moveit_ros_planning_interface
 	ur5_description
-	ur5_dynamics
-	rovi_utils
 )
 
 find_package(Boost REQUIRED)
@@ -74,8 +72,6 @@ catkin_package(
 		moveit_setup_assistant
 		moveit_ros_planning_interface
 		ur5_description
-		ur5_dynamics
-		rovi_utils
 	DEPENDS
 		EIGEN3
 )

@@ -45,7 +45,7 @@
         <visualize>true</visualize>
         <pose>0 0 0 0 0 0</pose>
 
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <horizontal_fov>1</horizontal_fov>
 
         <image>
           <width>800</width>
@@ -61,7 +61,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.0087</stddev>
+          <stddev>0.00507</stddev>
         </noise>
 
       </camera>
@@ -69,7 +69,7 @@
       <camera name="right">
 
         <pose>0 -0.08 0 0 0 0</pose>
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <horizontal_fov>1</horizontal_fov>
 
         <image>
           <width>800</width>
@@ -85,7 +85,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.0087</stddev>
+          <stddev>0.00507</stddev>
         </noise>
 
       </camera>

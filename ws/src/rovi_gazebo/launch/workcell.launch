@@ -3,37 +3,30 @@
 	<!-- ARGUMENTS -->
 
 	<!-- robot pose [x, y, z] -->
-	<!-- <arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/> -->
 	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.74"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<!--<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>-->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.45 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y 0.0"/>
-	
 
 	<arg name="kinect_pose" doc="The pose of the kinect spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
 	<arg name="projector_pose" doc="The pose of the camera spawn location."   default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
+	
+	<!-- <arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/> -->
+	<!-- <arg name="kinect_pose" doc="The pose of the kinect sensor spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/> -->
+	<!-- <arg name="projector_pose" doc="The pose of the projector spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/> -->
 
-	<arg name="all_objects" default="false" />
-	<arg name="use_moveit"  default="true" />
-	<arg name="use_rviz"    default="true" />
+	<arg name="no_objects"     default="true" />
+	<arg name="use_moveit"     default="true" />
+	<arg name="use_rviz"       default="true" />
+	<arg name="use_gripper"    default="true" />
+	<arg name="ur5_controller" default="ur5_joint_position_controller" />
 
 	<!-- GAZEBO -->
 
 	<!-- locate robot description -->
-	<!-- <param name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5.urdf.xacro"/> -->
-	<param name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5_with_wsg.urdf.xacro"/>
-
-	<!-- locate models -->
-	<param name="table" textfile="$(find rovi_gazebo)/models/table/model.sdf"/>
-	<param name="bottle" textfile="$(find rovi_gazebo)/models/bottle/model.sdf"/>
-	<param name="mug" textfile="$(find rovi_gazebo)/models/mug/model.sdf"/>
-	<param name="milk" textfile="$(find rovi_gazebo)/models/milk/model.sdf"/>
-	<param name="coffecan" textfile="$(find rovi_gazebo)/models/coffecan/model.sdf"/>
-	
-	<param name="camera_stereo" textfile="$(find rovi_gazebo)/models/camera_stereo/model.sdf"/>
-	<param name="kinect" textfile="$(find rovi_gazebo)/models/kinect/model.sdf"/>
-	<param name="projector" textfile="$(find rovi_gazebo)/models/projector/model.sdf"/>
+	<param if="$(arg use_gripper)"     name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5_with_wsg.urdf.xacro"/>
+	<param unless="$(arg use_gripper)" name="robot_description" command="$(find xacro)/xacro $(find ur5_description)/robots/ur5.urdf.xacro"/>
 
 	<!-- gazebo arguments -->
 	<arg name="paused" default="true"/>
@@ -82,8 +75,8 @@
 	<rosparam file="$(find ur5_controllers)/config/wsg_controllers.yaml" command="load"/>
 
 	<!-- load the controllers -->
-	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller ur5_joint_position_controller"/>
-	<node name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/>
+	<node name="ur5_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="ur5_joint_state_controller $(arg ur5_controller)"/>
+	<node if="$(arg use_gripper)" name="wsg_controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="wsg_joint_state_controller wsg_hybrid_controller"/>
 
 	<!-- publish default setpoints for controllers -->
 	<!-- <node pkg="rostopic" type="rostopic" name="default_wgc_setpoint" args="pub /wsg_group_controller/command std_msgs/Float64MultiArray '{data: 20.0 }'" output="screen"/> -->

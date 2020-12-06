@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rovi_gazebo)
+project(rovi_system)
 
 # C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -10,13 +10,10 @@ find_package(
 	COMPONENTS
 	roscpp
 	roslib
-	xacro
-	gazebo_ros
-	sensor_msgs
-	geometry_msgs
-	moveit_msgs
-	cv_bridge
 	rovi_utils
+	rovi_gazebo
+	rovi_planner
+	# rovi_pose_estimator
 )
 
 # find other libraries
@@ -43,23 +40,16 @@ endif()
 # declare a catkin package
 catkin_package(
 	INCLUDE_DIRS
-		include
 	LIBRARIES
-		lib_rovi_gazebo
 	CATKIN_DEPENDS
 		roscpp
 		roslib
-		xacro
-		gazebo_ros
-		sensor_msgs
-		geometry_msgs
-		moveit_msgs
-		cv_bridge
 		rovi_utils
+		rovi_gazebo
+		rovi_planner
+		# rovi_pose_estimator
 	DEPENDS
 		EIGEN3
-		OpenCV
-		# PCL
 )
 
 # include dirs
@@ -67,31 +57,14 @@ include_directories(
 	include
 	${catkin_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIRS}
-	${OpenCV_INCLUDE_DIRS}
-	# ${PCL_INCLUDE_DIRS}
-)
-
-################################################################################################
-
-# libraries
-
-## lib_rovi_gazebo (rovi_gazebo/rovi_gazebo.h)
-add_library(lib_rovi_gazebo src/lib_rovi_gazebo.cpp)
-target_link_libraries(lib_rovi_gazebo ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-install(
-	TARGETS lib_rovi_gazebo
-	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-## install all project namespaced headers (package/include)
-install(
-	DIRECTORY include/${PROJECT_NAME}/
-	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 ################################################################################################
 
 # nodes
+
+add_executable(reachability src/reachability.cpp)
+target_link_libraries(reachability ${catkin_LIBRARIES})
+
+add_executable(planning_kdl src/planning_kdl.cpp)
+target_link_libraries(planning_kdl ${catkin_LIBRARIES})
