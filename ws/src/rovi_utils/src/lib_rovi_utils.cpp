@@ -155,7 +155,7 @@ rovi_utils::move_base(moveit::core::RobotState& state, const geometry_msgs::Pose
 
 template<typename T>
 void
-rovi_utils::export_traj(T& traj, const std::string&& filename, const double resolution)
+rovi_utils::export_traj(T& traj, const std::string& filename, const double resolution)
 {
 
 	// MATLAB code:
@@ -321,6 +321,6 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 }
 
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
-template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string&& filename, const double resolution);
-template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string&& filename, const double resolution);
-template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite*, 6>>(std::array<KDL::Trajectory_Composite*, 6>& traj, const std::string&& filename, const double resolution);
+template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string& filename, const double resolution);
+template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string& filename, const double resolution);
+template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite*, 6>>(std::array<KDL::Trajectory_Composite*, 6>& traj, const std::string& filename, const double resolution);
