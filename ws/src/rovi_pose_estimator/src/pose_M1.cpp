@@ -17,6 +17,7 @@ int main(int argc, char** argv)
     }
 
     int iterations = std::stoi(argv[1]);
+    float noise = std::stof(argv[2]);
 
     // init the node
 	ros::init(argc, argv, "pose_M1");
@@ -24,9 +25,9 @@ int main(int argc, char** argv)
 	ros::AsyncSpinner spin(4);
 	spin.start();  
 
-    auto pose = M1::estimate_pose(iterations);
+    auto pose = M1::estimate_pose(iterations, true, 20);
 
-    ROS_INFO_STREAM(pose);
+    // ROS_INFO_STREAM(pose);
 
     return 0;
 }

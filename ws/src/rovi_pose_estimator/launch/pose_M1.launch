@@ -1,0 +1,22 @@
+<launch>
+
+	<!-- workcell -->
+	<include file="$(find rovi_gazebo)/launch/workcell.launch">
+		<arg name="paused" value="true"/>
+		<arg name="use_moveit" value="false"/>
+		<arg name="use_rviz" value="false"/>
+		<arg name="no_objects" value="true"/>
+		<arg name="ur5_controller" value="ur5_cartesian_pose_controller"/>
+		<arg name="use_gripper" value="true"/>
+	</include>
+	
+	<!-- spawn objects -->
+	<!-- <node name="spawn_bottle1" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle1 -x 0.15 -y 1.05 -z 0.75"/> --> -->
+	<!-- <node name="spawn_bottle2" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle2 -x 0.40 -y 1.05 -z 0.75"/> --> -->
+	<!-- <node name="spawn_bottle3" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle3 -x 0.65 -y 1.05 -z 0.75"/> --> -->
+	<!-- <node name="spawn_bottle4" pkg="gazebo_ros" type="spawn_model" args="-database bottle -sdf -model bottle4 -x 0.70 -y 0.11 -z 0.75"/> --> -->
+	
+	<!-- planning node -->
+	<!-- <node name="planning_kdl" pkg="rovi_system" type="planning_kdl" output="screen" launch-prefix="gnome-terminal -/-command" /> -->
+	
+</launch>

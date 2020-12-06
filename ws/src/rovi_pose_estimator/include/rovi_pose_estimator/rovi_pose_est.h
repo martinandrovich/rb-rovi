@@ -56,7 +56,7 @@ namespace rovi_pose_estimator
         ransac_features(const int & max_it = 10000);
 
         geometry_msgs::Pose
-        estimate_pose(const int & it, const bool & draw = false);
+        estimate_pose(const int & it, const bool & draw = false, const double & noise = 0.0);
     }
 
     namespace M3
@@ -86,6 +86,6 @@ namespace rovi_pose_estimator
         stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, const cv::Mat & Q, const bool & k_means = false);
 
         geometry_msgs::Pose 
-        estimate_pose(const bool & draw = 1, const std::string & img_name = "img_stitched.jpg", const double & qual = 0.01, const int & max_number_of_corners = 4, const double & min_dist_features = 50.0f);
+        estimate_pose(const bool & draw = 1, const std::string & img_name = "img_stitched.jpg", const double & noise = 0.0, const double & qual = 0.01, const int & max_number_of_corners = 4, const double & min_dist_features = 50.0f);
     }
 }

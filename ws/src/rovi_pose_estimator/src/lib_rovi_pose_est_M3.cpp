@@ -160,13 +160,14 @@ M3::stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, co
         M.at<double>(0, i) = M.at<double>(0, i) / w;
         M.at<double>(1, i) = M.at<double>(1, i) / w;
         M.at<double>(2, i) = M.at<double>(2, i) / w;
+        M.at<double>(3, i) = M.at<double>(3, i) / w;
     }
 
     return M;
 }
 
 geometry_msgs::Pose 
-M3::estimate_pose(const bool & draw, const std::string & img_name, const double & qual, const int & max_number_of_corners, const double & min_dist_features)
+M3::estimate_pose(const bool & draw, const std::string & img_name, const double & noise, const double & qual, const int & max_number_of_corners, const double & min_dist_features)
 {
     geometry_msgs::Pose pose;
 
@@ -174,6 +175,22 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
     auto cam_info_arr     = M3::get_image_info();
     auto cam_images_color = M3::get_image_data();
     auto cam_images_gray  = cam_images_color;
+    
+    cv::Mat gaussian_noise_left = cv::Mat::zeros(cam_images_color[0].size(), cam_images_color[0].type());
+    cv::Mat gaussian_noise_right = gaussian_noise_left;
+    
+    std::vector<double> mean = {0, 0, 0};
+    std::vector<double> std = {noise, noise, noise};
+
+    cv::randn(gaussian_noise_left, mean, std);
+    cv::randn(gaussian_noise_right, mean, std);
+
+    cv::imwrite("left.jpg", gaussian_noise_left);
+
+    cam_images_color[0] += gaussian_noise_left;
+    cam_images_color[1] += gaussian_noise_right;
+    cam_images_gray[0] += gaussian_noise_left;
+    cam_images_gray[1] += gaussian_noise_right;
 
     // Define ROI masks
     cv::Mat ROI_mask_left  = M3::create_mask(cam_images_gray[LEFT],  ROI_left);
@@ -242,6 +259,15 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
         pts.push_back(std::array<cv::Point2d, 2>{left_pt, corner_pts_right[k]});
     }
 
+    // Sort it 
+    std::sort(pts.begin(), pts.end(), [](const std::array<cv::Point2d, 2> & a, const std::array<cv::Point2d, 2> & b) 
+    {
+        if( a[0].y < b[0].y )
+            return true;
+        else
+            return false;
+    });
+
     if (pts.size() == 0)
     {
         ROS_INFO_STREAM("No solution was found");
@@ -251,33 +277,19 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
     // Stich the images
     const double dx = cam_images_color[LEFT].cols-1;
 
-    cv::Mat img_stitched = cv::Mat::zeros ( cv::Size(cam_images_gray[LEFT].cols * 2, cam_images_gray[LEFT].rows), CV_8UC3 );
-
-    if (draw)
-    {
-        cam_images_color[0].copyTo(img_stitched(cv::Rect(0, 0, cam_images_color[LEFT].cols, cam_images_color[LEFT].rows)));
-        cam_images_color[1].copyTo(img_stitched(cv::Rect(dx, 0, cam_images_color[RIGHT].cols, cam_images_color[RIGHT].rows)));
-
-        cv::putText(img_stitched, "Left Image", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
-        cv::putText(img_stitched, "Right Image", cv::Point(50 + dx, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
-
-        for(auto pt : pts)
-        {
-            pt[1].x += dx;
-            cv::line(img_stitched, pt[0], pt[1], cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
-        }
-    }
-
     // Define the Q matrix
     Eigen::Matrix<double, 3, 3, Eigen::RowMajor> K_left(cam_info_arr[LEFT].K.data());
 
-    cv::Mat Q = ( cv::Mat_<double>(4,4) <<  1., 0.,  0.,         -K_left(0,2),
-                                            0., 1.,  0.,         -K_left(1,2),
-                                            0., 0.,  0.,          K_left(1,1),
-                                            0., 0., -1/BASELINE,          0.0);
+    cv::Mat Q = ( cv::Mat_<double>(4,4) <<  1.0, 0.0, 0.0,-K_left(0,2),
+                                            0.0, 1.0, 0.0,-K_left(1,2),
+                                            0.0, 0.0, 0.0, K_left(1,1),
+                                            0.0, 0.0,-1/BASELINE, 0.0);
     
     // Stereo triangulation
     cv::Mat M = M3::stereo_triangulation(pts, Q);
+
+    //
+    ROS_INFO_STREAM("\n"<< M);
 
     // Take an arbitrary point, find the diagonal.
     cv::Point2d origo(M.at<double>(0, 0), M.at<double>(1, 0));
@@ -294,7 +306,7 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
         }
     }
 
-    // Calculate the coordinate system for pose generation
+    // Calculate the coordinate system for pose generation by getting the indices
     std::vector<int> pt_idx;
     for (int i = 1; i < 4; ++i)
     {
@@ -309,27 +321,71 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
     cv::Point2d l2 = cv::Point2d( M.at<double>(0, pt_idx[1]) - origo.x, M.at<double>(1, pt_idx[1]) - origo.y);
 
     double cross_val = l1.cross(l2);
+
     if(cross_val > 0)
     {
         std::swap(pt_idx[0], pt_idx[1]);
         std::swap(l1, l2);
     }
+
+    // Update l1/v2
+    auto L1_norm = sqrt(std::pow(l1.x, 2) + std::pow(l1.y, 2));
+    auto L2_norm = sqrt(std::pow(l2.x, 2) + std::pow(l2.y, 2));
+
+    l1 /= sqrt(l1.dot(l1));
+    l2 /= sqrt(l2.dot(l2));
+
+    auto error = l1.dot(l2);
+    auto y_orth = l1 - (error/2)*l2;
+    auto x_orth = l2 - (error/2)*l1;
+
+    l1 = 0.5*(3.0-x_orth.dot(x_orth))*x_orth;
+    l2 = 0.5*(3.0-y_orth.dot(y_orth))*y_orth;
     
     if (draw)
     {
+
+        // Imgage stiched
+        cv::Mat img_stitched = cv::Mat::zeros(cv::Size(cam_images_gray[LEFT].cols * 2, cam_images_gray[LEFT].rows), CV_8UC3);
+
+        cam_images_color[0].copyTo(img_stitched(cv::Rect(0, 0, cam_images_color[LEFT].cols, cam_images_color[LEFT].rows)));
+        cam_images_color[1].copyTo(img_stitched(cv::Rect(dx, 0, cam_images_color[RIGHT].cols, cam_images_color[RIGHT].rows)));
+
+        cv::putText(img_stitched, "Left Image", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
+        cv::putText(img_stitched, "Right Image", cv::Point(50 + dx, 50), cv::FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2, cv::LINE_AA);
+
+        for(auto pt : pts)
+        {
+            pt[1].x += dx;
+            cv::line(img_stitched, pt[0], pt[1], cv::Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255)));
+        }
+
+        auto pt = cv::Point2d(pts[0][0].x + l1.x * 50, pts[0][0].y + l1.y * 50);
+
         // Draw the pose_estimation, rhs-coordinate system and with a blue arrow
-        cv::arrowedLine(img_stitched, pts[0][0], pts[pt_idx[0]][0], cv::Scalar(0, 255, 0), 2);
-        cv::arrowedLine(img_stitched, pts[0][0], pts[pt_idx[1]][0], cv::Scalar(0, 0, 255), 2);
-        cv::arrowedLine(img_stitched, pts[0][0], pts[longest_idx][0], cv::Scalar(255, 0, 0), 2);
-        cv::arrowedLine(img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[pt_idx[0]][1].x + dx, pts[pt_idx[0]][1].y), cv::Scalar(0, 255, 0), 2);
-        cv::arrowedLine(img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[pt_idx[1]][1].x + dx, pts[pt_idx[1]][1].y), cv::Scalar(0, 0, 255), 2);
-        cv::arrowedLine(img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[longest_idx][1].x + dx, pts[longest_idx][1].y), cv::Scalar(255, 0, 0), 2);
+        cv::arrowedLine( img_stitched, pts[0][0], pts[pt_idx[0]][0], cv::Scalar(0, 255, 0), 2 );
+        cv::arrowedLine( img_stitched, pts[0][0], pts[pt_idx[1]][0], cv::Scalar(0, 0, 255), 2 );
+        cv::arrowedLine( img_stitched, pts[0][0], pts[longest_idx][0], cv::Scalar(255, 0, 0), 2 );
+        cv::arrowedLine( img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[pt_idx[0]][1].x + dx, pts[pt_idx[0]][1].y), cv::Scalar(0, 255, 0), 2 );
+        cv::arrowedLine( img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[pt_idx[1]][1].x + dx, pts[pt_idx[1]][1].y), cv::Scalar(0, 0, 255), 2 );
+        cv::arrowedLine( img_stitched, cv::Point2d(pts[0][1].x + dx, pts[0][1].y), cv::Point2d(pts[longest_idx][1].x + dx, pts[longest_idx][1].y), cv::Scalar(255, 0, 0), 2 );
 
         // Get the longest line, two gripping poses will be available, compute them both.
         cv::imwrite(img_name, img_stitched);
     }
 
-    ROS_INFO_STREAM("l1 " << l1 << " - l2: " << l2);
+    geometry_msgs::Pose pose_T;
+
+    Eigen::Matrix4d eig_pose = ( Eigen::Matrix4d() << l1.x, l2.x, 0.0, M.at<double>(0, 0) + (M.at<double>(0, longest_idx) - M.at<double>(0, 0))/2.0,
+                                                      l1.y, l2.y, 0.0, M.at<double>(1, 0) + (M.at<double>(1, longest_idx) - M.at<double>(1, 0))/2.0,
+                                                       0.0, 0.0, 1.0, 0.75,
+                                                       0.0, 0.0, 0.0, 1.0 ).finished();
+
+    Eigen::Affine3d affine(eig_pose);
+    tf::poseEigenToMsg(affine, pose);
+
+    ROS_INFO_STREAM("\n" << eig_pose);
+    // ROS_INFO_STREAM("\n" << eig_pose);
 
     return pose;
 }

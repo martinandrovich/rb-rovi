@@ -625,7 +625,7 @@ M1::ransac_features(const int & max_it)
 }
 
 geometry_msgs::Pose
-M1::estimate_pose(const int & it, const bool & draw)
+M1::estimate_pose(const int & it, const bool & draw, const double & noise)
 {
     // Sleep to make sure, that everything is up running.
     rovi_gazebo::set_projector(true);
@@ -635,15 +635,17 @@ M1::estimate_pose(const int & it, const bool & draw)
 
     // Get stereo images
     auto cam_images = M1::get_image_data();
+    cv::randn(cam_images[0], cam_images[0], noise);
+    cv::randn(cam_images[1], cam_images[1], noise);
 
     // Compute the disparity map
     cv::Mat point_cloud = M1::compute_disparitymap(cam_images[LEFT], cam_images[RIGHT]);
     
     if(draw)
     {
-        cv::imwrite("bottle_left.jpg", cam_images[0]);
-        cv::imwrite("bottle_right.jpg",cam_images[1]);
-        cv::imwrite("point_cloud.jpg", point_cloud);
+        cv::imwrite("bottle_left.jpg",  cam_images[0]);
+        cv::imwrite("bottle_right.jpg", cam_images[1]);
+        cv::imwrite("point_cloud.jpg",  point_cloud);
     }
 
     // Compute the point cloud
@@ -653,9 +655,7 @@ M1::estimate_pose(const int & it, const bool & draw)
     auto file_bottle_pcd = ros::package::getPath("rovi_gazebo") + std::string("/models/bottle/bottle.pcd");
 
     M1::read_compute_features_object(file_bottle_pcd);
-
     M1::match_features();
-
     auto T = Eigen::Affine3d(M1::ransac_features(it).cast<double>());
     geometry_msgs::Pose pose;
     tf::poseEigenToMsg(T, pose);
