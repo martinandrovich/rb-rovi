@@ -626,11 +626,14 @@ namespace rovi_pose_estimator
 
 		}
 
-		std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f>> 
-		bruteforce_matches(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners, int set_size)
-		{
-			std::vector<cv::Point2f> image_corners_to_match (image_corners.begin(), image_corners.begin() + set_size);
-			std::cout << "Image corners are: " << image_corners_to_match << std::endl;
+		std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<std::vector<cv::Point2f>> >
+		bruteforce_matches(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners, int set_size, int offset=0)
+		{	
+			std::vector<std::vector<cv::Point2f>> image_permutations;
+			for(int i= offset; i < image_corners.size() - set_size; i++)
+			{
+				image_permutations.emplace_back(std::vector<cv::Point2f> (image_corners.begin() + i, image_corners.begin() + i + set_size));
+			}
 			
 			std::vector< std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f> >> result;
 			std::vector<std::vector<cv::Point3f>> brute_forced_model_corner_matches; 
@@ -686,7 +689,7 @@ namespace rovi_pose_estimator
 				
 				
 
-			return std::pair<std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f>>(brute_forced_model_corner_matches, image_corners_to_match);			
+			return std::pair<std::vector<std::vector<cv::Point3f>>, std::vector<std::vector<cv::Point2f>>>(brute_forced_model_corner_matches, image_permutations);			
 		}
 
 
@@ -696,13 +699,12 @@ namespace rovi_pose_estimator
 			constexpr int points_to_use_for_estimation = 4;
 			constexpr int num_of_refinements = 5;
 			constexpr double uncertainty = 1.5;
-			constexpr int max_neighbours_search = 2 ;
-			constexpr bool bruteforce = false;
+			constexpr int max_neighbours_search = 1;
+			constexpr bool bruteforce = true;
 			std::vector<cv::Point3f> points3d(points_to_use_for_estimation);
 			std::vector<cv::Point2f> points2d(points_to_use_for_estimation);
-
 			
-			auto brute_forced_matches = bruteforce_matches(model_corners, image_corners, points_to_use_for_estimation);
+			auto brute_forced_matches = bruteforce_matches(model_corners, image_corners, points_to_use_for_estimation, 0);
 
 			std::cout << "Num of combinations made.. " << brute_forced_matches.first.size() << std::endl;
 
@@ -770,9 +772,17 @@ namespace rovi_pose_estimator
 			std::vector<int> generated_samples(points_to_use_for_estimation);
 			std::vector<int> generated_samples_best_match(points_to_use_for_estimation);
 
+			int brute_force_batch_id = 0;
 
 			for(int refine = 0; refine < num_of_refinements; refine++)
-			{
+			{   
+				if(refine)
+				{
+					if(bruteforce)
+					{
+						break;
+					}
+				}
 				for(int iteration=0; iteration< max_iterations; iteration++)
 				{
 					inliers = 0;
@@ -781,11 +791,16 @@ namespace rovi_pose_estimator
 					{
 						if(iteration >= brute_forced_matches.first.size())
 						{
-							break;
+							brute_force_batch_id++;
+							if(brute_force_batch_id >= brute_forced_matches.second.size())
+							{
+								break;
+							}
+							iteration = 0;
 						}
 						for(int point=0; point < points_to_use_for_estimation; point++)
 						{
-							points2d[point] = brute_forced_matches.second[point];
+							points2d[point] = brute_forced_matches.second[brute_force_batch_id][point];
 							points3d[point] = brute_forced_matches.first[iteration][point];					
 						}
 						
@@ -821,7 +836,7 @@ namespace rovi_pose_estimator
 					
 					cv::projectPoints(model_corners, rvec, tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
 
-					//cv::Rodrigues(rvec, rot);
+					
 					for(auto& point: reprojected_image_corners)
 					{
 						//std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
@@ -857,8 +872,8 @@ namespace rovi_pose_estimator
 				img->copyTo(img_cpy);
 				cv::projectPoints(model_corners, best_rvec, best_tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
 
-				std::cout << "rvec for best fit... " << rvec << std::endl;
-				std::cout << "tvec for best fit... " << tvec << std::endl;
+				std::cout << "rvec for best fit... " << best_rvec << std::endl;
+				std::cout << "tvec for best fit... " << best_tvec << std::endl;
 
 				std::cout << "Image_corner points for comparison " << image_corners << std::endl;
 				for(const auto& point: reprojected_image_corners)
@@ -880,8 +895,14 @@ namespace rovi_pose_estimator
 
 						
 				best_inliers = 0;	
+				brute_force_batch_id = 0;
 
-			}									
+			}
+
+			Rodrigues(best_rvec, rot);	//Convert from angle-axis to rot matrix
+
+			cv::hconcat(rot, best_tvec, pose_estimation);			
+			std::cout << "Found transformation: " << pose_estimation << std::endl; 
 		}
 
 

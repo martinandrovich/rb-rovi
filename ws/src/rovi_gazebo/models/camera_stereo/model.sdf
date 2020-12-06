@@ -8,6 +8,7 @@
   <!-- <pose>-1 0 2 0 1 0</pose> -->
 
   <static>true</static>
+  
   <allow_auto_disable>false</allow_auto_disable>
 
   <link name='cam_link'>
@@ -20,6 +21,7 @@
           <size>0.1 0.1 0.1</size>
         </box>
       </geometry>
+      <cast_shadows>0</cast_shadows>
     </visual>
 
     <inertial>
