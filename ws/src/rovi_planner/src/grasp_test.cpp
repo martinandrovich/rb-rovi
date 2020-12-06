@@ -31,8 +31,6 @@ constexpr auto PLANNING_SCENE_TOPIC = "/planning_scene_gazebo";
 constexpr auto TRAJECTORY_TOPIC     = "/move_group/display_planned_path";
 constexpr auto FREQ                 = 1000.0; // Hz
 
-constexpr auto HOME_ARM             = std::array{ 0., -1.57, 1.57, 1.57, 1.57, 0. };
-constexpr auto HOME_WSG             = std::array{ 0.05, 0.05 };
 constexpr auto BASE_OFFSET          = std::array{ 0.1, 0.5, 0.75 };
 constexpr auto POS_TABLE            = std::array{ 0.4, 0.6, 0.64 };
 constexpr auto POSE_BOTTLE_PICK     = std::array{  0.50,  0.53, 0.10, 0.0, 0.0, 0.0 };

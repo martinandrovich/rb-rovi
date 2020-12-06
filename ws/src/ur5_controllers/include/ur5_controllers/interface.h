@@ -26,7 +26,7 @@ namespace ur5_controllers
 		execute_traj(const std::vector<sensor_msgs::JointState>& traj, const double freq = EXEC_FREQ);
 		
 		static void
-		execute_traj(const KDL::Trajectory_Composite& traj, const double freq = EXEC_FREQ);
+		execute_traj(const KDL::Trajectory_Composite* traj, const double freq = EXEC_FREQ);
 
 		inline static const std::string COMMAND_JNT_POS_TOPIC = "/ur5_joint_position_controller/command";
 		inline static const std::string COMMAND_CART_TOPIC    = "/ur5_cartesian_pose_controller/command";
