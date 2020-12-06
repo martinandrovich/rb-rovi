@@ -197,9 +197,18 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_
 	co.mesh_poses[0].orientation.x = ori[1];
 	co.mesh_poses[0].orientation.y = ori[2];
 	co.mesh_poses[0].orientation.z = ori[3];
+	
+	// co.pose.position.x = pos[0];
+	// co.pose.position.y = pos[1];
+	// co.pose.position.z = pos[2];
 
-	co.meshes.push_back(mesh);
-	co.mesh_poses.push_back(co.mesh_poses[0]);
+	// co.pose.orientation.w = ori[0];
+	// co.pose.orientation.x = ori[1];
+	// co.pose.orientation.y = ori[2];
+	// co.pose.orientation.z = ori[3];
+
+	// co.meshes.push_back(mesh);
+	// co.mesh_poses.push_back(co.mesh_poses[0]);
 	co.operation = co.ADD;
 
 	return co;
@@ -260,6 +269,12 @@ rovi_utils::move_base(moveit::core::RobotState& state, const std::array<double, 
 	// state.setVariablePosition(0, offset[0]);
 	// state.setVariablePosition(1, offset[1]);
 	// state.setVariablePosition(2, offset[2]);
+}
+
+void
+rovi_utils::move_base(moveit::core::RobotState& state, const geometry_msgs::Pose& offset, const std::string& virtual_joint_name)
+{
+	move_base(state, { offset.position.x, offset.position.y, offset.position.z }, virtual_joint_name);
 }
 
 template<typename T>

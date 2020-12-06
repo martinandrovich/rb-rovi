@@ -12,6 +12,10 @@ find_package(
 	roslib
 	xacro
 	gazebo_ros
+	sensor_msgs
+	geometry_msgs
+	moveit_msgs
+	rovi_utils
 )
 
 # Finding Eigen is somewhat complicated because of our need to support Ubuntu
@@ -42,6 +46,10 @@ catkin_package(
 		roslib
 		xacro
 		gazebo_ros
+		sensor_msgs
+		geometry_msgs
+		moveit_msgs
+		rovi_utils
 	DEPENDS
 		EIGEN3
 )
@@ -77,8 +85,3 @@ install(
 ################################################################################################
 
 # nodes
-
-## example executable (rosrun)
-add_executable(example src/example.cpp)
-target_link_libraries(example ${catkin_LIBRARIES} lib_rovi_gazebo)
-target_include_directories(example PUBLIC include/rovi_gazebo)

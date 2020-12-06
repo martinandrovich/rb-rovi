@@ -75,6 +75,8 @@
 
     <!-- link 0 -->
     <!-- base link -->
+    
+    <!-- visual and collision meshes are slighly offset such that the base can he placed on a surface -->
 
     <link name="ur5_link0">
 
@@ -89,6 +91,7 @@
       </visual>
 
       <collision>
+        <origin xyz="0.0 0.0 0.005" rpy="0.0 0.0 0.0"/>
         <geometry>
           <mesh filename="package://ur5_description/meshes/collision/base.stl"/>
         </geometry>

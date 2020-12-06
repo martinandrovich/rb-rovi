@@ -85,9 +85,9 @@ namespace ur5_controllers
 	WSGHybridController::update(const ros::Time& time, const ros::Duration& dur)
 	{
 		// get desired joint efforts
-		const auto & command = *commands_buffer.readFromRT();
+		const auto& command = *commands_buffer.readFromRT();
 
-		Eigen::Vector2d torque(command.data, command.data);
+		Eigen::Vector2d tau_des(command.data, command.data);
 
 		// Eigen::Vector2d q = get_position();
 
@@ -97,12 +97,13 @@ namespace ur5_controllers
 		// Eigen::Vector3d g = R * Eigen::Vector3d(0, 0, 1.5*9.80665);
 
 		// for (size_t i = 0; i < 2; i++)
-		// 	torque(i) += (i == 0) ? g(0) : -g(0);
+		// 	tau_des(i) += (i == 0) ? g(0) : -g(0);
 		
-		Eigen::Vector2d torque_des = saturate_rotatum(torque);
+		// saturate rotatum
+		tau_des = saturate_rotatum(tau_des);
 
 		for (size_t i = 0; i < 2; i++)
-			vec_joints[i].setCommand(torque(i));
+			vec_joints[i].setCommand(tau_des(i));
 	}
 
 	Eigen::Vector2d

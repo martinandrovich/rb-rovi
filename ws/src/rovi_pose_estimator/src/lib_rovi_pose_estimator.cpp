@@ -58,8 +58,8 @@ namespace rovi_pose_estimator
 
 			if(save_to_disk)
 			{
-			pcl::PCDWriter writer;
-  			writer.write<pcl::PointXYZ> ("kinect_cloud.pcd", *point_cloud, false);
+				pcl::PCDWriter writer;
+				writer.write<pcl::PointXYZ> ("kinect_cloud.pcd", *point_cloud, false);
 			}
 			
 			*output_cloud = *point_cloud;

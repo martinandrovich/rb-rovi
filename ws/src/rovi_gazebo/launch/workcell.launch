@@ -3,7 +3,8 @@
 	<!-- ARGUMENTS -->
 
 	<!-- robot pose [x, y, z] -->
-	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/>
+	<!-- <arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.75"/> -->
+	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.74"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<!--<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y -1.5707"/>-->
@@ -14,7 +15,8 @@
 	<arg name="projector_pose" doc="The pose of the camera spawn location."   default="-x 0.4 -y 1.4 -z 1.5 -R 0.0 -P 1.0 -Y 1.5707"/>
 
 	<arg name="all_objects" default="false" />
-	<arg name="moveit" default="true" />
+	<arg name="use_moveit"  default="true" />
+	<arg name="use_rviz"    default="true" />
 
 	<!-- GAZEBO -->
 
@@ -42,6 +44,7 @@
 
 	<!-- launch gazebo (empty world) -->
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
+		<arg name="world_name" value="$(find rovi_gazebo)/world/groundless.world"/>
 		<arg name="debug" value="$(arg debug)"/>
 		<arg name="gui" value="$(arg gui)"/>
 		<arg name="paused" value="$(arg paused)"/>
@@ -89,6 +92,8 @@
 	<!-- <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen"/> -->
 
 	<!-- MOVE IT with OMPL -->
-	<include if="$(arg moveit)" file="$(find ur5_moveit_config)/launch/default.launch" />
+	<include if="$(arg use_moveit)" file="$(find ur5_moveit_config)/launch/default.launch">
+		<arg name="use_rviz" value="$(arg use_rviz)"/>
+	</include>
 
 </launch>

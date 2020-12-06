@@ -4,14 +4,14 @@
 	<name>rovi_gazebo</name>
 	<version>1.0.0</version>
 	<description>Integration of ROVI work cell, objects etc. into Gazebo.</description>
-	
+
 	<author email="dscho15@student.sdu.dk">Daniel Tofte Schøn</author>
 	<author email="marta16@student.sdu.dk">Martin Androvich</author>
 
 	<maintainer email="dscho15@student.sdu.dk">Daniel Tofte Schøn</maintainer>
 
 	<license>BSD</license>
-	
+
 	<url type="repository">https://github.com/martinandrovich/rb-rovi</url>
 
 	<buildtool_depend>catkin</buildtool_depend>
@@ -20,6 +20,11 @@
 	<depend>roslib</depend>
 	<depend>xacro</depend>
 	<depend>gazebo_ros</depend>
+	<depend>sensor_msgs</depend>
+	<depend>geometry_msgs</depend>
+	<depend>moveit_msgs</depend>
+	<depend>rovi_utils</depend>
+
 	<depend>Eigen3</depend>
 
 	<export>
@@ -34,7 +39,7 @@
 
 		 will only work when launched using gazebo_ros
 	-->
-	
+
 	<gazebo_ros
 		gazebo_plugin_path="${prefix}/lib"
 		gazebo_model_path="${prefix}/models"
