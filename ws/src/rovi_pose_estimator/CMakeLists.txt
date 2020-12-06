@@ -52,7 +52,6 @@ catkin_package(
 		std_msgs
 		sensor_msgs
 		image_transport
-		vision_opencv
 		cv_bridge
 		pcl_ros
 		rovi_utils
@@ -152,3 +151,6 @@ target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
 
 add_executable(pose_M3 src/pose_M3.cpp)
 target_link_libraries(pose_M3 lib_rovi_pose_est_M3)
+
+add_executable(pose_M4 src/pose_example.cpp)
+target_link_libraries(pose_M4 rovi_pose_estimator)

@@ -16,6 +16,7 @@
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
 #include <gazebo_msgs/SetModelState.h>
+#include <sensor_msgs/CameraInfo.h>
 
 #include <ur5_dynamics/ur5_dynamics.h>
 #include <rovi_utils/rovi_utils.h>
@@ -60,6 +61,13 @@ rovi_gazebo::set_projector(bool state)
 
 	// set async state
 	state_ = state;
+}
+
+
+sensor_msgs::CameraInfo
+get_camera_info()
+{
+	return *ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/rbrovi/camera/camera_info");
 }
 
 std::unordered_map<std::string, cv::Mat>

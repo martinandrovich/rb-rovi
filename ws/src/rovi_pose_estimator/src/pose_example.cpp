@@ -16,8 +16,11 @@
 #include <pcl/io/vtk_lib_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <rovi_gazebo/rovi_gazebo.h>
+#include <rovi_pose_estimator/rovi_pose_est.h>
 
 #include <filesystem>
+#include <eigen_conversions/eigen_msg.h>
+#include <opencv4/opencv2/core/eigen.hpp>
 
 
 
@@ -71,7 +74,7 @@ main(int argc, char** argv)
 
 	//pose_estimation_exampleM2();
 
-	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera_stereo/left/image_raw");
+	const auto msg = ros::topic::waitForMessage<sensor_msgs::Image>("/rbrovi/camera/image_raw");
 	cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
 	cv::imshow(window_name, img);
 	cv::waitKey(0);
@@ -92,10 +95,19 @@ main(int argc, char** argv)
 
 	auto model_corner_points = rovi_pose_estimator::M4::PCL_pointcloud_to_OPENCV_Point3d(*key_points);
 	cv::Mat pose_est;
-	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 10000, 5.001f, &img);
+	rovi_pose_estimator::M4::RANSAC_pose_estimation(model_corner_points, corner_points, corner3d_matches, corner2d_matches, pose_est, 10000, 5.001f, false, &img);
 	
 	auto model_pose = rovi_gazebo::get_model_pose("milk");
-	std::cout << "Model pose is: " << model_pose <<  << std::endl;
+
+	cv::Mat w_T_o;
+    Eigen::Affine3d affine;
+    tf::poseMsgToEigen(rovi_gazebo::get_model_pose("milk"), affine);
+    cv::eigen2cv(affine.matrix(), w_T_o);
+
+	std::cout << "Model pose is: " << model_pose << std::endl;
+	std::cout << "Pose est is: " << w_T_o << std::endl;
+
+	
 
 	
 	

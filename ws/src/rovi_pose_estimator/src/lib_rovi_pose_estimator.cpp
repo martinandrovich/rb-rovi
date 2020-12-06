@@ -37,6 +37,7 @@
 
 
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
+#include "rovi_gazebo/rovi_gazebo.h"
 
 void
 rovi_pose_estimator::test(const std::string& str)
@@ -466,8 +467,8 @@ namespace rovi_pose_estimator
 			const std::string& src = "src window";
 			cv::namedWindow(src);
 
-			//auto roi = cv::selectROI(src, img_gray);
-			//std::cout << "Roi selected.."<< roi << std::endl;
+			auto roi = cv::selectROI(src, img_gray);
+			std::cout << "Roi selected.."<< roi << std::endl;
 			
 			/*201 x 747 from (283, 39)*/
 			auto roi = cv::Rect(283, 39, 198, 747);
@@ -536,6 +537,8 @@ namespace rovi_pose_estimator
 
 			cv::imshow("Filtered corners...", corners_good_features_mat_statistical_filtered);
 			cv::waitKey();
+			
+			assert(corner_points.size() >= 4);
 		}
 
 		
@@ -614,18 +617,6 @@ namespace rovi_pose_estimator
 			return output;
 		}
 
-		cv::Mat
-		get_camera_matrix()
-		{
-
-		}
-
-		cv::Mat
-		get_camera_distortions()
-		{
-
-		}
-
 		std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<std::vector<cv::Point2f>> >
 		bruteforce_matches(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners, int set_size, int offset=0)
 		{	
@@ -694,7 +685,7 @@ namespace rovi_pose_estimator
 
 
 		void 
-		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, const cv::Mat* img)
+		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, bool approximate_camera_matrix, const cv::Mat* img)
 		{
 			constexpr int points_to_use_for_estimation = 4;
 			constexpr int num_of_refinements = 5;
@@ -718,8 +709,9 @@ namespace rovi_pose_estimator
 			std::mt19937 gen(rd());
 			std::uniform_int_distribution<int> distribution(0, model_matches.size()-1);	
 
-			if(img != nullptr)
+			if(approximate_camera_matrix)
 			{
+				assert(img != nullptr);
 				float focal_length = img->cols; // Approximate focal length.
 				cv::Point2d center = cv::Point2d(img->cols/2,img->rows/2);
 
@@ -728,8 +720,9 @@ namespace rovi_pose_estimator
 			}
 			else
 			{
-				camera_matrix = get_camera_matrix();
-				dist_coeffs = get_camera_distortions();
+				auto cam_info = rovi_gazebo::get_camera_info();
+				camera_matrix = cam_info.K;
+				dist_coeffs = cam_info.D;
 			}
 			std::cout << "Camera Matrix " << std::endl << camera_matrix << std::endl ;
 

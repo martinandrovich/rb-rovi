@@ -12,6 +12,7 @@
 #include <gazebo_msgs/ModelStates.h>
 #include <geometry_msgs/Pose.h>
 #include <moveit_msgs/CollisionObject.h>
+#include <sensor_msgs/CameraInfo.h>
 
 namespace rovi_gazebo
 {
@@ -45,8 +46,8 @@ namespace rovi_gazebo
 	cv::Mat
 	get_camera_img(); // todo
 	
-	cv::Mat
-	get_camera_info(); // todo
+	sensor_msgs::CameraInfo
+	get_camera_info();
 
 	std::unordered_map<std::string, cv::Mat>
 	get_stereo_camera_imgs();

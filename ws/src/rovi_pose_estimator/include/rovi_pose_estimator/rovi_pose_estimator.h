@@ -80,7 +80,7 @@ namespace rovi_pose_estimator
 		PCL_pointcloud_to_OPENCV_Point3d(const pcl::PointCloud<pcl::PointXYZRGB>& pointcloud);
         
         void 
-		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius=0.015f, const cv::Mat* img=nullptr);
+		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius=0.015f, bool approximate_camera_matrix=false, const cv::Mat* img=nullptr);
         
     }
 

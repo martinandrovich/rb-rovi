@@ -18,6 +18,7 @@
           <size>0.1 0.1 0.1</size>
         </box>
       </geometry>
+      <cast_shadows>0</cast_shadows>
     </visual>
 
     <inertial>
@@ -39,11 +40,12 @@
 
       <camera name="head">
 
-        <horizontal_fov>1.3962634</horizontal_fov>
+        <pose>0 -0.08 0 0 0 0</pose>
+        <horizontal_fov>1</horizontal_fov>
 
         <image>
-          <width>1200</width>
-          <height>1200</height>
+          <width>800</width>
+          <height>800</height>
           <format>R8G8B8</format>
         </image>
 
@@ -58,7 +60,7 @@
                That pixel's noise value is added to each of its color
                channels, which at that point lie in the range [0,1]. -->
           <mean>0.0</mean>
-          <stddev>0.007</stddev>
+          <stddev>0.00507</stddev>
         </noise>
 
       </camera>
@@ -72,7 +74,7 @@
         <cameraInfoTopicName>camera_info</cameraInfoTopicName>
         <frameName>camera_link</frameName>
 
-        <hackBaseline>0.07</hackBaseline>
+        <hackBaseline>0.08</hackBaseline>
         <distortionK1>0.0</distortionK1>
         <distortionK2>0.0</distortionK2>
         <distortionK3>0.0</distortionK3>

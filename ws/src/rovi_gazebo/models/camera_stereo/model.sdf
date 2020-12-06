@@ -15,7 +15,7 @@
 
     <!-- <pose frame=''>-0.118317 0.002195 0.004205 -0 -0 -3.12703</pose> -->
 
-    <!-- <visual name='visual'>
+      <visual name='visual'>
       <geometry>
         <box>
           <size>0.1 0.1 0.1</size>
