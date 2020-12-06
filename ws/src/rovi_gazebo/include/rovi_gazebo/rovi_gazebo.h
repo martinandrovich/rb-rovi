@@ -26,7 +26,7 @@ namespace rovi_gazebo
 		double WIDTH              = 1.20; // [m] (y)
 		double HEIGHT             = 0.75; // [m] (z)
 		double MASS               = 10.0; // [kg]
-		std::array<double, 3> POS =  { 0.4, 0.6, 0.64 }; // [m]
+		std::array<double, 3> POS = { 0.4, 0.6, 0.64 }; // [m]
 	} TABLE;
 
 	// -- transformations -----------------------------------------------------------
@@ -44,9 +44,15 @@ namespace rovi_gazebo
 
 	cv::Mat
 	get_camera_img(); // todo
+	
+	cv::Mat
+	get_camera_info(); // todo
 
 	std::unordered_map<std::string, cv::Mat>
 	get_stereo_camera_imgs();
+	
+	void
+	get_stereo_camera_info(); // todo
 
 	void
 	get_point_cloud(); // todo
@@ -65,6 +71,15 @@ namespace rovi_gazebo
 
 	geometry_msgs::Pose
 	get_model_pose(const std::string& name);
+	
+	void
+	spawn_model(const std::string& model, const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { 0, 0, 0 });
+	
+	void
+	move_model(const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { INFINITY, INFINITY, INFINITY});
+	
+	void
+	remove_model(const std::string& name);
 	
 	// -- robot state ---------------------------------------------------------------
 
