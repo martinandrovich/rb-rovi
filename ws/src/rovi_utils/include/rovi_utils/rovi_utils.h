@@ -7,6 +7,9 @@
 #include <atomic>
 #include <mutex>
 #include <tuple>
+#include <cstdio>
+#include <ctime>
+#include <filesystem>
 
 #include <ros/package.h>
 #include <Eigen/Eigen>
@@ -60,19 +63,31 @@ namespace rovi_utils
 	// -- utilities ---------------------------------------------------------------
 
 	std::string
+	get_timestamp(const std::string& format = "%Y%m%d_%H%M%S")
+	{
+		std::time_t rawtime;
+		std::tm* timeinfo;
+		char buffer [80];
+		std::time(&rawtime);
+		timeinfo = std::localtime(&rawtime);
+		std::strftime(buffer, 80, format.c_str(), timeinfo);
+		std::puts(buffer);
+		return std::string(buffer);
+	}
+	
+	std::string
 	get_data_path(const std::string& package)
 	{
 		return ros::package::getPath(package) + "/data";
 	}
 	
-	// template <typename R, typename F = void*>
-	// std::tuple<double, R> timing(F f)
-	// {
-	// 	auto t_begin = std::chrono::high_resolution_clock::now();
-	// 	R data = f();
-	// 	auto t = std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - t_begin)).count();
-	// 	return { t, data };
-	// }
+	std::string
+	get_experiment_dir(const std::string& package)
+	{
+		auto dir = get_data_path(package) + ros::this_node::getName() + "/" + get_timestamp();
+		std::filesystem::create_directories(dir);
+		return dir;
+	}
 	
 	template <typename T>
 	std::thread*
