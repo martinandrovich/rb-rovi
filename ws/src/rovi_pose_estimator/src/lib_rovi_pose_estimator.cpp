@@ -626,12 +626,67 @@ namespace rovi_pose_estimator
 
 		}
 
-		std::vector<std::vector<cv::Point2f>> bruteforce(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners)
+		std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f>> 
+		bruteforce_matches(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners, int set_size)
 		{
-			for(const auto& point3d:model_corners)
-			{
+			std::vector<cv::Point2f> image_corners_to_match (image_corners.begin(), image_corners.begin() + set_size);
+			std::cout << "Image corners are: " << image_corners_to_match << std::endl;
+			
+			std::vector< std::pair< std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f> >> result;
+			std::vector<std::vector<cv::Point3f>> brute_forced_model_corner_matches; 
 
-			}
+				if(set_size == 3)
+				{
+					for(int point1_match = 0; point1_match < model_corners.size(); point1_match++ )
+					{				
+						for(int point2_match = 0; point2_match < model_corners.size(); point2_match++ )
+						{
+							for(int point3_match = 0 ; point3_match < model_corners.size(); point3_match++ )
+							{
+								if(point1_match == point2_match || point1_match== point3_match || point3_match == point2_match)
+								{
+									break;
+								}
+								std::vector<cv::Point3f> model_corner_matches;
+								model_corner_matches.emplace_back(model_corners[point1_match]);
+								model_corner_matches.emplace_back(model_corners[point2_match]);
+								model_corner_matches.emplace_back(model_corners[point3_match]);
+								brute_forced_model_corner_matches.emplace_back( std::move(model_corner_matches));	
+							}				
+						}				
+					}	
+				}
+				if(set_size == 4)
+				{					
+					for(int point1_match = 0; point1_match < model_corners.size(); point1_match++ )
+					{				
+						for(int point2_match = 0; point2_match < model_corners.size(); point2_match++ )
+						{
+							for(int point3_match = 0 ; point3_match < model_corners.size(); point3_match++ )
+							{
+								for(int point4_match = 0; point4_match < model_corners.size(); point4_match++ )
+								{
+									if(point1_match == point2_match || point1_match== point3_match || point3_match == point2_match || point4_match == point1_match || point4_match == point2_match || point4_match == point3_match)
+									{
+										break;
+									}
+									std::vector<cv::Point3f> model_corner_matches;
+									model_corner_matches.emplace_back(model_corners[point1_match]);
+									model_corner_matches.emplace_back(model_corners[point2_match]);
+									model_corner_matches.emplace_back(model_corners[point3_match]);
+									model_corner_matches.emplace_back(model_corners[point4_match]);
+									brute_forced_model_corner_matches.emplace_back( std::move(model_corner_matches));	
+								}																
+							}			
+						}				
+					}	
+				}
+
+				
+				
+				
+
+			return std::pair<std::vector<std::vector<cv::Point3f>>, std::vector<cv::Point2f>>(brute_forced_model_corner_matches, image_corners_to_match);			
 		}
 
 
@@ -639,8 +694,17 @@ namespace rovi_pose_estimator
 		RANSAC_pose_estimation(const std::vector<cv::Point3f>& model_corners, const std::vector<cv::Point2f>& image_corners ,const std::vector<cv::Point3f>& model_matches, const std::vector<cv::Point2f>& image_matches, cv::Mat& pose_estimation, int max_iterations, const float inlier_radius, const cv::Mat* img)
 		{
 			constexpr int points_to_use_for_estimation = 4;
+			constexpr int num_of_refinements = 5;
+			constexpr double uncertainty = 1.5;
+			constexpr int max_neighbours_search = 2 ;
+			constexpr bool bruteforce = false;
 			std::vector<cv::Point3f> points3d(points_to_use_for_estimation);
 			std::vector<cv::Point2f> points2d(points_to_use_for_estimation);
+
+			
+			auto brute_forced_matches = bruteforce_matches(model_corners, image_corners, points_to_use_for_estimation);
+
+			std::cout << "Num of combinations made.. " << brute_forced_matches.first.size() << std::endl;
 
 			std::cout << "Model corners are: " << model_corners << std::endl;
 			std::cout << "Image corners are: " << image_corners << std::endl;
@@ -679,7 +743,7 @@ namespace rovi_pose_estimator
 			}
 
 			cv::flann::Index kd_tree(image_corners_mat, cv::flann::KDTreeIndexParams(4));
-			const int max_neighbours_search = 1 ;//image_corners.size();
+			
 			cv::Mat indices, dists;
 	
 
@@ -692,98 +756,132 @@ namespace rovi_pose_estimator
 			cv::Mat best_rvec(3, 1, CV_32FC1);
 			cv::Mat best_tvec(3, 1, CV_32FC1);
 
+			cv::Mat rvec_best_refine(3, 1, CV_32FC1);
+			cv::Mat tvec_best_refine(3, 1, CV_32FC1);
+
 
 			std::vector<cv::Point2f> reprojected_image_corners;
 
-			int transformations_found = 0;
 			auto euclidean_dist_camera_milk = (cv::Point3f(0.45, 1.0, 1.5) - cv::Point3f(0.25, 1.0, 0.75));
-			double uncertainty = 2.5;
+			
 			double expected_max_translation = std::sqrt(euclidean_dist_camera_milk.dot(euclidean_dist_camera_milk)) * uncertainty;
 			double expected_min_translation = expected_max_translation/(2.0* std::pow(uncertainty, 2));
 
-			for(int iteration=0; iteration< max_iterations; iteration++)
+			std::vector<int> generated_samples(points_to_use_for_estimation);
+			std::vector<int> generated_samples_best_match(points_to_use_for_estimation);
+
+
+			for(int refine = 0; refine < num_of_refinements; refine++)
 			{
-				inliers = 0;
-				for(int sample=0; sample < points_to_use_for_estimation; sample++)
+				for(int iteration=0; iteration< max_iterations; iteration++)
 				{
-					int rnd = distribution(gen);
-					points3d[sample] = model_matches[rnd];
-					points2d[sample] = image_matches[rnd];
-				}
+					inliers = 0;
 			
-				//std::cout << "Model points are: " << points3d << " Image points are: " << points2d << std::endl;
-
-				rvec = cv::Mat::zeros(rvec.size(), rvec.type());
-				tvec = cv::Mat::zeros(tvec.size(), tvec.type());
-
-				cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_AP3P);
-				//cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_ITERATIVE);
-				cv::projectPoints(model_corners, rvec, tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
-
-				//cv::Rodrigues(rvec, rot);
-				for(auto& point: reprojected_image_corners)
-				{
-					//std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
-					cv::Mat query = (cv::Mat_<float>(1,2) << point.x, point.y);
-					inliers += kd_tree.radiusSearch(query, indices, dists, inlier_radius, max_neighbours_search, cv::flann::SearchParams(32)); // 
-					//std::cout << "Found " << inliers << " , in single search... " << std::endl;
-				}
-				auto current_translation_euclidean_dist =  std::sqrt(tvec.dot(tvec));
-
-				if(current_translation_euclidean_dist > expected_min_translation && current_translation_euclidean_dist < expected_max_translation)
-				{
-					//std::cout << "Looks like we found a plausible match... -> tvec dist.. : " << current_translation_euclidean_dist << " And found " << inliers << " Inliers.." << std::endl;
-					if(inliers > best_inliers)
+					if(bruteforce)
 					{
-						best_rvec = rvec.clone();
-						best_tvec = tvec.clone();
-						best_inliers = inliers;
+						if(iteration >= brute_forced_matches.first.size())
+						{
+							break;
+						}
+						for(int point=0; point < points_to_use_for_estimation; point++)
+						{
+							points2d[point] = brute_forced_matches.second[point];
+							points3d[point] = brute_forced_matches.first[iteration][point];					
+						}
+						
 					}
-				}
+					else
+					{
+						for(int sample=0; sample < points_to_use_for_estimation; sample++)
+						{
+							int rnd = distribution(gen);
+							generated_samples[sample] = rnd;
+							points3d[sample] = model_matches[rnd];
+							points2d[sample] = image_matches[rnd];
+						}
+					}
+					
 				
-				
-				if(inliers >= image_corners.size())
-				{
-					transformations_found++;
-				}
+			
+					//std::cout << "Model points are: " << std::endl << points3d << std::endl <<  " Image points are: " << std::endl << points2d << std::endl << std::endl;
 
-				
-				if(iteration% 10000 == 0)
-				{
-					std::cout <<"Iteration: " << iteration << "  Best match so far: " << best_inliers << std::endl;
+					if(refine)
+					{
+						rvec = rvec_best_refine.clone();
+						tvec = tvec_best_refine.clone();
+						cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, true, cv::SOLVEPNP_ITERATIVE);
+					}
+					else
+					{
+						rvec = cv::Mat::zeros(rvec.size(), rvec.type());
+						tvec = cv::Mat::zeros(tvec.size(), tvec.type());
+						cv::solvePnP(points3d, points2d, camera_matrix, dist_coeffs, rvec, tvec, cv::SOLVEPNP_P3P);
+					}
+									
+					
+					cv::projectPoints(model_corners, rvec, tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
+
+					//cv::Rodrigues(rvec, rot);
+					for(auto& point: reprojected_image_corners)
+					{
+						//std::cout << "Searching for nearest neighbours for point: " << point << std::endl;
+
+						cv::Mat query = (cv::Mat_<float>(1,2) << point.x, point.y);
+						inliers += kd_tree.radiusSearch(query, indices, dists, inlier_radius, max_neighbours_search, cv::flann::SearchParams(32)); // 
+					}
+					auto current_translation_euclidean_dist =  std::sqrt(tvec.dot(tvec));
+
+					if(current_translation_euclidean_dist > expected_min_translation && current_translation_euclidean_dist < expected_max_translation)
+					{
+						if(inliers > best_inliers)
+						{							
+							best_rvec = rvec.clone();
+							best_tvec = tvec.clone();
+							best_inliers = inliers;
+							if(!refine)
+							{
+								generated_samples_best_match = generated_samples;
+							}
+							
+						}
+					}			
+					
+					if(iteration% 1000 == 0)
+					{
+						std::cout <<"Iteration: " << iteration << "  Best match so far: " << best_inliers << std::endl;
+					}			
 				}
-				else
+				std::cout << "Done with p3p ransac -> doing refinement." << std::endl;
+
+				cv::Mat img_cpy;
+				img->copyTo(img_cpy);
+				cv::projectPoints(model_corners, best_rvec, best_tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
+
+				std::cout << "rvec for best fit... " << rvec << std::endl;
+				std::cout << "tvec for best fit... " << tvec << std::endl;
+
+				std::cout << "Image_corner points for comparison " << image_corners << std::endl;
+				for(const auto& point: reprojected_image_corners)
+				{			
+					circle(img_cpy, point, 10,  cv::Scalar(0,0,255), 3, 8, 0 );
+
+				}
+				for(const auto& point: image_corners)
 				{					
-					//std::cout << "Found: " << inliers << " Inliers!!! -> best match so far: " << best_inliers << std::endl;					
-				}	
+					circle(img_cpy, point, 10,  cv::Scalar(0,255,0), 1, 8, 0 );
+				}
 
-			
-			}
-			std::cout << "Done performing p3p ransac... applying transformation to model points... " << " Found " << transformations_found << " transformations in total -> showing best..." << std::endl;
+				rvec_best_refine = best_rvec.clone();
+				tvec_best_refine = best_tvec.clone();	
 
-			cv::Mat img_cpy;
-			img->copyTo(img_cpy);
-			cv::projectPoints(model_corners, best_rvec, best_tvec, camera_matrix, dist_coeffs, reprojected_image_corners);
+				const std::string window_name = "reprojected point, refine: " + std::to_string(refine);
+				cv::imshow(window_name, img_cpy);	
+				cv::waitKey();
 
-			std::cout << "rvec for best fit... " << rvec << std::endl;
-			std::cout << "tvec for best fit... " << tvec << std::endl;
+						
+				best_inliers = 0;	
 
-			std::cout << "Image_corner points for comparison " << image_corners << std::endl;
-			for(const auto& point: reprojected_image_corners)
-			{
-				//auto roi_corrected = point + cv::Point2f(283, 39);
-				circle(img_cpy, point, 10,  cv::Scalar(0,0,255), 3, 8, 0 );
-				std::cout << "transformed point " << point << std::endl;
-			}
-			for(const auto& point: image_corners)
-			{
-				//auto roi_corrected = point + cv::Point2f(283, 39);
-				circle(img_cpy, point, 10,  cv::Scalar(0,255,0), 1, 8, 0 );
-			}
-			cv::imshow("Reprojected points", img_cpy);		
-			cv::waitKey();
-			
-
+			}									
 		}
 
 
