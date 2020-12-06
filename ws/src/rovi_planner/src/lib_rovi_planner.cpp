@@ -26,7 +26,7 @@
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <ur5_dynamics/ur5_dynamics.h>
 
-KDL::Trajectory_Composite
+KDL::Trajectory_Composite*
 rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double equiv_radius)
 {
 	// equivalent radius: serves to compare rotations and translations; the "amount of motion" (pos,vel,acc)
@@ -81,7 +81,7 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 		exit(-1);
 	}
 
-	return *traj;
+	return traj;
 }
 
 std::array<KDL::Trajectory_Composite*, 6>
@@ -202,7 +202,7 @@ rovi_planner::traj_parabolic(const std::vector<sensor_msgs::JointState>& joint_s
 	return trajs;
 }
 
-KDL::Trajectory_Composite
+KDL::Trajectory_Composite*
 rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double corner_radius, double equiv_radius)
 {
 
@@ -277,7 +277,7 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 		exit(-1);
 	}
 
-	return *traj;
+	return traj;
 }
 
 bool

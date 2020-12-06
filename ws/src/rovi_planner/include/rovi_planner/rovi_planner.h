@@ -28,7 +28,7 @@ namespace rovi_planner
 {
 	// trajectory planners
 
-	KDL::Trajectory_Composite
+	KDL::Trajectory_Composite*
 	traj_linear(
 		const std::vector<geometry_msgs::Pose>& waypoints,
 		double vel_max      = 1.00, // [m/s]
@@ -44,7 +44,7 @@ namespace rovi_planner
 		double equiv_radius = 0.05  // [m]
 	);
 
-	KDL::Trajectory_Composite
+	KDL::Trajectory_Composite*
 	traj_parabolic(
 		const std::vector<geometry_msgs::Pose>& waypoints,
 		double vel_max       = 1.00, // [m/s]

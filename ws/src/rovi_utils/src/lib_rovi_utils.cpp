@@ -167,7 +167,7 @@ rovi_utils::export_traj(T& traj, const std::string& filename, const double resol
 	const auto stem      = boost::filesystem::path(filename).stem().string();
 
 	// KDL::Trajectory_Composite (Cartesian space)
-	if constexpr (std::is_same<T, KDL::Trajectory_Composite>::value)
+	if constexpr (std::is_same<T, KDL::Trajectory_Composite*>::value)
 	{
 
 		if (resolution <= 0)
@@ -175,11 +175,11 @@ rovi_utils::export_traj(T& traj, const std::string& filename, const double resol
 
 		std::ofstream fs(filename, std::ofstream::out);
 
-		for (double t = 0.0; t < traj.Duration(); t += resolution)
+		for (double t = 0.0; t < traj->Duration(); t += resolution)
 		{
 			// KDL Frame
-			const auto& frame = traj.Pos(t);
-			const auto& twist = traj.Vel(t);
+			const auto& frame = traj->Pos(t);
+			const auto& twist = traj->Vel(t);
 
 			// convert KDL Frame to Eigen
 			static auto mat = Eigen::Affine3d();
@@ -321,6 +321,6 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 }
 
 // rovi_utils::export_traj(const T& traj, const std::string&& filename, const double resolution)
-template void rovi_utils::export_traj<KDL::Trajectory_Composite>(KDL::Trajectory_Composite& traj, const std::string& filename, const double resolution);
+template void rovi_utils::export_traj<KDL::Trajectory_Composite*>(KDL::Trajectory_Composite*& traj, const std::string& filename, const double resolution);
 template void rovi_utils::export_traj<robot_trajectory::RobotTrajectory>(robot_trajectory::RobotTrajectory& traj, const std::string& filename, const double resolution);
 template void rovi_utils::export_traj<std::array<KDL::Trajectory_Composite*, 6>>(std::array<KDL::Trajectory_Composite*, 6>& traj, const std::string& filename, const double resolution);

@@ -31,7 +31,7 @@ ur5_controllers::ur5::execute_traj(const std::vector<sensor_msgs::JointState>& t
 }
 
 void
-ur5_controllers::ur5::execute_traj(const KDL::Trajectory_Composite& traj, const double freq)
+ur5_controllers::ur5::execute_traj(const KDL::Trajectory_Composite* traj, const double freq)
 {
 	ur5_controllers::ur5::check_nh_init();
 	if (not pub_cmd_cart)
@@ -41,11 +41,11 @@ ur5_controllers::ur5::execute_traj(const KDL::Trajectory_Composite& traj, const 
 
 	ros::Rate lr(freq); // [Hz]
 	ur5_controllers::PoseTwist msg;
-	for (double t = 0.0; t < traj.Duration() and ros::ok(); t += 1/freq)
+	for (double t = 0.0; t < traj->Duration() and ros::ok(); t += 1/freq)
 	{
 		// KDL Frame
-		const auto& frame = traj.Pos(t);
-		const auto& twist = traj.Vel(t);
+		const auto& frame = traj->Pos(t);
+		const auto& twist = traj->Vel(t);
 
 		// Convert from KDL to Eigen
 		tf::poseKDLToMsg(frame, msg.pose);
