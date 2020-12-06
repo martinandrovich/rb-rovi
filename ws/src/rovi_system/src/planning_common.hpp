@@ -3,6 +3,9 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <tuple>
+#include <fstream>
+
 #include <Eigen/Eigen>
 
 #include <rovi_utils/rovi_utils.h>
@@ -11,9 +14,30 @@
 
 using namespace rovi_utils;
 using namespace rovi_gazebo;
+using namespace rovi_planner;
 
-static constexpr auto PLACE_LOCATION = // in world frame
-	std::array{ 0.70, 0.11, 0.75, 0.0, 0.0, 0.0 };
+template <typename T>
+struct PlanningData
+{
+	size_t iteration;
+	double planning_time;
+	double traj_duration;
+	T traj;
+};
+
+template <typename T>
+void
+export_planning_data(const std::vector<PlanningData<T>>& data, const std::string& filename)
+{
+	auto fs = std::ofstream(filename, std::ofstream::out);
+	fs << "i, planning time [ms], traj_duration [s]" << std::endl;
+	for (const auto& plan : data)
+		fs << plan.iteration << ", " << plan.planning_time << ", " << plan.traj_duration << std::endl;
+	fs.close();
+}
+
+static const auto PLACE_LOCATION = // in world frame
+	make_pose({ 0.70, 0.11, 0.75, 0.0, 0.0, 0.0 });
 
 static const auto PICK_LOCATIONS = std::array // in world frame
 {
