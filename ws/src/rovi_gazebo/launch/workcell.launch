@@ -8,7 +8,7 @@
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/>
 	<arg name="kinect_pose" doc="The pose of the kinect sensor spawn location." default="-x 0.4 -y 1.96 -z 1.28 -R 0.014188 -P 0.690494 -Y -1.570168"/>
-	<arg name="projector_pose" doc="The pose of the projector spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y -1.5707"/>
+	<arg name="projector_pose" doc="The pose of the projector spawn location." default="-x 0.4 -y 1.0 -z 1.5 -R 0.0 -P 1.5707 -Y 0"/>
 
 	<arg name="no_objects"     default="true" />
 	<arg name="use_moveit"     default="true" />
