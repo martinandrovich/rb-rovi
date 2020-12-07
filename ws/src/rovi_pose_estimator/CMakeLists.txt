@@ -76,56 +76,12 @@ include_directories(
 # libraries
 
 # lib_rovi_gazebo (rovi_gazebo/rovi_gazebo.h)
-# add_library(lib_rovi_pose_estimator src/lib_rovi_pose_estimator.cpp)
-# target_link_libraries(lib_rovi_pose_estimator ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+add_library(lib_rovi_pose_estimator src/lib_rovi_pose_estimator.cpp)
+target_link_libraries(lib_rovi_pose_estimator ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # # 
-# install(
-# 	TARGETS lib_rovi_pose_estimator
-# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
-
-# ## install all project namespaced headers (package/include)
-# install(
-# 	DIRECTORY include/${PROJECT_NAME}/
-# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-# )
-
-##################################Danielsstuff################################################### 
-
-# find_program(CCACHE_FOUND ccache)
-# if(CCACHE_FOUND)
-#     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-#     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-# endif(CCACHE_FOUND) 
-# set (CMAKE_CXX_FLAGS "-DPCL_ONLY_CORE_POINT_TYPES=ON -DNO_EXPLICIT_INSTANTIATIONS")
-
-# install lib_rovi_pose_est_M1
-add_library(lib_rovi_pose_est_M1 src/lib_rovi_pose_est_M1.cpp)
-target_link_libraries(lib_rovi_pose_est_M1 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-# 
 install(
-	TARGETS lib_rovi_pose_est_M1
-	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
-
-# install all project namespaced headers (package/include)
-install(
-	DIRECTORY include/${PROJECT_NAME}/
-	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
-add_library(lib_rovi_pose_est_M3 src/lib_rovi_pose_est_M3.cpp)
-target_link_libraries(lib_rovi_pose_est_M3 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
-
-# 
-install(
-	TARGETS lib_rovi_pose_est_M3
+	TARGETS lib_rovi_pose_estimator
 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
@@ -137,6 +93,50 @@ install(
 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
+##################################Danielsstuff################################################### 
+
+# find_program(CCACHE_FOUND ccache)
+# if(CCACHE_FOUND)
+#     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+#     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+# endif(CCACHE_FOUND) 
+# set (CMAKE_CXX_FLAGS "-DPCL_ONLY_CORE_POINT_TYPES=ON -DNO_EXPLICIT_INSTANTIATIONS")
+
+# install lib_rovi_pose_est_M1
+# add_library(lib_rovi_pose_est_M1 src/lib_rovi_pose_est_M1.cpp)
+# target_link_libraries(lib_rovi_pose_est_M1 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+# # 
+# install(
+# 	TARGETS lib_rovi_pose_est_M1
+# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
+
+# # install all project namespaced headers (package/include)
+# install(
+# 	DIRECTORY include/${PROJECT_NAME}/
+# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# )
+
+# add_library(lib_rovi_pose_est_M3 src/lib_rovi_pose_est_M3.cpp)
+# target_link_libraries(lib_rovi_pose_est_M3 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# # 
+# install(
+# 	TARGETS lib_rovi_pose_est_M3
+# 	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+# 	RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
+
+# ## install all project namespaced headers (package/include)
+# install(
+# 	DIRECTORY include/${PROJECT_NAME}/
+# 	DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+# )
+
 ################################################################################################
 
 # nodes
@@ -146,11 +146,11 @@ install(
 ## target_link_libraries(pose_example ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} lib_rovi_pose_estimator )
 ## target_include_directories(example PUBLIC include/rovi_pose_estimator)pose_example
 
-add_executable(pose_M1 src/pose_M1.cpp)
-target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
+#add_executable(pose_M1 src/pose_M1.cpp)
+#target_link_libraries(pose_M1 lib_rovi_pose_est_M1 )
 
-add_executable(pose_M3 src/pose_M3.cpp)
-target_link_libraries(pose_M3 lib_rovi_pose_est_M3)
+#add_executable(pose_M3 src/pose_M3.cpp)
+#target_link_libraries(pose_M3 lib_rovi_pose_est_M3)
 
 add_executable(pose_M4 src/pose_example.cpp)
-target_link_libraries(pose_M4 rovi_pose_estimator)
+target_link_libraries(pose_M4 lib_rovi_pose_estimator)

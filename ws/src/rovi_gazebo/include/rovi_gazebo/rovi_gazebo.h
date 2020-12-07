@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include <Eigen/Eigen>
-#include <opencv2/opencv.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 
 #include <sensor_msgs/JointState.h>
 #include <gazebo_msgs/LinkStates.h>

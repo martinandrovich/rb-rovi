@@ -65,7 +65,7 @@ rovi_gazebo::set_projector(bool state)
 
 
 sensor_msgs::CameraInfo
-get_camera_info()
+rovi_gazebo::get_camera_info()
 {
 	return *ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/rbrovi/camera/camera_info");
 }

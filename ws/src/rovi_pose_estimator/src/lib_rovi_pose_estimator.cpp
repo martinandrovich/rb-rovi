@@ -2,7 +2,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include "pcl_ros/point_cloud.h"
+#include <pcl_ros/point_cloud.h>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/voxel_grid.h>
@@ -27,14 +27,13 @@
 #include <pcl/registration/icp.h>
 #include <pcl/keypoints/harris_3d.h>
 
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include <opencv2/tracking.hpp>
-#include <opencv2/core.hpp>
-#include <opencv2/flann.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/imgproc.hpp>
+#include <opencv4/opencv2/tracking.hpp>
+#include <opencv4/opencv2/core.hpp>
+#include <opencv4/opencv2/flann.hpp>
 
 #include <random>
-
 
 #include "rovi_pose_estimator/rovi_pose_estimator.h"
 #include "rovi_gazebo/rovi_gazebo.h"
@@ -467,13 +466,13 @@ namespace rovi_pose_estimator
 			const std::string& src = "src window";
 			cv::namedWindow(src);
 
-			auto roi = cv::selectROI(src, img_gray);
-			std::cout << "Roi selected.."<< roi << std::endl;
+			// auto roi = cv::selectROI(src, img_gray);
+			// ROS_INFO_STREAM_ONCE("Roi selected "<< roi);
 			
 			/*201 x 747 from (283, 39)*/
-			auto roi = cv::Rect(283, 39, 198, 747);
+			auto roi = cv::Rect(250, 133, 220, 663);
 			cv::Mat gray_roi = img_gray(roi);
-			std::cout << "Type?" << gray_roi.type() << std::endl;
+			ROS_INFO_STREAM_ONCE("Type: " << gray_roi.type());
 
 			cv::Mat corners = cv::Mat::zeros(gray_roi.size(), CV_32FC1 );
 			std::vector<cv::Point2i> corner_coordinates;
@@ -721,9 +720,10 @@ namespace rovi_pose_estimator
 			else
 			{
 				auto cam_info = rovi_gazebo::get_camera_info();
-				camera_matrix = cam_info.K;
-				dist_coeffs = cam_info.D;
+				// camera_matrix = cv::Mat{cam_info.K.begin(), cam_info.K.end()};
+				// dist_coeffs = cam_info.D;
 			}
+
 			std::cout << "Camera Matrix " << std::endl << camera_matrix << std::endl ;
 
 			cv::Mat rot(3, 3, cv::DataType<float>::type);
