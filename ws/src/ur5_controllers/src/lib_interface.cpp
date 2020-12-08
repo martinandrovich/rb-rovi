@@ -66,13 +66,13 @@ ur5_controllers::wsg::init()
 
 	thread_pub = new std::thread([&]()
 	{
-		ros::Rate lp(PUB_FREQ);
+		ros::Rate lr(PUB_FREQ);
 		std_msgs::Float64 wsg_msg;
 		while (ros::ok())
 		{
 			wsg_msg.data = tau_des;
 			pub_cmd.publish(wsg_msg);
-			lp.sleep();
+			lr.sleep();
 		}
 	});
 	
@@ -80,7 +80,7 @@ ur5_controllers::wsg::init()
 }
 
 void
-ur5_controllers::wsg::grasp()
+ur5_controllers::wsg::grasp(bool wait)
 {
 	if (not thread_pub)
 		wsg::init();
@@ -89,13 +89,10 @@ ur5_controllers::wsg::grasp()
 }
 
 void
-ur5_controllers::wsg::release(bool sleep)
+ur5_controllers::wsg::release(bool wait)
 {
 	if (not thread_pub)
 		wsg::init();
 
 	tau_des = EFFORT_RELEASE;
-	
-	if (sleep)
-		ros::Duration(SLEEP_DUR).sleep();
 }

@@ -52,16 +52,15 @@ namespace ur5_controllers
 		wsg() = delete;
 
 		static void
-		grasp();
+		grasp(bool wait = false);
 
 		static void
-		release(bool sleep = false);
+		release(bool wait = false);
 
 		static inline const std::string	COMMAND_TOPIC  = "/wsg_hybrid_controller/command";
 		static inline const double      PUB_FREQ       = 100.0; // [Hz]
 		static inline const double      EFFORT_GRASP   = -50.0; // [Nm]
 		static inline const double      EFFORT_RELEASE =  30.0; // [Nm]
-		static inline const double      SLEEP_DUR      =   1.0; // [s]
 
 	private:
 

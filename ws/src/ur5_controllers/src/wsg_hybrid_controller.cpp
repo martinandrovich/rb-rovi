@@ -87,7 +87,7 @@ namespace ur5_controllers
 		// get desired joint efforts
 		const auto& command = *commands_buffer.readFromRT();
 
-		Eigen::Vector2d tau_des(command.data, command.data);
+		// Eigen::Vector2d tau_des(command.data, command.data);
 
 		// Eigen::Vector2d q = get_position();
 
@@ -100,10 +100,11 @@ namespace ur5_controllers
 		// 	tau_des(i) += (i == 0) ? g(0) : -g(0);
 		
 		// saturate rotatum
-		tau_des = saturate_rotatum(tau_des);
+		// tau_des = saturate_rotatum(tau_des);
 
 		for (size_t i = 0; i < 2; i++)
-			vec_joints[i].setCommand(tau_des(i));
+			vec_joints[i].setCommand(command.data);
+			// vec_joints[i].setCommand(tau_des(i));
 	}
 
 	Eigen::Vector2d
