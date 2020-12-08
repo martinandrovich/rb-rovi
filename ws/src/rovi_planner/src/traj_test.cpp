@@ -1,5 +1,6 @@
 #include <fstream>
 #include <tuple>
+#include <chrono>
 
 #include <ros/ros.h>
 #include <rovi_planner/rovi_planner.h>
@@ -20,9 +21,32 @@ main(int argc, char** argv)
 {
 
 	using namespace rovi_utils;
+	using namespace std::chrono_literals;
 
 	ros::init(argc, argv, "traj_test");
 	ros::NodeHandle nh;
+	
+	// gripper test
+	ROS_INFO("Grasping...");
+	ur5_controllers::wsg::grasp();
+	std::this_thread::sleep_for(1s);
+	
+	ROS_INFO("Releasing...");
+	ur5_controllers::wsg::release();
+	std::this_thread::sleep_for(1s);
+	
+	ROS_INFO("Grasping...");
+	ur5_controllers::wsg::grasp();
+	std::this_thread::sleep_for(0.5s);
+	
+	ROS_INFO("Releasing...");
+	ur5_controllers::wsg::release();
+	std::this_thread::sleep_for(0.5s);
+	
+	ROS_INFO("Grasping...");
+	ur5_controllers::wsg::grasp();
+	std::cin.ignore();
+	
 
 	// joint interpolation test
 
