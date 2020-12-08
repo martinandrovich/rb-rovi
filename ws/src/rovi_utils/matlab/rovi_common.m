@@ -20,7 +20,7 @@ addpath(DIR_EXPORT_FIG);
 % configure figure defaults
 set(groot, "DefaultFigureRenderer", "painters");
 set(groot, "DefaultFigurePosition", [0 0 500 500]);
-set(groot, "DefaultFigureColor", [1 1 1];
+set(groot, "DefaultFigureColor", [1 1 1]);
 
 % log info
 disp("DIR_ROOT: " + what(DIR_ROOT).path)
