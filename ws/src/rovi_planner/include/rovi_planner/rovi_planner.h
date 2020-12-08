@@ -88,7 +88,8 @@ namespace rovi_planner
 			plan(
 				const geometry_msgs::Pose& pose_des,
 				const std::string& planner = "RRTConnect",
-				std::vector<double> q      = {}
+				double max_planning_time = 1.0, // [s]
+				size_t max_planning_attempts = 10
 			);
 
 			static std::vector<sensor_msgs::JointState>

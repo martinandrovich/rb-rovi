@@ -407,7 +407,7 @@ rovi_planner::moveit_planner::attach_object_to_ee(const std::string& obj_name)
 }
 
 planning_interface::MotionPlanResponse
-rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const std::string& planner, std::vector<double> q)
+rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const std::string& planner, double max_planning_time, size_t max_planning_attempts)
 {
 	// lock planning scene mutex for this scope
 	std::lock_guard lock(mtx_planning_scene);
@@ -435,8 +435,8 @@ rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const st
 	pose.pose = pose_des;
 
 	// specify the tolerances for the pose
-	std::vector<double> tol_pos(3, 0.005);
-	std::vector<double> tol_ori(3, 0.005);
+	std::vector<double> tol_pos(3, 0.001);
+	std::vector<double> tol_ori(3, 0.001);
 	// set the kinematic_constraint
 	moveit_msgs::Constraints pose_goal = kinematic_constraints::constructGoalConstraints("ee_tcp", pose, tol_pos, tol_ori);
 
@@ -444,8 +444,8 @@ rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const st
 	req.group_name = ARM_GROUP;
 
 	// planning time
-	req.allowed_planning_time = 5;
-	req.num_planning_attempts = 10000;
+	req.allowed_planning_time = max_planning_time; // default: 1.0
+	req.num_planning_attempts = max_planning_attempts; // default: 10
 
 	// scale factor velocity / acceleration
 	req.max_acceleration_scaling_factor = 1.0;
