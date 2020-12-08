@@ -145,18 +145,18 @@ M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right)
 
     static auto min_disp          = 0;
     static auto num_disp          = 16*8;
-    static auto block_size        = 5; // has to be odd
+    static auto block_size        = 3; // has to be odd
     static auto cn                = 3;
-    static auto p1_smoothness     = 108;
-    static auto p2_smoothness     = 432; // he larger the values are, the smoother the disparity is
+    static auto p1_smoothness     = 0;
+    static auto p2_smoothness     = 0; // he larger the values are, the smoother the disparity is
     static auto disp_12_max       = 1;
     static auto unique_ratio      = 5;
     static auto speckle_win_size  = 0;
     static auto specke_range      = 1;
     static auto filter_gap        = 2;
     static auto written           = 0;
-    static auto lambda            = 1;
-    static auto sigma             = 1;
+    static auto lambda            = 0.5;
+    static auto sigma             = 0.5;
 
     // // Check if the file exists
     // fs["written"] >> written;
@@ -294,6 +294,7 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
 
         for(int j = 0; j < point_cloud.cols * 3; )
         {
+            
 
             std::uint8_t b = (std::uint8_t) rbg_left[m++];
             std::uint8_t g = (std::uint8_t) rbg_left[m++];
@@ -318,32 +319,12 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
                                                              -1.f, 0.f, 0.f, 0.f, 
                                                               0.f,-1.f, 0.f, 0.f, 
                                                               0.f, 0.f, 0.f, 1.f ).finished();
+
     // Define the overall transformation
     static Eigen::Matrix4f trans = (w_T_gaze.cast<float>()).matrix() * gaze_T_c;
 
     // Transform the point cloud 
     pcl::transformPointCloud(*cloud_scene_ptr, *cloud_scene_ptr, trans);
-
-    // // Cropbox
-    // static pcl::CropBox<pcl::PointXYZRGBNormal> box_filter_1;
-    // {
-    //     box_filter_1.setMin(Eigen::Vector4f(-1, 0, 0.0, 1.0f));
-    //     box_filter_1.setMax(Eigen::Vector4f(1, 1.5, 1.5, 1.0f));
-    //     box_filter_1.setInputCloud(cloud_scene_ptr);
-    //     box_filter_1.filter(*filtered_scene_ptr);
-    //     *cloud_scene_ptr = *filtered_scene_ptr;
-    // }
-
-    // // Voxel Filter
-    // static pcl::VoxelGrid<pcl::PointXYZRGBNormal> voxel_filter_1;
-    // {
-    //     voxel_filter_1.setInputCloud(cloud_scene_ptr);
-    //     voxel_filter_1.setLeafSize(leaf_size, leaf_size, leaf_size);
-    //     voxel_filter_1.filter(*filtered_scene_ptr);
-    //     *cloud_scene_ptr = *filtered_scene_ptr;
-    // }
-
-    //pcl::io::savePCDFile("cloud_scene.pcd", *cloud_scene_ptr);
 
     // Cropbox
     static pcl::CropBox<pcl::PointXYZRGBNormal> box_filter;
@@ -355,8 +336,10 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
         *cloud_scene_ptr = *filtered_scene_ptr;
     }
 
+    // pcl::io::savePCDFile("cloud_scene.pcd", *cloud_scene_ptr);  
+
     // Plane fitting
-    constexpr auto dist_tsh = 0.02f;
+    constexpr auto dist_tsh = 0.01f;
     static pcl::ModelCoefficients::Ptr coeff(new pcl::ModelCoefficients);    
     static pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     static pcl::SACSegmentation<pcl::PointXYZRGBNormal> segm;
@@ -381,7 +364,7 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
             pcl::PassThrough<pcl::PointXYZRGBNormal> pass;
             pass.setInputCloud(cloud_scene_ptr);
             pass.setFilterFieldName("z");
-            pass.setFilterLimits(zmin + 0.01, zmin + 1);
+            pass.setFilterLimits(zmin + 0.015, zmin + 1);
             pass.setFilterLimitsNegative(false);
             pass.filter(*filtered_scene_ptr);
             *cloud_scene_ptr = *filtered_scene_ptr;
@@ -422,14 +405,16 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
     {
         spin.setInputCloud(cloud_scene_ptr);
         spin.setInputNormals(cloud_scene_ptr);
-        spin.setRadiusSearch(0.3);
+        spin.setRadiusSearch(0.15);
         spin.compute(*features_scene_ptr);
     }
 
     // ROS_INFO_STREAM("The scene_voxel" << cloud_scene_ptr->size());
 
     // Save the pointcloud 
-    ///pcl::io::savePCDFileASCII("scene_voxel.pcd", *cloud_scene_ptr);
+    // pcl::io::savePCDFileASCII("scene_voxel.pcd", *cloud_scene_ptr);
+
+    // exit(1);
 
     // Clear it, to avoid segmentation fault
 
@@ -491,7 +476,7 @@ M1::read_compute_features_object(const std::string & obj)
     {
         spin.setInputCloud(cloud_object_ptr);
         spin.setInputNormals(cloud_object_ptr);
-        spin.setRadiusSearch(0.3);
+        spin.setRadiusSearch(0.15);
         spin.compute(*features_object_ptr);
     }
 
@@ -612,7 +597,7 @@ M1::ransac_features(const int & max_it)
         {
             if ( kd_tree_scene.nearestKSearch(aligned_object_ptr->points[j], K, point_idx_nn_search, point_nn_L2) > 0 )
             {   
-                if (point_nn_L2[0] < 0.0001f)
+                if (point_nn_L2[0] < 0.00001f)
                 {
                     inliers++;
                 }
@@ -632,7 +617,8 @@ M1::ransac_features(const int & max_it)
     // pcl::IterativeClosestPoint<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal > icp;
     // icp.setInputCloud(cloud_object_ptr);
     // icp.setInputTarget(cloud_scene_ptr);
-    // icp.setMaxCorrespondenceDistance(0.002);
+    // icp.setMaxCorrespondenceDistance(0.01);
+    // icp.setMaximumIterations(100);
     // icp.align(*cloud_object_ptr);
 
     // pcl::visualization::PCLVisualizer viewer("vis");
@@ -640,16 +626,13 @@ M1::ransac_features(const int & max_it)
     // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_object_ptr, "obj");
     // viewer.spin();
 
-    return best_T;
+    return best_T; //;
 
 }
 
 geometry_msgs::Pose
 M1::estimate_pose(const int & it, const bool & draw, const double & noise)
 {
-    // SLEEP!
-    // ros::Duration(1).sleep();
-
     // Get stereo images
     auto cam_images = M1::get_image_data();
 
@@ -677,9 +660,12 @@ M1::estimate_pose(const int & it, const bool & draw, const double & noise)
     {
         cv::imwrite("bottle_left.jpg",  cam_images[0]);
         cv::imwrite("bottle_right.jpg", cam_images[1]);
-        cv::imwrite("point_cloud.jpg",  point_cloud);
+        std::ofstream write_cloud("write_mat.mat", std::ios_base::out);
+        write_cloud << cv::format(point_cloud, cv::Formatter::FMT_CSV) << std::endl;
+        write_cloud.close();
     }
-
+    
+    // cv::imwrite("point_cloud.jpg",  point_cloud);
     // Compute the point cloud
     M1::compute_pointcloud_scene(point_cloud, cam_images[0]);
 

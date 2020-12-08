@@ -29,7 +29,7 @@ namespace rovi_pose_estimator
 
     namespace M1
     {
-        constexpr auto leaf_size = 0.008f;
+        constexpr auto leaf_size = 0.002f;
 
         std::array<cv::Mat, 2> 
         get_image_data(const std::string & ns_ros = "/rbrovi/camera_stereo");

@@ -9,11 +9,11 @@
 
 const static std::vector<std::array<double, 3>> OBJECT_POS{
                                                                 {0.55, 0.95, 0.75},
-                                                                {0.45, 1.05, 0.75},
-                                                                {0.6, 0.95, 0.75},
-                                                                {0.55, 1.03, 0.75},
-                                                                {0.4, 0.98, 0.75},
-                                                                {0.5, 1.01, 0.75}
+                                                                {0.55, 1.00, 0.75},
+                                                                {0.55, 1.05, 0.75},
+                                                                {0.60, 0.95, 0.75},
+                                                                {0.60, 1.00, 0.75},
+                                                                {0.60, 1.05, 0.75},
                                                             };
 
 
@@ -59,32 +59,28 @@ int main(int argc, char** argv)
     rovi_gazebo::set_simulation(true);
     rovi_gazebo::spawn_model("bottle", "bottle1", OBJECT_POS[0], OBJECT_ORI[0]);
 
-    auto pose = M1::estimate_pose(iterations, true, 0);
-
-    file_handle << "actual_pose vs detected" << std::endl;
+    geometry_msgs::Pose guess;
     
     for (auto i = 0; i < OBJECT_ORI.size(); ++i )
     {
+
         rovi_gazebo::move_model("bottle1", OBJECT_POS[i], OBJECT_ORI[i]);
+        ros::Duration(1).sleep();
 
-        ros::Duration(2).sleep();
-
-        for (auto j = 0; j < 50; j++)
+        for (auto j = 0; j < 20; j++)
         {
             auto tic = ros::Time::now();
-            geometry_msgs::Pose guess = M1::estimate_pose(iterations, false, 0);
+            guess = M1::estimate_pose(iterations, false, 0);
             geometry_msgs::Pose actual = rovi_utils::make_pose(OBJECT_POS[i], OBJECT_ORI[i]);
             auto toc = ros::Time::now();
-
             file_handle << (toc-tic).toSec() << ", " << actual.position.x << ", " << actual.position.y << ", " << actual.position.z << ", ";
-            file_handle << guess.position.x << ", " << guess.position.y << ", " << guess.position.z << ", " << std::endl;
+            file_handle << guess.position.x << ", " << guess.position.y << ", " << guess.position.z << std::endl;
         }
 
     }
-    
-    file_handle.close();
 
-    ROS_INFO_STREAM(pose);
+    file_handle.close();
+    ROS_INFO_STREAM(guess);
 
     return 0;
 }
