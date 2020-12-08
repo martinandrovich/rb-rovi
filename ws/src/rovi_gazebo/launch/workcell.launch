@@ -3,7 +3,7 @@
 	<!-- ARGUMENTS -->
 
 	<!-- robot pose [x, y, z] -->
-	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5 -z 0.74"/>
+	<arg name="robot_pose"  doc="The pose of the robot spawn location." default="-x 0.1 -y 0.5"/>
 
 	<!-- camera pose [x, y, z, R, P, Y] -->
 	<arg name="camera_pose" doc="The pose of the camera spawn location." default="-x 0.44 -y 1.4 -z 1.5 -R 0.0 -P 1.2 -Y -1.5707"/>
@@ -41,7 +41,7 @@
 
 	<!-- spawn URDF robot model with gripper in gazebo -->
 	<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model ur5
-		$(arg robot_pose)
+		$(arg robot_pose) -z 0.74
 		-J ur5_joint1 1.57 -J ur5_joint2 -1.57 -J ur5_joint3 1.57 -J ur5_joint4 1.57 -J ur5_joint5 1.57 -J ur5_joint6 0
 		-J wsg_base_mount_right_joint 0 -J wsg_base_mount_left_joint 0"/>
 

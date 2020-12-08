@@ -70,15 +70,18 @@ rovi_utils::make_pose(const std::array<double, 3>& pos, const std::array<double,
 
 moveit_msgs::CollisionObject
 rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
+// rovi_utils::make_mesh_cobj(const std::string& model_name, const std::string& obj_name, const std::string& planning_frame, const std::array<double, 3>& pos, const std::array<double, 4>& ori)
 {
 	// 3D model of <name> object is expected to be located at
 	// package://rovi_gazebo/models/name/name.dae
 	static const std::string PATH_PACKAGE = "package://rovi_gazebo/models";
+	// static const std::string PATH_PACKAGE = ros::package::getPath("rovi_gazebo") + "/models";
 	ROS_WARN_STREAM_ONCE("make_mesh_cobj() only searches '" << PATH_PACKAGE << "' path for .dae models.");
 
 	// create mesh
 	// https://answers.ros.org/question/246467/moveit-attach-object-error/
 	
+	// remove any digits from object name to get model name (bottle3 -> bottle)
 	auto model_name = name;
 	model_name.erase(std::remove_if(model_name.begin(), model_name.end(), &isdigit), model_name.end());
 
@@ -86,7 +89,8 @@ rovi_utils::make_mesh_cobj(const std::string& name, const std::string& planning_
 	shapes::Mesh* mesh_ptr;
 	shapes::ShapeMsg shape_msg;
 
-	mesh_ptr = shapes::createMeshFromResource(PATH_PACKAGE+ "/" + model_name + "/" + model_name + ".dae");
+	mesh_ptr = shapes::createMeshFromResource("package://rovi_gazebo/models/" + model_name + "/" + model_name + ".dae");
+	// mesh_ptr = shapes::createMeshFromResource("file://" + PATH_PACKAGE + "/" + model_name + "/" + model_name + ".dae");
 	shapes::constructMsgFromShape(mesh_ptr, shape_msg);
 	mesh = boost::get<shape_msgs::Mesh>(shape_msg);
 
