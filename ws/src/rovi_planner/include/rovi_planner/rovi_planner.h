@@ -35,6 +35,14 @@ namespace rovi_planner
 		double acc_max      = 1.00, // [m/s^2]
 		double equiv_radius = 0.05  // [m]
 	);
+	
+	KDL::Trajectory_Composite*
+	traj_linear2(
+		const std::vector<geometry_msgs::Pose>& waypoints,
+		double vel_max      = 1.00, // [m/s]
+		double acc_max      = 1.00, // [m/s^2]
+		double equiv_radius = 0.05  // [m]
+	);
 
 	std::array<KDL::Trajectory_Composite*, 6>
 	traj_linear(
