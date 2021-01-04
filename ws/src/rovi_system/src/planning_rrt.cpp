@@ -47,6 +47,9 @@ main(int argc, char** argv)
 	rovi_planner::moveit_planner::update_planning_scene();
 	std::this_thread::sleep_for(1s);
 	
+	std::cout << "Press [ENTER] to start planning..." << std::endl;
+	std::cin.ignore();
+	
 	// estimate object pose
 
 	// RRT is planning for TCP (not EE) !!!

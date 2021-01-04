@@ -2,6 +2,7 @@
 
 	<!-- workcell -->
 	<include file="$(find rovi_gazebo)/launch/workcell.launch">
+		<arg name="robot_pose" value="-x 0.4 -y 0.55"/>
 		<arg name="paused" value="true"/>
 		<arg name="use_moveit" value="false"/>
 		<arg name="use_rviz" value="false"/>

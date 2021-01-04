@@ -25,18 +25,37 @@ main(int argc, char** argv)
 	// config
 	const auto [MAX_VEL, MAX_ACC, RAD, EQUIV_RAD] = std::tuple{ 0.1, 0.1, 0.05, 0.001 };
 	const size_t NUM_ITER = 50;
+	const auto pose_obj = PICK_LOCATIONS[2];
 
 	// compute via points
 	std::vector<geometry_msgs::Pose> waypoints =
 	{
-		get_current_ee_pose(),                                // starting pose
-		get_ee_given_pos(VIA_POINTS["orient"]),               // orient EE and center
-		get_ee_given_pos(VIA_POINTS["move-down"]),            // move down
-		get_ee_given_pos(VIA_POINTS["pre-fork"]),             // pre-fork
-		get_ee_given_pos(VIA_POINTS["fork"]),                 // fork
-		get_ee_given_pos(PICK_LOCATIONS[0], PRE_PICK_OFFSET), // pre-obj
-		get_ee_given_pos(PICK_LOCATIONS[0], PICK_OFFSET)      // obj
+		get_current_ee_pose(),                       // starting pose
+		get_ee_given_pos(VIA_POINTS["orient"]),      // orient EE and center
+		get_ee_given_pos(VIA_POINTS["move-down"]),   // move down
+		get_ee_given_pos(VIA_POINTS["pre-fork"]),    // pre-fork
+		get_ee_given_pos(VIA_POINTS["fork"]),        // fork
+		get_ee_given_pos(pose_obj, PRE_PICK_OFFSET), // pre-obj
+		get_ee_given_pos(pose_obj, PICK_OFFSET)  // obj
 	};
+		
+	// spawn cubes at waypoints (for image)
+	// if constexpr (true)
+	// {	
+	// 	rovi_gazebo::spawn_model("bottle", "bottle5", PICK_LOCATIONS[0]);
+	// 	rovi_gazebo::spawn_model("bottle", "bottle6", PICK_LOCATIONS[1]);
+	// 	rovi_gazebo::spawn_model("bottle", "bottle7", PICK_LOCATIONS[2]);
+
+	// 	std::cin.ignore();
+		
+	// 	rovi_gazebo::spawn_model("cube", "cube1", VIA_POINTS["orient"]);
+	// 	rovi_gazebo::spawn_model("cube", "cube2", VIA_POINTS["move-down"]);
+	// 	rovi_gazebo::spawn_model("cube", "cube3", VIA_POINTS["pre-fork"]);
+	// 	rovi_gazebo::spawn_model("cube", "cube4", VIA_POINTS["fork"]);
+
+	// 	std::cin.ignore();
+	// 	return 0;
+	// }
 	
 	// set experiment name and make dir
 	const std::string dir = get_experiment_dir("rovi_system");
@@ -56,9 +75,9 @@ main(int argc, char** argv)
 			plan.traj_duration = plan.traj->Duration();
 			
 			std::cout << "\n";
-			std::cout << "iteration:      " << plan.iteration << std::endl;
-			std::cout << "planning time:  " << plan.planning_time << " [ms]" << std::endl;
-			std::cout << "traj duration   " << plan.traj_duration << " [s]" << std::endl;
+			std::cout << "iteration:     " << plan.iteration << std::endl;
+			std::cout << "planning time: " << plan.planning_time << " [ms]" << std::endl;
+			std::cout << "traj duration: " << plan.traj_duration << " [s]" << std::endl;
 			
 			results.push_back(plan);
 		}
@@ -74,7 +93,7 @@ main(int argc, char** argv)
 	
 	// spawn bottle after one sec
 	std::thread([&](){
-		auto pos = PICK_LOCATIONS[0].position;
+		auto pos = pose_obj.position;
 		ros::Duration(1).sleep();
 		rovi_gazebo::spawn_model("bottle", "bottle1", { pos.x, pos.y, pos.z });
 	}).detach();
