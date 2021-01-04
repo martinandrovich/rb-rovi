@@ -2,7 +2,7 @@
 <sdf version='1.6'>
   <model name='cube'>
     <link name='link_0'>
-      <inertial>
+      <!-- <inertial>
         <mass>1.424</mass>
         <inertia>
            <ixx>0.006368833984400001</ixx>
@@ -13,7 +13,7 @@
            <izz>0.0018547197266</izz>
         </inertia>
         <pose>0.000513 0 0.080213 0 -0 0</pose>
-      </inertial>
+      </inertial> -->
       <pose>0 0 0 0 -0 0</pose>
       <gravity>1</gravity>
       <self_collide>0</self_collide>
@@ -30,7 +30,7 @@
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
-      <collision name='collision'>
+      <!-- <collision name='collision'>
         <laser_retro>0</laser_retro>
         <max_contacts>10</max_contacts>
         <pose>0 0 0 0 -0 0</pose>
@@ -85,9 +85,9 @@
             </bullet>
           </contact>
         </surface>
-      </collision>
+      </collision> -->
     </link>
-    <static>0</static>
+    <static>1</static>
     <allow_auto_disable>1</allow_auto_disable>
   </model>
 </sdf>
