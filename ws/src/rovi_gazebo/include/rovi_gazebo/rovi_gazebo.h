@@ -76,6 +76,9 @@ namespace rovi_gazebo
 	spawn_model(const std::string& model, const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { 0, 0, 0 });
 	
 	void
+	spawn_model(const std::string& model, const std::string& name, const geometry_msgs::Pose& pose);
+	
+	void
 	move_model(const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { INFINITY, INFINITY, INFINITY});
 	
 	void
