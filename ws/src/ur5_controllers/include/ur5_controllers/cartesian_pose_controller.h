@@ -30,8 +30,8 @@ namespace ur5_controllers
 		static inline constexpr auto CONTROLLER_NAME = "CartesianPoseController";
 		static inline constexpr auto SATURATE_ROTATUM = true;
 		static inline constexpr auto TAU_DOT_MAX = 1000.;
-		// static inline const std::vector<double> Q_D_INIT = { 1.57, -1.57, 1.57, 1.57, 1.57, 0.0 };
-		static inline const std::vector<double> Q_D_INIT = { 0.5603, -1.2099, 2.0125, -0.8027, 0.5603, -3.1415 };
+		// static inline const std::vector<double> Q_D_INIT = { 1.57, -1.57, 1.57, 1.57, 1.57, 0.0 }; // default
+		static inline const std::vector<double> Q_D_INIT = { 0.5603, -1.2099, 2.0125, -0.8027, 0.5603, -3.1415 }; // for KDL planner testing
 
 		std::vector<std::string> vec_joint_names;
 		size_t num_joints;
