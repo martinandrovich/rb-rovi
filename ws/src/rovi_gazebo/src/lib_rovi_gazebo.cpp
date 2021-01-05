@@ -319,9 +319,9 @@ rovi_gazebo::get_current_link6_pose(bool in_world_frame)
 }
 
 geometry_msgs::Pose
-rovi_gazebo::get_current_ee_pose()
+rovi_gazebo::get_current_ee_pose(bool in_world_frame)
 {
-	const auto pose_l6 = get_current_link6_pose(false);
+	const auto pose_l6 = get_current_link6_pose(in_world_frame);
 	Eigen::Isometry3d b_T_l6, b_T_ee;
 
 	tf::poseMsgToEigen(pose_l6, b_T_l6);
@@ -335,9 +335,9 @@ rovi_gazebo::get_current_ee_pose()
 }
 
 geometry_msgs::Pose
-rovi_gazebo::get_current_tcp_pose()
+rovi_gazebo::get_current_tcp_pose(bool in_world_frame)
 {
-	const auto pose_l6 = get_current_link6_pose(false);
+	const auto pose_l6 = get_current_link6_pose(in_world_frame);
 	Eigen::Isometry3d b_T_l6, b_T_tcp;
 
 	tf::poseMsgToEigen(pose_l6, b_T_l6);
