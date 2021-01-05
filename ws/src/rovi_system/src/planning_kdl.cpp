@@ -36,22 +36,23 @@ main(int argc, char** argv)
 		get_ee_given_pos(VIA_POINTS["pre-fork"]),    // pre-fork
 		get_ee_given_pos(VIA_POINTS["fork"]),        // fork
 		get_ee_given_pos(pose_obj, PRE_PICK_OFFSET), // pre-obj
-		get_ee_given_pos(pose_obj, PICK_OFFSET)  // obj
+		get_ee_given_pos(pose_obj, PICK_OFFSET)      // obj
 	};
 		
 	// spawn cubes at waypoints (for image)
 	// if constexpr (true)
 	// {	
-	// 	rovi_gazebo::spawn_model("bottle", "bottle5", PICK_LOCATIONS[0]);
-	// 	rovi_gazebo::spawn_model("bottle", "bottle6", PICK_LOCATIONS[1]);
-	// 	rovi_gazebo::spawn_model("bottle", "bottle7", PICK_LOCATIONS[2]);
+	// 	rovi_gazebo::spawn_model("bottle", "bottle1", PICK_LOCATIONS[0]);
+	// 	rovi_gazebo::spawn_model("bottle", "bottle2", PICK_LOCATIONS[1]);
+	// 	rovi_gazebo::spawn_model("bottle", "bottle3", PICK_LOCATIONS[2]);
 
 	// 	std::cin.ignore();
 		
-	// 	rovi_gazebo::spawn_model("cube", "cube1", VIA_POINTS["orient"]);
-	// 	rovi_gazebo::spawn_model("cube", "cube2", VIA_POINTS["move-down"]);
-	// 	rovi_gazebo::spawn_model("cube", "cube3", VIA_POINTS["pre-fork"]);
-	// 	rovi_gazebo::spawn_model("cube", "cube4", VIA_POINTS["fork"]);
+	// 	rovi_gazebo::spawn_model("sphere", "sphere0", get_current_tcp_pose(true)); // tcp pose in world frame
+	// 	rovi_gazebo::spawn_model("sphere", "sphere1", VIA_POINTS["orient"]);
+	// 	rovi_gazebo::spawn_model("sphere", "sphere2", VIA_POINTS["move-down"]);
+	// 	rovi_gazebo::spawn_model("sphere", "sphere3", VIA_POINTS["pre-fork"]);
+	// 	rovi_gazebo::spawn_model("sphere", "sphere4", VIA_POINTS["fork"]);
 
 	// 	std::cin.ignore();
 	// 	return 0;
