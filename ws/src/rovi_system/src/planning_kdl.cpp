@@ -7,6 +7,8 @@
 #include <ur5_controllers/interface.h>
 #include <ur5_dynamics/ur5_dynamics.h>
 
+#include <eigen_conversions/eigen_msg.h>
+
 #include "planning_common.hpp"
 
 int
@@ -60,6 +62,22 @@ main(int argc, char** argv)
 	
 	// set experiment name and make dir
 	const std::string dir = get_experiment_dir("rovi_system");
+	
+	// export waypoints
+	std::ofstream fs_waypoints(dir + "/waypoints.csv", std::ofstream::out);
+	for (const auto& pt : waypoints)
+	{
+		static auto mat = Eigen::Affine3d();
+		tf::poseMsgToEigen(pt, mat);
+		auto T_ = mat.matrix();
+		T_.transposeInPlace();
+		Eigen::VectorXd v(Eigen::Map<Eigen::VectorXd>(T_.data(), T_.size()));
+
+		for (size_t i = 0; i < v.size(); ++i)
+			fs_waypoints << v(i) << ((i != v.size() - 1) ? ", " : "");
+
+		fs_waypoints << "\n";
+	}
 	
 	// do experiments for linear and parabolic interpolation
 	for (const auto method : { "lin", "par" })
