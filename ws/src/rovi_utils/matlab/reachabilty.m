@@ -2,8 +2,9 @@ close all; clear; clc;
 run("rovi_common.m");
 %%
 
-data = readmatrix(DIR_DATA + "/reachability/reachability.csv");
-% quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1])
+EXPERIMENT = "20210106_164202";
+GRASP_POS = "top";
+data = readmatrix(DIR_DATA + "/reachability/" + EXPERIMENT + "/" + GRASP_POS + ".csv");
 
 increment = 0.1;
 x = [min(data(:, 2)) max(data(:, 2))];
@@ -27,4 +28,6 @@ ylabel("Table height (x)")
 ytickformat('%.1f');
 xtickformat('%.1f');
 
-export_fig(DIR_IMGS + "/reachability.pdf")
+total = sum(data(:, 3))
+
+export_fig(DIR_IMGS + "/reachability-" + GRASP_POS + ".pdf")
