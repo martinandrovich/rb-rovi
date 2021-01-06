@@ -127,8 +127,8 @@ namespace rovi_planner
 				const std::array<double, 3>& base_pos,
 				const std::string& obj_name,
 				const std::array<double, 3>& obj_pos,
-				const std::array<double, 3>& offset,
-				const std::array<double, 3>& axis,
+				const Eigen::Isometry3d& offset,
+				const std::array<double, 3>& rot_axis,
 				size_t resolution = 16,
 				bool visualize = false
 			);

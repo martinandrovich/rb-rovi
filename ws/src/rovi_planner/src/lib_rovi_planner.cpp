@@ -564,7 +564,7 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 }
 
 rovi_planner::moveit_planner::ReachabilityData
-rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos, const std::string& obj_name, const std::array<double, 3>& obj_pos, const std::array<double, 3>& offset, const std::array<double, 3>& axis, size_t resolution, bool visualize)
+rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos, const std::string& obj_name, const std::array<double, 3>& obj_pos, const Eigen::Isometry3d& offset, const std::array<double, 3>& rot_axis, size_t resolution, bool visualize)
 {
 
 	// check
@@ -596,7 +596,8 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 	
 	// generate transformations
 	Eigen::Matrix4d w_T_obj      = make_tf(obj_pos,        0, { 0, 0, 1 });
-	Eigen::Matrix4d obj_T_offset = make_tf(offset,         0, { 0, 0, 1 });
+	// Eigen::Matrix4d obj_T_offset = make_tf(offset,         0, { 0, 0, 1 });
+	Eigen::Matrix4d obj_T_offset = offset.matrix();
 	Eigen::Matrix4d l6_T_ee      = make_tf({ 0, 0.15, 0 }, 0, { 0, 0, 1 });
 	Eigen::Matrix4d w_T_base     = make_tf(base_pos,       0, { 0, 0, 1 });
 	
@@ -624,7 +625,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 		const double theta = 2.0 * M_PI / (double)resolution * double(i);
 
 		// compute transformations
-		Eigen::Matrix4d T_rotate = make_tf({ 0, 0, 0 }, theta, axis);
+		Eigen::Matrix4d T_rotate = make_tf({ 0, 0, 0 }, theta, rot_axis);
 		Eigen::Matrix4d b_T_offset = w_T_base.inverse().matrix() * w_T_obj * obj_T_offset * T_rotate * l6_T_ee.inverse().matrix();
 
 		// calculate the inverse_kinematics to the pose
@@ -649,7 +650,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 			
 			if (visualize)
 			{
-				static ros::Rate lp(10); // Hz
+				static ros::Rate lp(5); // Hz
 				ROS_INFO_STREAM("Collision test:  " << i << "/" << (resolution + 1) << ", angle: " << theta);
 				ROS_INFO_STREAM("Current state is " << (col_res.collision ? "in" : "not in") << " collision");
 				lp.sleep();
