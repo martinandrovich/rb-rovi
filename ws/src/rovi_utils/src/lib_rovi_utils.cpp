@@ -297,7 +297,7 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 
 	std::vector<sensor_msgs::JointState> joint_states;
 
-	static std::ofstream fs("write_to_file.csv", std::ofstream::out);
+	// static std::ofstream fs("joint_states_from_traj.csv", std::ofstream::out);
 
 	for (size_t i = 0; i < traj.getWayPointCount(); ++i)
 	{
@@ -316,10 +316,10 @@ rovi_utils::joint_states_from_traj(const robot_trajectory::RobotTrajectory& traj
 			
 		joint_states.push_back(joint_state);
 
-		fs << joint_state.position[0] << ", " << joint_state.position[1] << ", " <<  joint_state.position[2] << ", " << joint_state.position[3] << ", " << joint_state.position[4] << ", " << joint_state.position[5] << ", " << std::endl;
+		// fs << joint_state.position[0] << ", " << joint_state.position[1] << ", " <<  joint_state.position[2] << ", " << joint_state.position[3] << ", " << joint_state.position[4] << ", " << joint_state.position[5] << ", " << std::endl;
 	}
 
-	fs.close();
+	// fs.close();
 
 	return joint_states;
 }
