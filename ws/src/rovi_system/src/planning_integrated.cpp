@@ -15,7 +15,7 @@ main(int argc, char** argv)
 	using namespace std::chrono_literals;
 
 	// init node
-	ros::init(argc, argv, "planning_rrt");
+	ros::init(argc, argv, "planning_integrated");
 	ros::NodeHandle nh;
 
 	// config
@@ -28,42 +28,37 @@ main(int argc, char** argv)
 	const auto dir       = get_experiment_dir("rovi_system");
 	const auto obj_model = "bottle";
 	const auto obj_name  = obj_model + std::to_string(1);
-	const auto obj_pose  = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[0];
-	const auto obj_pos   = obj_pose.position;
-
-	// experiment lambda
-	const auto do_planning_experiments = [&](const std::string& operation, const auto& pose)
+	      auto obj_pose  = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[0];
+	
+	if (argc == 4)
 	{
-		// for (auto method : { "RRT", "RRTconnect", "RRTstar" })
-		for (auto method : { "RRTconnect" })
+		obj_pose.position.x = std::atof(argv[1]);
+		obj_pose.position.y = std::atof(argv[2]);
+		obj_pose.position.z = std::atof(argv[3]);
+		
+		ROS_INFO_STREAM("Using the provided pick pose (x, y, z):\n");
+		std::cout << obj_pose << std::endl;
+		std::this_thread::sleep_for(1s);
+	}
+
+	// experiment lambda (binomial)
+	const auto do_planning_experiments = [&](const std::string& operation)
+	{
+		std::ofstream fs(dir + "/" + operation + "_attempts.csv", std::ofstream::out);
+		fs << "iteration, success, error\n";
+
+		for (size_t i = 0; i < NUM_ITER and ros::ok(); ++i)
 		{
-			std::vector<PlanningData<robot_trajectory::RobotTrajectoryPtr>> results;
-			const auto dir_out = dir + "/" + operation + "/" + method;
-			std::filesystem::create_directories(dir_out);
+			auto pose = get_tcp_given_pos(obj_pose, PICK_OFFSET);
+			auto pose_error = 0.f;
 
-			for (size_t i = 0; i < NUM_ITER and ros::ok(); ++i)
-			{
-				ROS_WARN_STREAM("Doing " << method << " experiment for " << operation << "; iteration: " << i);
-				PlanningData<robot_trajectory::RobotTrajectoryPtr> plan;
+			auto plan_moveit = rovi_planner::moveit_planner::plan(pose, PLANNING_METHOD, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
+			bool plan_success = (plan_moveit.error_code_.val == plan_moveit.error_code_.SUCCESS);
 
-				plan.iteration = i;
-				auto t_begin = std::chrono::high_resolution_clock::now();
-				auto plan_moveit = rovi_planner::moveit_planner::plan(pose, method, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
-				plan.planning_time = std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now() - t_begin).count();
-
-				auto traj = rovi_planner::moveit_planner::get_traj(plan_moveit, 0.0001, 1/ur5_controllers::ur5::EXEC_FREQ, 0.2, 0.1);
-				plan.traj = plan_moveit.trajectory_;
-
-				plan.traj_duration = plan.traj->getDuration();
-
-				results.push_back(plan);
-				rovi_utils::export_traj(*plan.traj, dir_out + "/traj" + std::to_string(i) + ".csv");
-			}
-
-			// export all planning data and trajectories
-			// ../dir/pick/RRTstar/plan.csv
-			export_planning_data(results, dir_out + "/plan.csv");
+			fs << std::boolalpha << i << ", " << plan_success << ", " << pose_error << "\n";
 		}
+		
+		fs.close();
 	};
 
 	// init moveit planner
@@ -75,45 +70,45 @@ main(int argc, char** argv)
 	// setup simulation and wait for it to settle
 	ROS_INFO_STREAM("Preparing simulation...");
 	rovi_gazebo::set_simulation(true);
-	rovi_gazebo::set_projector(false);
+	rovi_gazebo::set_projector(true);
 
 	ROS_INFO_STREAM("Releasing gripper...");
 	ur5_controllers::wsg::release();
 	std::this_thread::sleep_for(2s);
 
 	// setup scence
-
 	ROS_INFO_STREAM("Setting up scene...");
 	rovi_gazebo::spawn_model("coffecan", "coffecan1", { 0.105778, 0.146090, 0.740000 }, { 0.000015, 0.0, 0.142340 });
 	rovi_gazebo::spawn_model("mug", "mug1", { 0.238709, 0.223757, 0.740674 }, { -0.012724, -0.016048, 1.954001 });
 	rovi_gazebo::spawn_model("crate", "crate1", { 0.641959, 0.676307, 0.739943 }, { 0.003127, -0.003012, 0.030163 });
-	rovi_gazebo::spawn_model(obj_model, obj_name, { obj_pos.x, obj_pos.y, obj_pos.z });
+	rovi_gazebo::spawn_model(obj_model, obj_name, obj_pose);
 	rovi_planner::moveit_planner::update_planning_scene();
 	std::this_thread::sleep_for(1s);
 
 	std::cout << "Press [ENTER] to start planning..." << std::endl;
 	std::cin.ignore();
 
-	// estimate object pose
-
-	// RRT is planning for TCP (not EE) !!!
-	const auto pose_pick  = get_tcp_given_pos(obj_pose, PICK_OFFSET);
+	// MoveIt (RRT) is planning for TCP (not EE) !!!
+	auto       pose_pick  = get_tcp_given_pos(obj_pose, PICK_OFFSET);
 	const auto pose_place = get_tcp_given_pos(PLACE_LOCATION, PICK_OFFSET);
 	const auto pose_home  = get_current_tcp_pose();
 
 	// PICK
 	{
+	
+	// experiments
+	std::cout << "Press [ENTER] to do experiments..." << std::endl;
+	if (DO_EXPERIMENTS)
+		do_planning_experiments("pick");
+	
+	// estimate object pose
+	pose_pick = pose_pick;
 
 	// plan and interpolate
 	ROS_INFO_STREAM("Planning...");
 	auto plan = rovi_planner::moveit_planner::plan(pose_pick, PLANNING_METHOD, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
 	ROS_INFO_STREAM("Creating trajectory (interpolation)...");
 	auto traj = rovi_planner::moveit_planner::get_traj(plan, 0.0001, 1/ur5_controllers::ur5::EXEC_FREQ, 0.2, 0.1);
-
-	// experiments
-	std::cout << "Press [ENTER] to do experiments..." << std::endl;
-	if (DO_EXPERIMENTS)
-		do_planning_experiments("pick", pose_pick);
 
 	// execute in Gazebo
 	ROS_INFO_STREAM("Executing trajectory in Gazebo...");
@@ -144,9 +139,6 @@ main(int argc, char** argv)
 	// plan using moveit (to to place)
 	ROS_INFO_STREAM("Planning...");
 	auto plan = rovi_planner::moveit_planner::plan(pose_place, PLANNING_METHOD, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
-	
-	if (DO_EXPERIMENTS)
-		do_planning_experiments("place", pose_place);
 
 	// get parabolic trajectory (time optimal)
 	ROS_INFO_STREAM("Creating trajectory (interpolation)...");

@@ -27,7 +27,7 @@ main(int argc, char** argv)
 	// config
 	const auto [MAX_VEL, MAX_ACC, RAD, EQUIV_RAD] = std::tuple{ 0.1, 0.1, 0.05, 0.001 };
 	const size_t NUM_ITER = 50;
-	const auto pose_obj = PICK_LOCATIONS[2];
+	const auto pose_obj = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[2];
 
 	// compute via points
 	std::vector<geometry_msgs::Pose> waypoints =
@@ -112,7 +112,7 @@ main(int argc, char** argv)
 	
 	// spawn bottle after one sec
 	std::thread([&](){
-		auto pos = pose_obj.position;
+		auto& pos = pose_obj.position;
 		ros::Duration(1).sleep();
 		rovi_gazebo::spawn_model("bottle", "bottle1", { pos.x, pos.y, pos.z });
 	}).detach();
