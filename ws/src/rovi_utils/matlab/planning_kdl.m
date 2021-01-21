@@ -51,11 +51,42 @@ export_fig(DIR_IMGS + "/planning/kdl-traj-par.pdf")
 
 %% histograms
 
-figure
-histogram(plan_lin(:, 2))
+figure("Position", [0 0 700 500])
+
+subplot(1,2,1)
+histogram(plan_lin(:, 2), 40, "FaceColor", COL_BLUE)
+title("Linear interpolation")
 mean(plan_lin(:, 2))
+xlabel("Time [ms]")
+ylabel("Count")
+xlim([0 0.03])
+pbaspect([1 0.7 1])
+% yticklabels(yticks*100)
 
+subplot(1,2,2)
+histogram(plan_par(:, 2), 20, "FaceColor", COL_BLUE)
+title("Parabolic interpolation")
+mean(plan_lin(:, 2))
+xlabel("Time [ms]")
+ylabel("Count")
+xlim([0 0.03])
+pbaspect([1 0.7 1])
+% yticklabels(yticks*100)
+
+export_fig(DIR_IMGS + "/planning/kdl-plan-time.pdf", "-painters")
+
+%%
+
+% planning time (linear)
+figure 
+histogram(plan_lin(:, 2), "FaceColor", COL_BLUE)
+mean(plan_lin(:, 2))
+xlabel("Time [ms]")
+ylabel("Count")
+
+% planning time (parabolic)
 figure
-histogram(plan_par(:, 2))
+histogram(plan_par(:, 2), "FaceColor", COL_BLUE)
 mean(plan_par(:, 2))
-
+xlabel("Time [ms]")
+ylabel("Count")
