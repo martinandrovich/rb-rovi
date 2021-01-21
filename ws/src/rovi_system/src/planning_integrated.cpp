@@ -28,8 +28,18 @@ main(int argc, char** argv)
 	const auto dir       = get_experiment_dir("rovi_system");
 	const auto obj_model = "bottle";
 	const auto obj_name  = obj_model + std::to_string(1);
-	const auto obj_pose  = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[0];
-	const auto obj_pos   = obj_pose.position;
+	      auto obj_pose  = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[0];
+	
+	if (argc == 4)
+	{
+		obj_pose.position.x = std::atof(argv[1]);
+		obj_pose.position.y = std::atof(argv[2]);
+		obj_pose.position.z = std::atof(argv[3]);
+		
+		ROS_INFO_STREAM("Using the provided pick pose (x, y, z):\n");
+		std::cout << obj_pose << std::endl;
+		std::this_thread::sleep_for(1s);
+	}
 
 	// experiment lambda (binomial)
 	const auto do_planning_experiments = [&](const std::string& operation)
@@ -71,7 +81,7 @@ main(int argc, char** argv)
 	rovi_gazebo::spawn_model("coffecan", "coffecan1", { 0.105778, 0.146090, 0.740000 }, { 0.000015, 0.0, 0.142340 });
 	rovi_gazebo::spawn_model("mug", "mug1", { 0.238709, 0.223757, 0.740674 }, { -0.012724, -0.016048, 1.954001 });
 	rovi_gazebo::spawn_model("crate", "crate1", { 0.641959, 0.676307, 0.739943 }, { 0.003127, -0.003012, 0.030163 });
-	rovi_gazebo::spawn_model(obj_model, obj_name, { obj_pos.x, obj_pos.y, obj_pos.z });
+	rovi_gazebo::spawn_model(obj_model, obj_name, obj_pose);
 	rovi_planner::moveit_planner::update_planning_scene();
 	std::this_thread::sleep_for(1s);
 
