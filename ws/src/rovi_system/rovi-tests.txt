@@ -2,11 +2,9 @@ reachability
 
 planning_common
 planning_kdl (lin + par)
-planning_moveit
+planning_rrt
+planning_integrated
 
 pose_estimation_m1
 pose_estimation_m3
 pose_estimation_m4
-
-integrated
-integrated_hard
