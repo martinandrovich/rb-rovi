@@ -517,7 +517,7 @@ rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const st
 	{
 		// do some error handling here
 		ROS_FATAL_STREAM("It was not possible to generate a trajectory... exiting...");
-		exit(-1);
+		// exit(-1);
 	}
 
 	// return the plan
