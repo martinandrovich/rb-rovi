@@ -1,11 +1,12 @@
 #include <ros/ros.h>
 #include <ros/package.h>
-#include <rovi_pose_estimator/rovi_pose_est.h>
 #include <Eigen/Eigen>
 #include <cv_bridge/cv_bridge.h>
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_utils/rovi_utils.h>
 #include <eigen_conversions/eigen_msg.h>
+
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
 
 const static std::vector<std::array<double, 3>> OBJECT_POS{
                                                                 {0.55, 0.95, 0.75},

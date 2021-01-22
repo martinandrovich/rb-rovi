@@ -1,7 +1,8 @@
 #include <ros/ros.h>
-#include <rovi_pose_estimator/rovi_pose_est.h>
-#include <rovi_gazebo/rovi_gazebo.h>
-#include <rovi_utils/rovi_utils.h>
+
+#include <iostream>
+#include <fstream>
+
 #include <Eigen/Eigen>
 #include <cv_bridge/cv_bridge.h>
 
@@ -11,8 +12,10 @@
 #include <opencv4/opencv2/core/eigen.hpp>
 
 #include <eigen_conversions/eigen_msg.h>
-#include <iostream>
-#include <fstream>
+
+#include <rovi_utils/rovi_utils.h>
+#include <rovi_gazebo/rovi_gazebo.h>
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
 
 const static std::vector<std::array<double, 3>> OBJECT_POS{
                                                                 {0.1, 1, 0.79},

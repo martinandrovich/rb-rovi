@@ -1,3 +1,5 @@
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
+
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -55,7 +57,6 @@
 #include <pcl/common/time.h>
 #include <pcl/common/transforms.h>
 
-#include <rovi_pose_estimator/rovi_pose_est.h>
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_utils/rovi_utils.h>
 

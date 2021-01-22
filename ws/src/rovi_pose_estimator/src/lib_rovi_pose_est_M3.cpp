@@ -1,3 +1,5 @@
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
+
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -9,6 +11,7 @@
 #include <sensor_msgs/Image.h>
 #include <std_msgs/Int32.h>
 #include <cv_bridge/cv_bridge.h>
+#include <eigen_conversions/eigen_msg.h>
 
 #include <opencv4/opencv2/imgproc.hpp>
 #include <opencv4/opencv2/imgcodecs.hpp>
@@ -17,11 +20,8 @@
 #include <opencv4/opencv2/calib3d.hpp>
 #include <opencv4/opencv2/core/eigen.hpp>
 
-#include <rovi_pose_estimator/rovi_pose_est.h>
 #include <rovi_utils/rovi_utils.h>
-
 #include <rovi_gazebo/rovi_gazebo.h>
-#include <eigen_conversions/eigen_msg.h>
 
 namespace rovi_pose_estimator
 {
