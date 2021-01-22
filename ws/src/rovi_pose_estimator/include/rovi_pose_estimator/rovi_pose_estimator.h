@@ -1,77 +1,99 @@
 #pragma once
+
 #include <string>
+#include <array>
+
+#include <ros/ros.h>
 #include <opencv2/opencv.hpp>
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-#include <pcl/registration/transformation_estimation_svd.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <geometry_msgs/Pose.h>
+#include <Eigen/Eigen>
 
 namespace rovi_pose_estimator
 {
-    namespace M2
-    {
-        void
-        get_point_cloud(pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud, bool save_to_disk=false);
+	static cv::RNG rng(12345);
+	static constexpr auto LEFT = 0;
+	static constexpr auto RIGHT = 1;
+	static constexpr auto BASELINE = -0.08;
+	static constexpr auto IMG_SIZE_W = 800;
+	static constexpr auto IMG_SIZE_H = 800;
+	static constexpr auto GAUSS_BLUR_STD = 0.10;
+	static const auto GAUSS_BLUR_KERNEL = cv::Size(3, 3);
+	static const std::array<double, 3> TSH_LOWER = {220, 220, 220};
+	static const std::array<double, 3> TSH_UPPER = {255, 255, 255};
+	static const std::vector<cv::Point> ROI_left  { cv::Point{0, 0}, cv::Point{0, IMG_SIZE_H-1}, cv::Point{IMG_SIZE_W-1, IMG_SIZE_H-1}, cv::Point{IMG_SIZE_W-1, 0} };
+	static const std::vector<cv::Point> ROI_right { cv::Point{0, 0}, cv::Point{0, IMG_SIZE_H-1}, cv::Point{IMG_SIZE_W-1, IMG_SIZE_H-1}, cv::Point{IMG_SIZE_W-1, 0} };
+	static constexpr double MIN_DIST_GOOD_FEATURE = 50;
+	static constexpr int MAX_CORNERS_GOOD_FEATURE = 4; 
 
-        void 
-        compute_spin_image_features(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, const pcl::PointCloud<pcl::Histogram<153>>::Ptr& scene_features, const pcl::PointCloud<pcl::Histogram<153>>::Ptr& obj_features);
+	namespace M1
+	{
+		// constexpr auto leaf_size = 0.008f;
+		constexpr auto leaf_size = 0.01f;
 
-        void 
-        match_spin_image_features(const pcl::PointCloud<pcl::Histogram<153>>::Ptr& scene, const pcl::PointCloud<pcl::Histogram<153>>::Ptr& obj, std::vector<int>& scene_match_indices);
-        
-        const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 
-        RANSAC_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, std::vector<int>& scene_match_indices, int max_iterations, double inlier_threshold);
+		std::array<cv::Mat, 2> 
+		get_image_data(const std::string & ns_ros = "/rbrovi/camera_stereo");
 
-        void 
-        global_pose_est(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& obj, pcl::PointCloud<pcl::PointXYZ>::Ptr& output, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& transformation, float inlier_tresh=0.005, int ransac_iterations=5000);
+		std::array<sensor_msgs::CameraInfo, 2>
+		get_image_info(const std::string & ns_ros = "/rbrovi/camera_stereo");
 
-        void 
-        load_model(const std::string& model_path, const pcl::PointCloud<pcl::PointXYZ>::Ptr& dst);
-    }
-    
-    void 
-    compute_normals(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input, const pcl::PointCloud<pcl::Normal>::Ptr& normals);
-    
-    void 
-    voxelGrid(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud, float leaf_size=0.02);
+		void
+		set_structed_light(ros::NodeHandle & nh, const bool & state);
 
-    void
-    outlierRemoval(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &output_cloud);
+		cv::Mat 
+		compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right);
 
-    void 
-	spatialFilter(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &output_cloud);
-    
-    void 
-    smoothing(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud);
+		void
+		compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_img);
 
-    void
-    plane_segmentation(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::ModelCoefficients::Ptr& plane_coeff, float leaf_size);
+		bool
+		read_compute_features_object(const std::string & obj);
 
-    void
-    extract_indices(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud, bool inverse_extraction=false);
+		void 
+		match_features();
 
-    void
-    extract_indices(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& input_cloud, pcl::PointIndices::Ptr& inlier_idices, pcl::PointCloud<pcl::PointXYZRGB>::Ptr& output_cloud, bool inverse_extraction);
+		Eigen::Matrix4f 
+		ransac_features(const int & max_it = 10000);
 
-    void
-    CheckforNans(const pcl::PointCloud<pcl::PointXYZ>::Ptr& input_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr& output_cloud);
+		geometry_msgs::Pose
+		estimate_pose(const int & it, const bool & draw = false, const double & noise = 0.0);
+	}
 
-    void
-    ICP(const pcl::PointCloud<pcl::PointXYZ>::Ptr& scene, const pcl::PointCloud<pcl::PointXYZ>::Ptr& model, pcl::PointCloud<pcl::PointXYZ>::Ptr& transformed_model, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& final_trans, float leaf_size=0.05, int max_iterations=50);
-    
-    void
-    get_final_pose(const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& global_rot, const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& local_rot, const pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& sensor_pose, pcl::registration::TransformationEstimationSVD<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4& final_pose);
+	namespace M3
+	{
+		std::array<cv::Mat, 2> 
+		get_image_data(const std::string & ns_ros = "/rbrovi/camera_stereo");         
 
-	void
-    test(const std::string& str);
+		std::array<sensor_msgs::CameraInfo, 2>
+		get_image_info(const std::string & ns_ros = "/rbrovi/camera_stereo");
 
+		cv::Mat 
+		create_mask(const cv::Mat & img, const std::vector<cv::Point> & pts);
 
-    namespace M4
-    {
-        void Harris_keypoints_example(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& model, pcl::PointIndices::Ptr& inlier_idices);
-    }
+		cv::Mat 
+		tsh_mask(
+			const cv::Mat & img_color, 
+			const std::array<double, 3> & lower_rgb = { 230.f, 230.f, 230.f }, 
+			const std::array<double, 3> & upper_rgb = { 255.f, 255.f, 255.f }
+		);
 
+		cv::Mat 
+		find_contour(const cv::Mat & mask);
 
+		double 
+		L2_stereo(const cv::Point2d & left, const cv::Point2d & right, const double y_tsh = 10);
 
-   
-    //void rovi_pose_estimator::
+		cv::Mat 
+		stereo_triangulation(const std::vector<std::array<cv::Point2d, 2>> & pts, const cv::Mat & Q, const bool & k_means = false);
+
+		geometry_msgs::Pose 
+		estimate_pose(
+			const bool & draw = 1,
+			const std::string & img_name = "img_stitched.jpg",
+			const double & noise = 0.0,
+			const double & qual = 0.01,
+			const int & max_number_of_corners = 4,
+			const double & min_dist_features = 50.0f
+		);
+	}
 }

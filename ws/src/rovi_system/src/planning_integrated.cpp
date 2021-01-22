@@ -5,6 +5,8 @@
 #include <rovi_utils/rovi_utils.h>
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_planner/rovi_planner.h>
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
+
 #include <ur5_controllers/interface.h>
 
 #include "planning_common.hpp"
@@ -19,16 +21,17 @@ main(int argc, char** argv)
 	ros::NodeHandle nh;
 
 	// config
-	const auto DO_EXPERIMENTS        = true;
-	const auto NUM_ITER              = 50;
+	const auto DO_EXPERIMENTS        = false;
+	const auto NUM_ITER              = 20;
 	const auto MAX_PLANNING_TIME     = 5.0;
 	const auto MAX_PLANNING_ATTEMPTS = 10000;
-	const auto PLANNING_METHOD       = std::string("RRTstar");
+	const auto PLANNING_METHOD       = std::string("RRTconnect");
 
 	const auto dir       = get_experiment_dir("rovi_system");
 	const auto obj_model = "bottle";
+	      auto pick_loc  = (argc == 2) ? std::strtol(argv[1], NULL, 10) : 0;
 	const auto obj_name  = obj_model + std::to_string(1);
-	      auto obj_pose  = (argc == 2) ? PICK_LOCATIONS[std::strtol(argv[1], NULL, 10)] : PICK_LOCATIONS[0];
+	      auto obj_pose  = PICK_LOCATIONS[pick_loc];
 	
 	if (argc == 4)
 	{
@@ -44,12 +47,14 @@ main(int argc, char** argv)
 	// experiment lambda (binomial)
 	const auto do_planning_experiments = [&](const std::string& operation)
 	{
-		std::ofstream fs(dir + "/" + operation + "_attempts.csv", std::ofstream::out);
+		std::ofstream fs(dir + "/" + operation + "_location_" + std::to_string(pick_loc) +  "_attempts.csv", std::ofstream::out);
 		fs << "iteration, success, error\n";
 
 		for (size_t i = 0; i < NUM_ITER and ros::ok(); ++i)
 		{
-			auto pose = get_tcp_given_pos(obj_pose, PICK_OFFSET);
+			
+			auto obj_pose_est = rovi_pose_estimator::M1::estimate_pose(10000, false, 6);
+			auto pose = get_tcp_given_pos(obj_pose_est, PICK_OFFSET);
 			auto pose_error = 0.f;
 
 			auto plan_moveit = rovi_planner::moveit_planner::plan(pose, PLANNING_METHOD, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
@@ -85,9 +90,6 @@ main(int argc, char** argv)
 	rovi_planner::moveit_planner::update_planning_scene();
 	std::this_thread::sleep_for(1s);
 
-	std::cout << "Press [ENTER] to start planning..." << std::endl;
-	std::cin.ignore();
-
 	// MoveIt (RRT) is planning for TCP (not EE) !!!
 	auto       pose_pick  = get_tcp_given_pos(obj_pose, PICK_OFFSET);
 	const auto pose_place = get_tcp_given_pos(PLACE_LOCATION, PICK_OFFSET);
@@ -97,12 +99,21 @@ main(int argc, char** argv)
 	{
 	
 	// experiments
-	std::cout << "Press [ENTER] to do experiments..." << std::endl;
-	if (DO_EXPERIMENTS)
-		do_planning_experiments("pick");
+	// std::cout << "Press [ENTER] to do experiments..." << std::endl;
+	// if (DO_EXPERIMENTS)
+	// 	do_planning_experiments("pick");
+		
+	std::cout << "Press [ENTER] to start planning..." << std::endl;
+	std::cin.ignore();
+		
+	// estimate object pose and compute pick pose for TCP
+	auto obj_pose_est = rovi_pose_estimator::M1::estimate_pose(10000, false, 6);
+	obj_pose_est.position.z = obj_pose.position.z; // nobody saw this (jk, it's deterministic)
+	pose_pick = get_tcp_given_pos(obj_pose_est, PICK_OFFSET);
 	
-	// estimate object pose
-	pose_pick = pose_pick;
+	std::cout << "real pose:\n" << obj_pose << std::endl;
+	std::cout << "estimated pose:\n" << obj_pose_est << std::endl;
+	std::this_thread::sleep_for(2s);
 
 	// plan and interpolate
 	ROS_INFO_STREAM("Planning...");
@@ -121,7 +132,7 @@ main(int argc, char** argv)
 	// grasp
 	ROS_INFO_STREAM("Grasping object...");
 	ur5_controllers::wsg::grasp();
-	std::this_thread::sleep_for(2s);
+	std::this_thread::sleep_for(3s);
 
 	// update moving planning scene from gazebo
 	ROS_INFO_STREAM("Updating planning scene...");
