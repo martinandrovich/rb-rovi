@@ -64,6 +64,7 @@ namespace rovi_pose_estimator
 
 // Scene
 static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_scene_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
+static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_orig_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
 static pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr filtered_scene_ptr(new pcl::PointCloud<pcl::PointXYZRGBNormal>());
 static pcl::PointCloud<pcl::Histogram<153>>::Ptr features_scene_ptr(new pcl::PointCloud<pcl::Histogram<153>>());
 
@@ -141,78 +142,78 @@ cv::Mat
 M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right)
 {   
     // FileStorage
-    // cv::FileStorage fs("stereosgbm_config.yaml", cv::FileStorage::READ);
+    cv::FileStorage fs("stereosgbm_config.yaml", cv::FileStorage::READ);
 
     static auto min_disp          = 0;
     static auto num_disp          = 16*8;
-    static auto block_size        = 3; // has to be odd
+    static auto block_size        = 5; // has to be odd
     static auto cn                = 3;
-    static auto p1_smoothness     = 0;
-    static auto p2_smoothness     = 0; // he larger the values are, the smoother the disparity is
+    static auto p1_smoothness     = 100;
+    static auto p2_smoothness     = 400; // he larger the values are, the smoother the disparity is
     static auto disp_12_max       = 1;
     static auto unique_ratio      = 5;
     static auto speckle_win_size  = 0;
     static auto specke_range      = 1;
     static auto filter_gap        = 2;
     static auto written           = 0;
-    static auto lambda            = 0.5;
-    static auto sigma             = 0.5;
+    static auto lambda            = 2;
+    static auto sigma             = 5;
 
     // // Check if the file exists
-    // fs["written"] >> written;
+    fs["written"] >> written;
     // ROS_INFO_STREAM_ONCE("Checking if the file exists stereosgbm_config.yaml exists, the state is: " << written);
     // ROS_INFO_STREAM_ONCE("If not, write to the file");
 
-    // if (fs.isOpened() && written == 1)
-    // {   
-    //     //read from file
-    //     fs["min_disp"]         >> min_disp;
-    //     fs["num_disp"]         >> num_disp;
-    //     fs["block_size"]       >> block_size;
-    //     fs["cn"]               >> cn;
-    //     fs["p1_smoothness"]    >> p1_smoothness;
-    //     fs["p2_smoothness"]    >> p2_smoothness;
-    //     fs["disp_12_max"]      >> disp_12_max;
-    //     fs["unique_ratio"]     >> unique_ratio;
-    //     fs["speckle_win_size"] >> speckle_win_size;
-    //     fs["specke_range"]     >> specke_range;
-    //     fs["filter_gap"]       >> filter_gap;
-    //     fs["lambda"]           >> lambda;
-    //     fs["sigma"]            >> sigma;
-    // }
-    // else
-    // {
-    //     // write to file
-    //     cv::FileStorage fs1("stereosgbm_config.yaml", cv::FileStorage::WRITE);
-    //     fs1 << "written"          << 1;
-    //     fs1 << "min_disp"         << min_disp;
-    //     fs1 << "num_disp"         << num_disp;
-    //     fs1 << "block_size"       << block_size;
-    //     fs1 << "cn"               << cn;
-    //     fs1 << "p1_smoothness"    << p1_smoothness;
-    //     fs1 << "p2_smoothness"    << p2_smoothness;
-    //     fs1 << "disp_12_max"      << disp_12_max;
-    //     fs1 << "unique_ratio"     << unique_ratio;
-    //     fs1 << "speckle_win_size" << speckle_win_size;
-    //     fs1 << "specke_range"     << specke_range;
-    //     fs1 << "filter_gap"       << filter_gap;
-    //     fs1 << "sigma"            << sigma;
-    //     fs1 << "lambda"           << lambda;
-    // }  
+    if (fs.isOpened() && written == 1)
+    {   
+        //read from file
+        fs["min_disp"]         >> min_disp;
+        fs["num_disp"]         >> num_disp;
+        fs["block_size"]       >> block_size;
+        fs["cn"]               >> cn;
+        fs["p1_smoothness"]    >> p1_smoothness;
+        fs["p2_smoothness"]    >> p2_smoothness;
+        fs["disp_12_max"]      >> disp_12_max;
+        fs["unique_ratio"]     >> unique_ratio;
+        fs["speckle_win_size"] >> speckle_win_size;
+        fs["specke_range"]     >> specke_range;
+        fs["filter_gap"]       >> filter_gap;
+        fs["lambda"]           >> lambda;
+        fs["sigma"]            >> sigma;
+    }
+    else
+    {
+        // write to file
+        cv::FileStorage fs1("stereosgbm_config.yaml", cv::FileStorage::WRITE);
+        fs1 << "written"          << 1;
+        fs1 << "min_disp"         << min_disp;
+        fs1 << "num_disp"         << num_disp;
+        fs1 << "block_size"       << block_size;
+        fs1 << "cn"               << cn;
+        fs1 << "p1_smoothness"    << p1_smoothness;
+        fs1 << "p2_smoothness"    << p2_smoothness;
+        fs1 << "disp_12_max"      << disp_12_max;
+        fs1 << "unique_ratio"     << unique_ratio;
+        fs1 << "speckle_win_size" << speckle_win_size;
+        fs1 << "specke_range"     << specke_range;
+        fs1 << "filter_gap"       << filter_gap;
+        fs1 << "sigma"            << sigma;
+        fs1 << "lambda"           << lambda;
+    }  
 
-    // // Write the configurations
-    // ROS_INFO_STREAM( min_disp           << ", " << 
-    //                  num_disp           << ", " <<  
-    //                  block_size         << ", " <<
-    //                  cn                 << ", " << 
-    //                  p1_smoothness      << ", " <<
-    //                  p2_smoothness      << ", " <<
-    //                  disp_12_max        << ", " <<
-    //                  unique_ratio       << ", " <<
-    //                  speckle_win_size   << ", " <<
-    //                  specke_range       << ", " <<
-    //                  filter_gap
-    //                 );
+    // Write the configurations
+    ROS_INFO_STREAM( min_disp           << ", " << 
+                     num_disp           << ", " <<  
+                     block_size         << ", " <<
+                     cn                 << ", " << 
+                     p1_smoothness      << ", " <<
+                     p2_smoothness      << ", " <<
+                     disp_12_max        << ", " <<
+                     unique_ratio       << ", " <<
+                     speckle_win_size   << ", " <<
+                     specke_range       << ", " <<
+                     filter_gap
+                    );
     
     // Setup the matchers
     cv::Ptr<cv::StereoSGBM> left_matcher = cv::StereoSGBM::create(
@@ -276,8 +277,6 @@ M1::compute_disparitymap(const cv::Mat & img_left, const cv::Mat & img_right)
 void
 M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_img)
 {
-    // timing
-    auto tic = ros::Time::now();
 
     // cloud_ptr set width etc
     cloud_scene_ptr->width = point_cloud.cols;
@@ -334,9 +333,8 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
         box_filter.setInputCloud(cloud_scene_ptr);
         box_filter.filter(*filtered_scene_ptr);
         *cloud_scene_ptr = *filtered_scene_ptr;
+        //*cloud_orig_ptr = *cloud_scene_ptr;
     }
-
-    // pcl::io::savePCDFile("cloud_scene.pcd", *cloud_scene_ptr);  
 
     // Plane fitting
     constexpr auto dist_tsh = 0.01f;
@@ -364,7 +362,7 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
             pcl::PassThrough<pcl::PointXYZRGBNormal> pass;
             pass.setInputCloud(cloud_scene_ptr);
             pass.setFilterFieldName("z");
-            pass.setFilterLimits(zmin + 0.015, zmin + 1);
+            pass.setFilterLimits(zmin + 0.025, zmin + 1);
             pass.setFilterLimitsNegative(false);
             pass.filter(*filtered_scene_ptr);
             *cloud_scene_ptr = *filtered_scene_ptr;
@@ -409,33 +407,18 @@ M1::compute_pointcloud_scene(const cv::Mat & point_cloud, const cv::Mat & left_i
         spin.compute(*features_scene_ptr);
     }
 
-    // ROS_INFO_STREAM("The scene_voxel" << cloud_scene_ptr->size());
-
     // Save the pointcloud 
     // pcl::io::savePCDFileASCII("scene_voxel.pcd", *cloud_scene_ptr);
-
-    // exit(1);
-
-    // Clear it, to avoid segmentation fault
-
-    auto toc = ros::Time::now();
-    auto delta = toc-tic;
-    // ROS_INFO_STREAM("Time spent in preprocessing dense stereo scene: " << delta.toSec() << "ms");
 }
 
 bool
 M1::read_compute_features_object(const std::string & obj)
 {
-    // tic
-    auto tic = ros::Time::now();
 
     int error = pcl::io::loadPCDFile<pcl::PointXYZRGBNormal>(obj, *cloud_object_ptr);
 
-    // ROS_INFO_STREAM("Cloud object ptr size := " << cloud_object_ptr->size());
-
     if(error != 0)
     {
-        // ROS_INFO_STREAM("The filename is wrong, it was not possible to load the object.");
         return false;
     }
 
@@ -461,6 +444,15 @@ M1::read_compute_features_object(const std::string & obj)
         cloud_object_ptr -> points[i].rgb = *reinterpret_cast<float*>(&rgb);
     }
 
+    // Voxel Filter
+    static pcl::VoxelGrid<pcl::PointXYZRGBNormal> voxel_filter;
+    {
+        voxel_filter.setInputCloud(cloud_object_ptr);
+        voxel_filter.setLeafSize(leaf_size, leaf_size, leaf_size);
+        voxel_filter.filter(*filtered_object_ptr);
+        *cloud_object_ptr = *filtered_object_ptr;
+    }
+
     // Estimate normals from PoV
     static pcl::NormalEstimation<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> normal_est;
     {
@@ -480,10 +472,6 @@ M1::read_compute_features_object(const std::string & obj)
         spin.compute(*features_object_ptr);
     }
 
-    // toc
-    auto toc = ros::Time::now();
-    // ROS_INFO_STREAM("Time spent in compute_features_object: " << (toc-tic).toSec());
-
     // Save the pointcloud 
     //pcl::io::savePCDFileASCII("voxel_object.pcd", *cloud_object_ptr);
 
@@ -493,8 +481,6 @@ M1::read_compute_features_object(const std::string & obj)
 void 
 M1::match_features()
 {
-    // Tic
-    auto tic = ros::Time::now();
 
     // Define the L2_norm operator
     static auto L2_norm = [](const pcl::Histogram<153> & f1, const pcl::Histogram<153> & f2)
@@ -535,10 +521,6 @@ M1::match_features()
         corr[idx_query].distance       = nearest_neighbour(features_object_ptr, idx_query, features_scene_ptr, idx_scene);
         corr[idx_query].index_match    = idx_scene;
     }
-
-    // Toc
-    auto toc = ros::Time::now();
-    // ROS_INFO_STREAM("Time spent in compute_features_object: " << (toc-tic).toSec());
 }
 
 Eigen::Matrix4f 
@@ -614,33 +596,42 @@ M1::ransac_features(const int & max_it)
 
     pcl::transformPointCloud(*cloud_object_ptr, *cloud_object_ptr, best_T);
 
-    // pcl::IterativeClosestPoint<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal > icp;
-    // icp.setInputCloud(cloud_object_ptr);
-    // icp.setInputTarget(cloud_scene_ptr);
-    // icp.setMaxCorrespondenceDistance(0.01);
-    // icp.setMaximumIterations(100);
-    // icp.align(*cloud_object_ptr);
-
     // pcl::visualization::PCLVisualizer viewer("vis");
-    // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_scene_ptr, "scene");
+    // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_orig_ptr, "scene");
     // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_object_ptr, "obj");
     // viewer.spin();
 
-    return best_T; //;
+    pcl::IterativeClosestPoint<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal > icp;
+    icp.setInputSource(cloud_object_ptr);
+    icp.setInputTarget(cloud_scene_ptr);
+    icp.setRANSACOutlierRejectionThreshold(leaf_size*1.2);
+    icp.setMaxCorrespondenceDistance(0.005);
+    icp.setEuclideanFitnessEpsilon(1e-9);
+    icp.setTransformationEpsilon(1e-9);
+    icp.setMaximumIterations(20);
+    icp.align(*cloud_object_ptr);
+
+    // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_orig_ptr, "scene");
+    // viewer.addPointCloud<pcl::PointXYZRGBNormal>(cloud_object_ptr, "obj1");
+    // viewer.spin();
+
+    return icp.getFinalTransformation() * best_T; //;
 
 }
 
 geometry_msgs::Pose
 M1::estimate_pose(const int & it, const bool & draw, const double & noise)
 {
+    static auto file_bottle_pcd = ros::package::getPath("rovi_gazebo") + std::string("/models/bottle/bottle.pcd");
+
     // Get stereo images
     auto cam_images = M1::get_image_data();
 
     cv::Mat gaussian_noise_left = cv::Mat::zeros(cam_images[0].size(), cam_images[0].type());
     cv::Mat gaussian_noise_right = gaussian_noise_left;
     
-    std::vector<double> mean = {0, 0, 0};
-    std::vector<double> std = {noise, noise, noise};
+    std::vector<double> mean = { 0, 0, 0 };
+    std::vector<double> std = { noise, noise, noise };
 
     cv::randn(gaussian_noise_left, mean, std);
     cv::randn(gaussian_noise_right, mean, std);
@@ -665,17 +656,10 @@ M1::estimate_pose(const int & it, const bool & draw, const double & noise)
         write_cloud.close();
     }
     
-    // cv::imwrite("point_cloud.jpg",  point_cloud);
-    // Compute the point cloud
     M1::compute_pointcloud_scene(point_cloud, cam_images[0]);
-
-    // std::string read_file = "test.pcd";
-    static auto file_bottle_pcd = ros::package::getPath("rovi_gazebo") + std::string("/models/bottle/bottle.pcd");
-    
-    // ROS_INFO_STREAM(file_bottle_pcd);
-
     M1::read_compute_features_object(file_bottle_pcd);
     M1::match_features();
+
     auto T = Eigen::Affine3d(M1::ransac_features(it).cast<double>());
     geometry_msgs::Pose pose;
     tf::poseEigenToMsg(T, pose);
