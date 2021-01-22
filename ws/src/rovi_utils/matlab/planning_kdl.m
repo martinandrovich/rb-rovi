@@ -74,19 +74,3 @@ pbaspect([1 0.7 1])
 % yticklabels(yticks*100)
 
 export_fig(DIR_IMGS + "/planning/kdl-plan-time.pdf", "-painters")
-
-%%
-
-% planning time (linear)
-figure 
-histogram(plan_lin(:, 2), "FaceColor", COL_BLUE)
-mean(plan_lin(:, 2))
-xlabel("Time [ms]")
-ylabel("Count")
-
-% planning time (parabolic)
-figure
-histogram(plan_par(:, 2), "FaceColor", COL_BLUE)
-mean(plan_par(:, 2))
-xlabel("Time [ms]")
-ylabel("Count")

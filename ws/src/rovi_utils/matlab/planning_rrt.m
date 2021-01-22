@@ -2,11 +2,39 @@ close all; clear; clc;
 run("rovi_common.m");
 
 OPERATION = "pick";
-METHOD = "RRT";
-EXPERIMENT = "20210106_155128";
+METHOD = "RRTConnect";
+POSE = "pose_0";
+EXPERIMENT = "20210120_221926";
 
-DIR_EXPERIMENT = DIR_DATA + "/planning_rrt/" + EXPERIMENT + "/" + OPERATION + "/" + METHOD;
+DIR_EXPERIMENT = DIR_DATA + "/planning_rrt/" + EXPERIMENT + "/" + OPERATION + "/" + METHOD + "/" + POSE;
 % DIR_EXPERIMENT = DIR_DATA + "/planning_rrt/20210105_200351";
+
+%% histograms
+
+plan = readmatrix(DIR_EXPERIMENT + "/plan.csv");
+
+% planning time
+figure("Position", [0 0 350 500])
+histogram(plan(:, 2), 20, "FaceColor", COL_BLUE)
+pbaspect([1 0.7 1])
+xlabel("Time [ms]")
+ylabel("Count")
+
+export_fig(DIR_IMGS + "/planning/rrt-pick-plan-time-hist.pdf", "-painters")
+
+% trajectory duration
+figure("Position", [0 0 350 500])
+histogram(plan(:, 3), 20, "FaceColor", COL_BLUE)
+pbaspect([1 0.7 1])
+xlabel("Time [s]")
+ylabel("Count")
+
+export_fig(DIR_IMGS + "/planning/rrt-pick-traj-dur-hist.pdf", "-painters")
+
+%% trajectory plot
+
+% for transparency
+set(groot, "DefaultFigureRenderer", "opengl");
 
 figure
 img = imread(DIR_IMGS + "/planning/rrt-traj-bg.png");
@@ -33,4 +61,4 @@ xlim([-0.3609 0.8792])
 ylim([-0.7498 1.7303])
 zlim([-0.2370 1.5346])
 
-% export_fig(DIR_IMGS + "/planning/rrt-traj-pick.pdf")
+export_fig(DIR_IMGS + "/planning/rrt-traj-pick.pdf")
