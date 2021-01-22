@@ -18,24 +18,27 @@
 #include <rovi_pose_estimator/rovi_pose_estimator.h>
 
 const static std::vector<std::array<double, 3>> OBJECT_POS{
-                                                                {0.1, 1, 0.79},
-                                                                {0.2, 1.03, 0.79},
-                                                                {0.3, 1.05, 0.79},
-                                                                {0.4, 1.03, 0.79},
-                                                                {0.5, 0.98, 0.79},
-                                                                {0.6, 1.01, 0.79}
+                                                                {0.22, 1.02, 0.79},
+                                                                {0.27, 1.03, 0.79},
+                                                                {0.33, 1.05, 0.79},
+                                                                {0.44, 1.03, 0.79},
+                                                                {0.57, 0.98, 0.79},
+                                                                {0.63, 1.01, 0.79}
                                                             };
 
 
 const static std::vector<std::array<double, 3>> OBJECT_ORI{
-                                                                {0.0, 0., 0.5},
-                                                                {0.0, 0., 0.4},
-                                                                {0.0, 0., 0.9},
-                                                                {0.0, 0., 0.2},
-                                                                {0.0, 0., 0.3},
-                                                                {0.0, 0., 0.6}
+                                                                {0.0, 0., 0.15},
+                                                                {0.0, 0., 0.22},
+                                                                {0.0, 0., 0.35},
+                                                                {0.0, 0., 0.44},
+                                                                {0.0, 0., 0.53},
+                                                                {0.0, 0., 0.62}
                                                             };
 
+const static std::vector<double> OBJECT_NOISE               {
+                                                                3*3
+                                                            };
 
 int main(int argc, char** argv)
 {
@@ -43,22 +46,13 @@ int main(int argc, char** argv)
 
     std::fstream file_handle("rovi_pose.csv", std::ios_base::out);
 
-    if(argc != 2 ) 
-        return -1;
-
-    float noise = std::stof(argv[1]);
-
     if( not file_handle.is_open() )
     {
         ROS_INFO_STREAM("File is not open, closing.");
         return -1;
     }
 
-    if (OBJECT_POS.size() != OBJECT_ORI.size())
-    {
-        ROS_INFO_STREAM("Object pos and ori is snot the same");
-        return -1;
-    }
+    float noise = std::stof(argv[1]);
 
     // init the node
 	ros::init(argc, argv, "pose_M1");
@@ -75,18 +69,40 @@ int main(int argc, char** argv)
 
     file_handle << "actual_pose vs detected" << std::endl;
     
-    for (int i = 0; i < OBJECT_ORI.size(); ++i )
+    for (int i = 0; i < OBJECT_POS.size(); ++i )
     {
-        auto file_name = std::string("pose_M3_") + std::to_string(i) + std::string(".jpg");
-        rovi_gazebo::move_model("cube1", OBJECT_POS[i], OBJECT_ORI[i]);
-        ros::Duration(2).sleep();
-        geometry_msgs::Pose guess = M3::estimate_pose(1, file_name, (double)noise);
-        geometry_msgs::Pose actual = rovi_utils::make_pose(OBJECT_POS[i], OBJECT_ORI[i]);
 
-        file_handle << actual.position.x << ", " << actual.position.y << ", " << actual.position.z << ", " 
-                    << actual.orientation.x << ", "<< actual.orientation.y << ", "<< actual.orientation.z << ", " << actual.orientation.w << ", ";
-        file_handle << guess.position.x << ", " << guess.position.y << ", " << guess.position.z << ", " 
-                    << guess.orientation.x << ", "<< guess.orientation.y << ", "<< guess.orientation.z << ", " << guess.orientation.w << std::endl;
+        for (int j = 0; j < OBJECT_ORI.size(); ++j )
+        {
+
+            rovi_gazebo::move_model("cube1", OBJECT_POS[i], OBJECT_ORI[j]);
+
+            ros::Duration(1).sleep();
+
+            //for (int k = 0; k < OBJECT_NOISE.size(); ++k)
+            //{
+
+            for(int z = 0; z < 2; ++z)
+            {
+                auto file_name = std::string("pose_M3_") + std::to_string(i) + std::to_string(j) + std::string(".jpg");
+
+                //rovi_gazebo::move_model("cube1", OBJECT_POS[i], OBJECT_ORI[i]);
+
+                ros::Duration(1).sleep();
+
+                geometry_msgs::Pose guess = M3::estimate_pose(1, file_name, 0);
+
+                geometry_msgs::Pose actual = rovi_utils::make_pose(OBJECT_POS[i], OBJECT_ORI[j]);
+
+                file_handle << 0 << ", " << actual.position.x << ", " << actual.position.y << ", " << actual.position.z << ", " 
+                            << actual.orientation.x << ", "<< actual.orientation.y << ", "<< actual.orientation.z << ", " << actual.orientation.w << ", ";
+
+                file_handle << guess.position.x << ", " << guess.position.y << ", " << guess.position.z << ", " 
+                            << guess.orientation.x << ", "<< guess.orientation.y << ", "<< guess.orientation.z << ", " << guess.orientation.w << std::endl;
+                
+            }
+
+        }
     }
     
     file_handle.close();

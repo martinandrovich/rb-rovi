@@ -1,0 +1,16 @@
+%YAML:1.0
+---
+written: 1
+min_disp: 0
+num_disp: 128
+block_size: 5
+cn: 3
+p1_smoothness: 100
+p2_smoothness: 400
+disp_12_max: 1
+unique_ratio: 5
+speckle_win_size: 0
+specke_range: 1
+filter_gap: 2
+sigma: 2
+lambda: 1

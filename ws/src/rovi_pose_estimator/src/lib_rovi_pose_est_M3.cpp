@@ -182,6 +182,8 @@ M3::estimate_pose(const bool & draw, const std::string & img_name, const double 
     std::vector<double> mean = {0, 0, 0};
     std::vector<double> std = {noise, noise, noise};
 
+    cv::theRNG().state = cv::getTickCount();
+
     cv::randn(gaussian_noise_left, mean, std);
     cv::randn(gaussian_noise_right, mean, std);
 

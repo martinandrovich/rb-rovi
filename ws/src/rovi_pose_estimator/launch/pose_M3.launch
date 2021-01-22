@@ -2,13 +2,12 @@
 
 	<!-- workcell -->
 	<include file="$(find rovi_gazebo)/launch/workcell.launch">
-		<arg name="paused" value="true"/>
+		<arg name="paused" value="false"/>
 		<arg name="use_moveit" value="false"/>
 		<arg name="use_rviz" value="false"/>
 		<arg name="no_objects" value="true"/>
 		<arg name="use_gripper" value="true"/>
+		<arg name="gui" value="false"/>
 	</include>
-	
-    <!-- <node name="spawn_cube" pkg="gazebo_ros" type="spawn_model" args="-database cube -sdf -model cube1 -x 0.2 -y 1.0 -z 1.0 -Y 0.0"/> -->
 	
 </launch>
