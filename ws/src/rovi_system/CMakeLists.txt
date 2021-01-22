@@ -63,6 +63,9 @@ include_directories(
 
 # nodes
 
+add_executable(interpolation_kdl src/interpolation_kdl.cpp)
+target_link_libraries(interpolation_kdl ${catkin_LIBRARIES})
+
 add_executable(reachability src/reachability.cpp)
 target_link_libraries(reachability ${catkin_LIBRARIES})
 
@@ -71,3 +74,6 @@ target_link_libraries(planning_kdl ${catkin_LIBRARIES})
 
 add_executable(planning_rrt src/planning_rrt.cpp)
 target_link_libraries(planning_rrt ${catkin_LIBRARIES})
+
+add_executable(planning_integrated src/planning_integrated.cpp)
+target_link_libraries(planning_integrated ${catkin_LIBRARIES})

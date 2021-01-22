@@ -33,7 +33,8 @@ void
 rovi_gazebo::set_simulation(bool state)
 {
 	static auto nh = new ros::NodeHandle("~/gazebo_simulation_controller");
-	static auto client_gazebo_sim = nh->serviceClient<std_srvs::Empty>((state) ? "/gazebo/unpause_physics" : "/gazebo/pause_physics");
+	auto client_gazebo_sim = nh->serviceClient<std_srvs::Empty>((state) ? "/gazebo/unpause_physics" : "/gazebo/pause_physics");
+	client_gazebo_sim.waitForExistence();
 	std_srvs::Empty srv;
 	client_gazebo_sim.call(srv);
 }
@@ -41,7 +42,6 @@ rovi_gazebo::set_simulation(bool state)
 void
 rovi_gazebo::set_projector(bool state)
 {
-
 	// create atomic bool and async publisher
 	static std::atomic<bool> state_;
 	static auto t = std::thread([&]()
@@ -151,7 +151,6 @@ rovi_gazebo::get_model_states()
 sensor_msgs::JointState
 rovi_gazebo::get_joint_states()
 {
-
 	// construct listener thread (once)
 	static std::mutex mtx_joint_states;
 	static sensor_msgs::JointState joint_states;
@@ -217,6 +216,13 @@ rovi_gazebo::spawn_model(const std::string& model, const std::string& name, cons
 	
 	// execute command
 	system(cmd.c_str());
+}
+
+void
+rovi_gazebo::spawn_model(const std::string& model, const std::string& name, const geometry_msgs::Pose& pose)
+{	
+	using namespace rovi_utils;
+	rovi_gazebo::spawn_model(model, name, read_pose(pose).pos, read_pose(pose).rpy);
 }
 
 void
@@ -313,9 +319,9 @@ rovi_gazebo::get_current_link6_pose(bool in_world_frame)
 }
 
 geometry_msgs::Pose
-rovi_gazebo::get_current_ee_pose()
+rovi_gazebo::get_current_ee_pose(bool in_world_frame)
 {
-	const auto pose_l6 = get_current_link6_pose(false);
+	const auto pose_l6 = get_current_link6_pose(in_world_frame);
 	Eigen::Isometry3d b_T_l6, b_T_ee;
 
 	tf::poseMsgToEigen(pose_l6, b_T_l6);
@@ -329,9 +335,9 @@ rovi_gazebo::get_current_ee_pose()
 }
 
 geometry_msgs::Pose
-rovi_gazebo::get_current_tcp_pose()
+rovi_gazebo::get_current_tcp_pose(bool in_world_frame)
 {
-	const auto pose_l6 = get_current_link6_pose(false);
+	const auto pose_l6 = get_current_link6_pose(in_world_frame);
 	Eigen::Isometry3d b_T_l6, b_T_tcp;
 
 	tf::poseMsgToEigen(pose_l6, b_T_l6);

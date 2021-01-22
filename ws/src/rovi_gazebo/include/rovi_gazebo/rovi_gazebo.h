@@ -76,6 +76,9 @@ namespace rovi_gazebo
 	spawn_model(const std::string& model, const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { 0, 0, 0 });
 	
 	void
+	spawn_model(const std::string& model, const std::string& name, const geometry_msgs::Pose& pose);
+	
+	void
 	move_model(const std::string& name, const std::array<double, 3>& pos, const std::array<double, 3>& rpy = { INFINITY, INFINITY, INFINITY});
 	
 	void
@@ -96,10 +99,10 @@ namespace rovi_gazebo
 	get_current_link6_pose(bool in_world_frame = false);
 
 	geometry_msgs::Pose
-	get_current_ee_pose();
+	get_current_ee_pose(bool in_world_frame = false);
 
 	geometry_msgs::Pose
-	get_current_tcp_pose();
+	get_current_tcp_pose(bool in_world_frame = false);
 	
 	geometry_msgs::Pose
 	get_ee_given_pos(const geometry_msgs::Pose& pose_obj, const Eigen::Isometry3d& offset = Eigen::Translation3d(0.0, 0.0, 0.0) * Eigen::Isometry3d::Identity());

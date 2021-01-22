@@ -31,6 +31,25 @@ namespace rovi_utils
 
 	geometry_msgs::Pose
 	make_pose(const std::array<double, 3>& pos, const std::array<double, 3>& rpy);
+	
+	auto
+	read_pose(const geometry_msgs::Pose& pose)
+	{	
+		struct
+		{
+			std::array<double, 3> pos;
+			std::array<double, 3> rpy;
+			Eigen::Quaternion<double> q;
+		} pose_data;
+		
+		pose_data.q = Eigen::Quaternion<double>({ pose.orientation.w, pose.orientation.x, pose.orientation.y, pose.orientation.z });
+		const auto euler = pose_data.q.toRotationMatrix().eulerAngles(0, 1, 2);
+		
+		pose_data.pos = { pose.position.x, pose.position.y, pose.position.z };
+		pose_data.rpy = { euler[0], euler[1], euler[2] };
+		
+		return pose_data;
+	}
 
 	// -- trajectories ------------------------------------------------------------
 

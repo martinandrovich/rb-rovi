@@ -48,10 +48,10 @@ static const auto PICK_LOCATIONS = std::array // in world frame
 
 static std::unordered_map<std::string, geometry_msgs::Pose> VIA_POINTS = // in world frame
 {
-	{ "orient",    make_pose({ TABLE.LENGTH/2, TABLE.WIDTH/2,       1.20, 0.00, 0.00, 0.00 }) },
-	{ "move-down", make_pose({ TABLE.LENGTH/2, TABLE.WIDTH/2,       1.00, 0.00, 0.00, 0.00 }) },
-	{ "pre-fork",  make_pose({ TABLE.LENGTH/2, TABLE.WIDTH/2 + 0.1, 0.80, 0.00, 0.00, 0.00 }) },
-	{ "fork",      make_pose({ TABLE.LENGTH/2, TABLE.WIDTH/2 + 0.2, 0.80, 0.00, 0.00, 0.00 }) },
+	{ "orient",    make_pose({ 0.65, TABLE.WIDTH/2,       1.20, 0.00, 0.00, 0.00 }) },
+	{ "move-down", make_pose({ 0.65, TABLE.WIDTH/2,       1.00, 0.00, 0.00, 0.00 }) },
+	{ "pre-fork",  make_pose({ 0.65, TABLE.WIDTH/2 + 0.1, 0.80, 0.00, 0.00, 0.00 }) },
+	{ "fork",      make_pose({ 0.65, TABLE.WIDTH/2 + 0.2, 0.80, 0.00, 0.00, 0.00 }) },
 };
 
 static const auto PRE_PICK_OFFSET = // x, y, z
@@ -59,3 +59,9 @@ static const auto PRE_PICK_OFFSET = // x, y, z
 
 static const auto PICK_OFFSET = // x, y, z
 	Eigen::Translation3d(0.0, 0.0, 0.1) * Eigen::Isometry3d::Identity();
+	
+static const auto PICK_OFFSET_TOP = // x, y, z
+	Eigen::Translation3d(0.0, 0.0, 0.3) * 
+	Eigen::AngleAxisd(0,       Eigen::Vector3d::UnitZ()) * // yaw
+	Eigen::AngleAxisd(0,       Eigen::Vector3d::UnitY()) * // pitch
+	Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitX());  // roll

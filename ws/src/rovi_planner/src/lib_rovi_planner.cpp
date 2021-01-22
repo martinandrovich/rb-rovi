@@ -54,9 +54,8 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 		// http://docs.ros.org/en/melodic/api/orocos_kdl/html/classKDL_1_1Path__Line.html#a1ea3f21f577aee2a4252c5a802b6a7f2
 		for (size_t i = 0; i < frames.size() - 1; ++i)
 		{
-
 			// create path
-			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator, equiv_radius);
+			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator->Clone(), equiv_radius);
 
 			// define velocity profile for path
 			auto vel_profile = new KDL::VelocityProfile_Trap(vel_max, acc_max);
@@ -66,6 +65,62 @@ rovi_planner::traj_linear(const std::vector<geometry_msgs::Pose>& waypoints, dou
 			const auto traj_seg = new KDL::Trajectory_Segment(path, vel_profile);
 			traj->Add(traj_seg);
 		}
+	}
+	catch (const KDL::Error& e)
+	{
+		ROS_ERROR("Could not plan trajectory.");
+
+		ROS_INFO("Planning was attempted with following waypoints:\n\n");
+		for (auto const& point : frames)
+			std::cout << point << "\n\n";
+
+		std::cerr << e.Description() << std::endl;
+		std::cerr << e.GetType() << std::endl;
+
+		exit(-1);
+	}
+
+	return traj;
+}
+
+KDL::Trajectory_Composite*
+rovi_planner::traj_linear2(const std::vector<geometry_msgs::Pose>& waypoints, double vel_max, double acc_max, double equiv_radius)
+{
+	if (waypoints.size() < 2)
+		throw std::runtime_error("There must be at least two waypoints.");
+
+	auto traj                = new KDL::Trajectory_Composite();
+	auto paths               = new KDL::Path_Composite();
+	static auto interpolator = new KDL::RotationalInterpolation_SingleAxis();
+
+	// convert vector<Pose> to vector<KDL::Frame>
+	std::vector<KDL::Frame> frames;
+	for (const auto& pt : waypoints)
+	{
+		static KDL::Frame frame;
+		tf::poseMsgToKDL(pt, frame);
+		frames.push_back(frame);
+	}
+
+	// try creating the trajectory; catch any errors
+	try
+	{
+		// create a trajectory segment for each waypoint defined as a path line betwen the current and next point with some velocity profile
+		// http://docs.ros.org/en/melodic/api/orocos_kdl/html/classKDL_1_1Path__Line.html#a1ea3f21f577aee2a4252c5a802b6a7f2
+		for (size_t i = 0; i < frames.size() - 1; ++i)
+		{
+			// create path
+			const auto path = new KDL::Path_Line(frames[i], frames[i + 1], interpolator->Clone(), equiv_radius);
+			paths->Add(path);
+		}
+		
+		// define velocity profile for path
+		auto vel_profile = new KDL::VelocityProfile_Trap(vel_max, acc_max);
+		vel_profile->SetProfile(0, paths->PathLength());
+	
+		// construct segment from paths and velocity profile
+		const auto traj_seg = new KDL::Trajectory_Segment(paths, vel_profile);
+		traj->Add(traj_seg);
 	}
 	catch (const KDL::Error& e)
 	{
@@ -115,7 +170,7 @@ rovi_planner::traj_linear(const std::vector<sensor_msgs::JointState>& joint_stat
 				const auto [frame_from, frame_to] = std::tuple { angle_to_frame(joint_states[i].position[j]), angle_to_frame(joint_states[i + 1].position[j]) };
 
 				// create path
-				const auto path = new KDL::Path_Line(frame_from, frame_to, interpolator, equiv_radius);
+				const auto path = new KDL::Path_Line(frame_from, frame_to, interpolator->Clone(), equiv_radius);
 
 				// define velocity profile for path
 				auto vel_profile = new KDL::VelocityProfile_Trap(vel_max, acc_max);
@@ -158,7 +213,7 @@ rovi_planner::traj_parabolic(const std::vector<sensor_msgs::JointState>& joint_s
 	for (size_t i = 0; i < NUM_JOINTS; ++i)
 	{
 		trajs[i] = new KDL::Trajectory_Composite();
-		paths[i] = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator);
+		paths[i] = new KDL::Path_RoundedComposite(corner_radius, equiv_radius, interpolator->Clone());
 	}
 
 	// lambda to convert angle to KDL frame
@@ -238,7 +293,7 @@ rovi_planner::traj_parabolic(const std::vector<geometry_msgs::Pose>& waypoints, 
 	if (waypoints.size() > 1)
 	{
 		// add all waypoints (frames) to path
-		for (auto pt : frames)
+		for (const auto& pt : frames)
 			path->Add(pt);
 
 		// finish creating the path
@@ -462,7 +517,7 @@ rovi_planner::moveit_planner::plan(const geometry_msgs::Pose& pose_des, const st
 	{
 		// do some error handling here
 		ROS_FATAL_STREAM("It was not possible to generate a trajectory... exiting...");
-		exit(-1);
+		// exit(-1);
 	}
 
 	// return the plan
@@ -509,7 +564,7 @@ rovi_planner::moveit_planner::start_planning_scene_publisher()
 }
 
 rovi_planner::moveit_planner::ReachabilityData
-rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos, const std::string& obj_name, const std::array<double, 3>& obj_pos, const std::array<double, 3>& offset, const std::array<double, 3>& axis, size_t resolution, bool visualize)
+rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos, const std::string& obj_name, const std::array<double, 3>& obj_pos, const Eigen::Isometry3d& offset, const std::array<double, 3>& rot_axis, size_t resolution, bool visualize)
 {
 
 	// check
@@ -541,7 +596,8 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 	
 	// generate transformations
 	Eigen::Matrix4d w_T_obj      = make_tf(obj_pos,        0, { 0, 0, 1 });
-	Eigen::Matrix4d obj_T_offset = make_tf(offset,         0, { 0, 0, 1 });
+	// Eigen::Matrix4d obj_T_offset = make_tf(offset,         0, { 0, 0, 1 });
+	Eigen::Matrix4d obj_T_offset = offset.matrix();
 	Eigen::Matrix4d l6_T_ee      = make_tf({ 0, 0.15, 0 }, 0, { 0, 0, 1 });
 	Eigen::Matrix4d w_T_base     = make_tf(base_pos,       0, { 0, 0, 1 });
 	
@@ -569,7 +625,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 		const double theta = 2.0 * M_PI / (double)resolution * double(i);
 
 		// compute transformations
-		Eigen::Matrix4d T_rotate = make_tf({ 0, 0, 0 }, theta, axis);
+		Eigen::Matrix4d T_rotate = make_tf({ 0, 0, 0 }, theta, rot_axis);
 		Eigen::Matrix4d b_T_offset = w_T_base.inverse().matrix() * w_T_obj * obj_T_offset * T_rotate * l6_T_ee.inverse().matrix();
 
 		// calculate the inverse_kinematics to the pose
@@ -594,7 +650,7 @@ rovi_planner::moveit_planner::reachability(const std::array<double, 3>& base_pos
 			
 			if (visualize)
 			{
-				static ros::Rate lp(10); // Hz
+				static ros::Rate lp(5); // Hz
 				ROS_INFO_STREAM("Collision test:  " << i << "/" << (resolution + 1) << ", angle: " << theta);
 				ROS_INFO_STREAM("Current state is " << (col_res.collision ? "in" : "not in") << " collision");
 				lp.sleep();

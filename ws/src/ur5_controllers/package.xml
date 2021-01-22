@@ -34,6 +34,7 @@
 	<depend>pluginlib</depend>
 	<depend>geometry_msgs</depend>
 	<depend>rviz</depend>
+	<depend>kdl_conversions</depend>
 
 	<depend>ur5_description</depend>
 	<depend>ur5_dynamics</depend>
