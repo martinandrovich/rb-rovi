@@ -13,7 +13,7 @@ find_package(
 	rovi_utils
 	rovi_gazebo
 	rovi_planner
-	# rovi_pose_estimator
+	rovi_pose_estimator
 )
 
 # find other libraries
@@ -47,7 +47,7 @@ catkin_package(
 		rovi_utils
 		rovi_gazebo
 		rovi_planner
-		# rovi_pose_estimator
+		rovi_pose_estimator
 	DEPENDS
 		EIGEN3
 )

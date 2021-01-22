@@ -5,6 +5,8 @@
 #include <rovi_utils/rovi_utils.h>
 #include <rovi_gazebo/rovi_gazebo.h>
 #include <rovi_planner/rovi_planner.h>
+#include <rovi_pose_estimator/rovi_pose_estimator.h>
+
 #include <ur5_controllers/interface.h>
 
 #include "planning_common.hpp"
@@ -97,12 +99,18 @@ main(int argc, char** argv)
 	{
 	
 	// experiments
-	std::cout << "Press [ENTER] to do experiments..." << std::endl;
-	if (DO_EXPERIMENTS)
-		do_planning_experiments("pick");
+	// std::cout << "Press [ENTER] to do experiments..." << std::endl;
+	// if (DO_EXPERIMENTS)
+	// 	do_planning_experiments("pick");
 	
 	// estimate object pose
-	pose_pick = pose_pick;
+	// pose_pick = pose_pick;
+	pose_pick = rovi_pose_estimator::M1::estimate_pose(10000, false, 6);
+	
+	std::cout << "real pose:\n" << obj_pose << std::endl;
+	std::cout << "estimated pose:\n" << pose_pick << std::endl;
+	
+	std::cout << "Press [ENTER] to do plan..." << std::endl;
 
 	// plan and interpolate
 	ROS_INFO_STREAM("Planning...");
