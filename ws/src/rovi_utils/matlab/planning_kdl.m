@@ -23,7 +23,7 @@ z = data(:, 12);
 
 figure
 hold on
-plot3(x, y, z, "LineWidth", 3, "Color", COL_BLUE)
+plot3(x, y, z, "LineWidth", 3)
 plot3(traj_pts(:, 4), traj_pts(:, 8), traj_pts(:, 12), "O", "MarkerFaceColor", COL_ORANGE)
 pbaspect([1 1 1])
 grid on
@@ -39,7 +39,7 @@ y = data(:, 8);
 z = data(:, 12);
 
 figure
-plot3(x, y, z, "LineWidth", 3, "Color", COL_BLUE)
+plot3(x, y, z, "LineWidth", 3)
 hold on
 plot3(traj_pts(:, 4), traj_pts(:, 8), traj_pts(:, 12), "O", "MarkerFaceColor", COL_ORANGE)
 pbaspect([1 1 1])
@@ -54,7 +54,7 @@ export_fig(DIR_IMGS + "/planning/kdl-traj-par.pdf")
 figure("Position", [0 0 700 500])
 
 subplot(1,2,1)
-histogram(plan_lin(:, 2), 40, "FaceColor", COL_BLUE)
+histogram(plan_lin(:, 2), 40)
 title("Linear interpolation")
 mean(plan_lin(:, 2))
 xlabel("Time [ms]")
@@ -64,7 +64,7 @@ pbaspect([1 0.7 1])
 % yticklabels(yticks*100)
 
 subplot(1,2,2)
-histogram(plan_par(:, 2), 20, "FaceColor", COL_BLUE)
+histogram(plan_par(:, 2), 20)
 title("Parabolic interpolation")
 mean(plan_lin(:, 2))
 xlabel("Time [ms]")

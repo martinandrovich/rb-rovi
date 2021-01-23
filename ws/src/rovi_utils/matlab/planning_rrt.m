@@ -15,7 +15,7 @@ plan = readmatrix(DIR_EXPERIMENT + "/plan.csv");
 
 % planning time
 figure("Position", [0 0 350 500])
-histogram(plan(:, 2), 20, "FaceColor", COL_BLUE)
+histogram(plan(:, 2), 20)
 pbaspect([1 0.7 1])
 xlabel("Time [ms]")
 ylabel("Count")
@@ -24,7 +24,7 @@ export_fig(DIR_IMGS + "/planning/rrt-pick-plan-time-hist.pdf", "-painters")
 
 % trajectory duration
 figure("Position", [0 0 350 500])
-histogram(plan(:, 3), 20, "FaceColor", COL_BLUE)
+histogram(plan(:, 3), 20)
 pbaspect([1 0.7 1])
 xlabel("Time [s]")
 ylabel("Count")
