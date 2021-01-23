@@ -1,4 +1,5 @@
 # rb-rovi
+
 Robotics and computer vision project of Advanced Robotics at SDU.
 
 * [Overview](#overview)
@@ -7,35 +8,31 @@ Robotics and computer vision project of Advanced Robotics at SDU.
 	+ [Dependencies](#dependencies)
 	+ [Configuration](#configuration)
 	+ [Usage](#usage)
-	+ [API & Troubleshooting](#api--troubleshooting)
 * [Versioning](#versioning)
 * [License](#license)
 * [Acknowledgments](#acknowledgments)
 
 ## Overview
 
-Short description and image here.
+A dynamic simulated environment using ROS/Gazebo framework is used to facilitate development of avision-based pick and place pipeline within a workcell consisting of a UR5 manipulator mounted ontoa specialized table with designated pick and place areas, equipped with various perception sensors. Read the [project report][rovi-report] for more information.
+
+![rovi-workcell][img-rovi-workcell]
+
+The dynamic simulation environment is established with interfaces that enable interaction with theenvironment and control of the manipulator and gripper. A reachability analysis is used to determine the optimal base mount location of the manipulator. Motion planning is used to facilitate object relocation via trajectory generation; both interpolation-based and collision-free methods are implemented and evaluated. Two vision-based pose-estimation methods are implemented and evaluated for localization of object within the workcell.
 
 ## Packages
 
 This repository is structured as a `catkin` ROS workspace, consisting of the following packages:
 
-```
-rb-rovi/ws/src
-    /ur5_description
-    /ur5_controllers
-    /ur5_dynamics
-    /ur5_moveit_config
-    /rovi_gazebo
-    /rovi_planner
-    /rovi_pose_estimator
-    /rovi_utils
-    /rovi_system
-        manipulator_reachability.cpp
-        pose_estimator_test.cpp
-        pick_and_place_known.cpp
-        pick_and_place_estimated.cpp
-```
+- [`ur5_description`][pkg-ur5-description] - URDF description of the UR5 robot.
+- [`ur5_dynamics`][pkg-ur5-dynamics] - Dynamics and kinematics library for the UR5 robot.
+- [`ur5_controllers`][pkg-ur5-controllers] - ROS Control controllers for the UR5 robot.
+- [`ur5_moveit_config`][pkg-ur5-moveit] - Moveit configuration for the UR5 robot.
+- [`rovi_gazebo`][pkg-rovi-gazebo] - Integration of ROVI workcell into Gazebo with various interface methods.
+- [`rovi_utils`][pkg-rovi-utils] - Various helper methods for the ROVI system.
+- [`rovi_planner`][pkg-rovi-planner] - Methods relating to motion planning of the UR5 robot in the ROVI system using KDL and MoveIt.
+- [`rovi_pose_estimator`][pkg-rovi-pose-estimator] - Vision-based pose estimation methods for objects in the ROVIsystem workcell.
+- [`rovi_system`][pkg-rovi-system] - Integration of and testing ground for ROVI system components.
 
 Description of each package can be found in the corresponding README (TODO).
 
@@ -49,6 +46,8 @@ The system is tested on Ubuntu `18.04.3 LTS` and Ubuntu `20.04.3 LTS`. The proje
 
 * [ROS (noetic)][ros] - used as framework for robot operation
 * [Gazebo][gazebo] - used as robot simulation environment
+* [KDL][kdl] - used for dynamics and motion interpolation
+* [MoveIt][moveit] - used for motion planning
 * [OpenCV][opencv] - used for computer vision
 * [PCL][pcl] - used for point clouds
 
@@ -71,10 +70,6 @@ For auto-completion, linting etc., VS Code can be configured [as explained here]
 
 Navigate to `../rb-rovi/ws/` and run `source devel/setup.bash` to load the necessary environment variables to access the commands to run the packages of this repository. The workspace simulation can then be launched by running `roslaunch rovi_gazebo workcell.launch`.
 
-### API & Troubleshooting
-
-Text.
-
 ## Versioning
 
 We use [SemVer][semver] for versioning. For the versions available, see the [releases on this repository][releases]. Furthermore, this [changelog] documents the most relevant changes.
@@ -87,15 +82,32 @@ No license has been decided yet.
 
 - [RoboGnome][erdal-git] - configuration of VS Code to run flawlessly with ROS
 
+<!-- LINKS -->
+
+[rovi-report]: /assets/docs/rovi-report.pdf
+[img-rovi-workcell]: /assets/img/workcell/rovi-workcell.png
+
+[pkg-ur5-description]: /ws/src/ur5_description
+[pkg-ur5-dynamics]: /ws/src/ur5_dynamics
+[pkg-ur5-controllers]: /ws/src/ur5_controllers
+[pkg-ur5-moveit]: /ws/src/ur5_moveit_config
+[pkg-rovi-gazebo]: /ws/src/rovi_gazebo
+[pkg-rovi-utils]: /ws/src/rovi_utils
+[pkg-rovi-planner]: /ws/src/rovi_planner
+[pkg-rovi-pose-estimator]: /ws/src/rovi_pose_estimator
+[pkg-rovi-system]: /ws/src/rovi_system
+
 [semver]: http://semver.org/
 [releases]: about:blank
 [changelog]: CHANGELOG.md
 [wiki]: about:blank
 
-[ros]: http://wiki.ros.org/noetic/
-[gazebo]: http://gazebosim.org/
-[opencv]: https://opencv.org/
-[pcl]: https://pointclouds.org/
+[ros]: http://wiki.ros.org/noetic
+[gazebo]: http://gazebosim.org
+[kdl]: https://www.orocos.org/kdl.html
+[moveit]: https://moveit.ros.org
+[opencv]: https://opencv.org
+[pcl]: https://pointclouds.org
 [rosdep]: http://wiki.ros.org/rosdep#Installing_rosdep
 [ros-vs-code]: https://github.com/RoboGnome/VS_Code_ROS
 
