@@ -70,6 +70,8 @@ For auto-completion, linting etc., VS Code can be configured [as explained here]
 
 Navigate to `../rb-rovi/ws/` and run `source devel/setup.bash` to load the necessary environment variables to access the commands to run the packages of this repository. The workspace simulation can then be launched by running `roslaunch rovi_gazebo workcell.launch`.
 
+For example, the integrated system test can be run by first running `source devel/setup.bash`. Then, the simulation environemnt is launched by running `roslaunch rovi_system planning.moveit.launch` (unpause the simulation in Gazebo) and the integration test node is launched by running `rosrun rovi_system planning_integrated` in a seperate terminal (also after sourcing).
+
 ## Versioning
 
 We use [SemVer][semver] for versioning. For the versions available, see the [releases on this repository][releases]. Furthermore, this [changelog] documents the most relevant changes.
