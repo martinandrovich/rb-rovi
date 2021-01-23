@@ -60,7 +60,7 @@ main(int argc, char** argv)
 			auto plan_moveit = rovi_planner::moveit_planner::plan(pose, PLANNING_METHOD, MAX_PLANNING_TIME, MAX_PLANNING_ATTEMPTS);
 			bool plan_success = (plan_moveit.error_code_.val == plan_moveit.error_code_.SUCCESS);
 
-			fs << std::boolalpha << i << ", " << plan_success << ", " << pose_error << "\n";
+			fs  << i << ", " << int(plan_success) << ", " << pose_error << "\n";
 		}
 		
 		fs.close();
