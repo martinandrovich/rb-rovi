@@ -30,8 +30,8 @@ This repository is structured as a `catkin` ROS workspace, consisting of the fol
 - [`ur5_moveit_config`][pkg-ur5-moveit] - Moveit configuration for the UR5 robot.
 - [`rovi_gazebo`][pkg-rovi-gazebo] - Integration of ROVI workcell into Gazebo with various interface methods.
 - [`rovi_utils`][pkg-rovi-utils] - Various helper methods for the ROVI system.
-- [`rovi_planner`][pkg-rovi-planner] - Methods relating to motion planning of the UR5 robot in the ROVI system using KDL and MoveIt.
-- [`rovi_pose_estimator`][pkg-rovi-pose-estimator] - Vision-based pose estimation methods for objects in the ROVIsystem workcell.
+- [`rovi_planner`][pkg-rovi-planner] - Motion planning of the UR5 robot using KDL and MoveIt.
+- [`rovi_pose_estimator`][pkg-rovi-pose-estimator] - Vision-based pose estimation methods for objects in the ROVI workcell.
 - [`rovi_system`][pkg-rovi-system] - Integration of and testing ground for ROVI system components.
 
 Description of each package can be found in the corresponding README (TODO).
