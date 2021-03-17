@@ -14,11 +14,11 @@ Robotics and computer vision project of Advanced Robotics at SDU.
 
 ## Overview
 
-A dynamic simulated environment using ROS/Gazebo framework is used to facilitate development of avision-based pick and place pipeline within a workcell consisting of a UR5 manipulator mounted ontoa specialized table with designated pick and place areas, equipped with various perception sensors. Read the [project report][rovi-report] for more information.
+A dynamic simulated environment using ROS/Gazebo framework is used to facilitate development of a vision-based pick and place pipeline within a workcell consisting of a UR5 manipulator mounted onto a specialized table with designated pick and place areas, equipped with various perception sensors. Read the [project report][rovi-report] for more information.
 
 ![rovi-workcell][img-rovi-workcell]
 
-The dynamic simulation environment is established with interfaces that enable interaction with theenvironment and control of the manipulator and gripper. A reachability analysis is used to determine the optimal base mount location of the manipulator. Motion planning is used to facilitate object relocation via trajectory generation; both interpolation-based and collision-free methods are implemented and evaluated. Two vision-based pose-estimation methods are implemented and evaluated for localization of object within the workcell.
+The dynamic simulation environment is established with interfaces that enable interaction with the environment and control of the manipulator and gripper. A reachability analysis is used to determine the optimal base mount location of the manipulator. Motion planning is used to facilitate object relocation via trajectory generation; both interpolation-based and collision-free methods are implemented and evaluated. Two vision-based pose-estimation methods are implemented and evaluated for localization of object within the workcell.
 
 ## Packages
 
